@@ -38,6 +38,25 @@ export function createLevel({ cols, properties = {} }) {
     }
   }
 
+  /** Village pavement (kerb and road below): the street surface. */
+  function pavement(c0, c1) {
+    for (let c = c0; c <= c1; c++) {
+      set('ground', c, SURFACE, T.pavement);
+      set('ground', c, SURFACE + 1, T.road);
+    }
+  }
+
+  /**
+   * A low bridge over the line: a girder deck at `row` (solid, but only ever a
+   * ceiling; the validator caps the jumps underneath it) with a railing on top.
+   */
+  function bridge(c0, c1, row) {
+    for (let c = c0; c <= c1; c++) {
+      set('ground', c, row, T.girder);
+      if (row > 0) set('background', c, row - 1, T.parapet);
+    }
+  }
+
   function embankment(c0, c1) {
     for (let c = c0; c <= c1; c++) {
       set('ground', c, SURFACE, T.grassTop);
@@ -107,6 +126,7 @@ export function createLevel({ cols, properties = {} }) {
     addObject('hazard', kind, col * TS, (surfaceRow - 1) * TS, TS, TS, { kind });
   const glass = (col, surfaceRow = SURFACE) => hazard('glass', col, surfaceRow);
   const bucket = (col, surfaceRow = SURFACE) => hazard('bucket', col, surfaceRow);
+  const kebab = (col, surfaceRow = SURFACE) => hazard('kebab', col, surfaceRow);
   /** The level's boss. `tuning` names an entry of BOSS in src/config.js ('first' or 'final'). */
   const boss = (col, kind, surfaceRow = SURFACE, tuning = 'first') =>
     addObject('boss', kind, ...feet(col, surfaceRow), 0, 0, { kind, tuning });
@@ -114,6 +134,11 @@ export function createLevel({ cols, properties = {} }) {
   const secret = (c0, c1, r0, r1) => addObject('secret', 'secret', c0 * TS, r0 * TS, (c1 - c0 + 1) * TS, (r1 - r0 + 1) * TS);
   const pub = (col, id) => addObject('pub', id, ...feet(col), 0, 0, { pub: id }, decor);
   const sign = (col, text) => addObject('sign', text, ...feet(col), 0, 0, { text }, decor);
+  /** Village scenery, standing on the surface at `col`. `id` is a key of HOUSES in src/assets.js. */
+  const house = (col, id) => addObject('house', id, ...feet(col), 0, 0, { house: id }, decor);
+  const shop = (col, text) => addObject('shop', text, ...feet(col), 0, 0, { text }, decor);
+  const lamp = (col) => addObject('lamp', 'lamp', ...feet(col), 0, 0, {}, decor);
+  const stall = (col) => addObject('stall', 'stall', ...feet(col), 0, 0, {}, decor);
   const easel = (col) => addObject('easel', 'easel', col * TS + TS / 2, (SURFACE + 1) * TS + 4, 0, 0, {}, decor);
 
   function toMap() {
@@ -179,6 +204,8 @@ export function createLevel({ cols, properties = {} }) {
     TS,
     set,
     platform,
+    pavement,
+    bridge,
     embankment,
     carriage,
     crates,
@@ -193,12 +220,17 @@ export function createLevel({ cols, properties = {} }) {
     hazard,
     glass,
     bucket,
+    kebab,
     boss,
     zone,
     secret,
     pub,
     sign,
     easel,
+    house,
+    shop,
+    lamp,
+    stall,
     toMap,
   };
 }

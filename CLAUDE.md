@@ -7,6 +7,7 @@
 - Phaser's `scale.refresh()` uses a cached parent size; call `scale.getParentBounds()` first (see `src/systems/Scaling.js`).
 - The Player reads only `VirtualInput.state`, never raw keys/pointers. All deaths go through `player.die()`.
 - Touch buttons cover the bottom corners: keep spawn points and level start/end content clear of them.
+- Low bridges are `girder` tiles (`bridge()` in `scripts/levels/lib.mjs`): solid ceilings the validator never treats as ground or ledges. Its jump numbers (`LEVEL_RULES.jump`) must match `PLAYER`/`PHYSICS` in config.
 - Test flags: `?touch` forces on-screen buttons on desktop; `?debug` (dev only) shows bodies and player state.
 - Phaser static bodies: `refreshBody()` resets the body size to the sprite, so call `body.setSize()` after it.
 - Story/theme: `docs/story.md`; the agreed mapping is in the README "Story and theme" section. Title stays "Super Lad Alarm".
@@ -19,7 +20,7 @@
 - Listeners on `scene.events` / `game.events` / `scale` must be removed on SHUTDOWN (emitters outlive restarts).
 - Runs are timed, not scored: no points, no saved best, no pause (owner's decision, overrides the brief). Final time = clock + 2 s per missed pint − bonus `timeBonusMs`; see `finalTime()` in `src/systems/GameState.js`. Don't add localStorage.
 - Portrait freeze uses `game.loop.sleep()`/`wake()` (src/systems/mobile.js); always `loop.resetDelta()` before `wake()` or the clock jumps.
-- Boss: `src/systems/BossArena.js` + `src/entities/Conductor.js`, tuned by `BOSS.first` / `BOSS.final` in config (the boss object's `tuning` property picks one; read per-phase values with `conductor.perPhase()`). The fight is on the roof of his train (cols 158–177), then Parkstone and the pub door follow. Any player death during the fight resets it. Camera `pan()` needs long ease names (`'Sine.easeInOut'`); tweens accept short ones.
+- Boss: `src/systems/BossArena.js` + `src/entities/Conductor.js`, tuned by `BOSS.first` / `BOSS.final` in config (the boss object's `tuning` property picks one; read per-phase values with `conductor.perPhase()`). No level has the fight right now (v1 was replaced by level 1); it returns in level 3. Any player death during the fight resets it. Camera `pan()` needs long ease names (`'Sine.easeInOut'`); tweens accept short ones.
 - Phaser Containers already have `x, y, z, w` (Transform): never store sizes as `this.w`/`this.h` on a Container (`setPosition()` resets `w` to 0).
 - Listeners on `scene.events` 'update' can fire once more in the frame their owner is destroyed (snapshot emit); guard with `if (!this.scene) return`.
 - The finish is a pub door: put the `finish` object in the same column as its `pub` decor.

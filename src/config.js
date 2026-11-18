@@ -213,5 +213,6 @@ export const COLORS = {
 // parallax hills (0xffffff = as drawn). Later stages add weather and lamps.
 export const THEMES = {
   day: { sky: COLORS.sky, hillsTint: 0xffffff },
+  morning: { sky: '#c4e8ff', hillsTint: 0xf4ffe8 }, // level 1: pale, fresh late-morning light
 };
 export const DEFAULT_THEME = 'day';

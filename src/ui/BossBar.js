@@ -6,7 +6,8 @@ import { addPixelText } from './text.js';
 export default class BossBar {
   constructor(scene, gameScene, showToast) {
     this.scene = scene;
-    this.container = scene.add.container(scene.scale.width / 2, 6) // re-centred by Hud.layout().setVisible(false);
+    // x is re-centred by Hud.layout() when the game width changes.
+    this.container = scene.add.container(scene.scale.width / 2, 6).setVisible(false);
     this.label = addPixelText(scene, 0, 0, 'CONDUCTOR', { scale: 1, tint: 0xffcd75 }).setOrigin(0.5, 0);
     this.pips = scene.add.graphics();
     this.container.add([this.label, this.pips]);

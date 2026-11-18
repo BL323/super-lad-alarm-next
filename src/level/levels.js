@@ -4,17 +4,18 @@
 // pub whose door finishes the level. `npm run validate:levels` checks this list
 // against the level files.
 //
-// Until the six-leg crawl is built (docs/vNext-delivery-plan.md), the only
-// level is v1: the whole crawl in one level.
+// The six-leg crawl is being built one level at a time
+// (docs/vNext-delivery-plan.md). The v1 one-level game lives on at
+// BL323/super-lad-alarm.
 export const LEVELS = [
   {
-    id: 'v1',
+    id: 'level-01',
     number: 1,
-    from: 'Dorchester',
-    to: 'Parkstone',
-    pub: 'avocet',
-    mapKey: 'v1',
-    file: 'assets/levels/v1.json',
+    from: 'Poole',
+    to: 'Dorchester South',
+    pub: 'brewhouse',
+    mapKey: 'level-01',
+    file: 'assets/levels/level-01.json',
     next: null,
   },
 ];

@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { MAX_GAME_WIDTH, GAME_HEIGHT, PARALLAX, THEMES, DEFAULT_THEME } from '../config.js';
-import { TEX, TILESET, pubTextureKey } from '../assets.js';
-import { ensureSignTexture } from '../art/placeholders.js';
+import { TEX, TILESET, pubTextureKey, houseTextureKey } from '../assets.js';
+import { ensureSignTexture, ensureShopTexture } from '../art/placeholders.js';
 
 // Draw order for everything in the level.
 export const DEPTH = {
@@ -19,6 +19,7 @@ export const DEPTH = {
 export const HAZARD_SPRITES = {
   glass: { texture: TEX.GLASS, body: [12, 6, 2, 10] },
   bucket: { texture: TEX.BUCKET, body: [10, 8, 3, 8] }, // fried-chicken bucket outside The Black Bear
+  kebab: { texture: TEX.KEBAB, body: [12, 6, 2, 9] }, // dropped kebab on Dorchester's high street
 };
 
 const prop = (obj, name) => obj.properties?.find((p) => p.name === name)?.value;
@@ -72,9 +73,18 @@ export function loadLevel(scene, levelDef) {
   const point = (o) => ({ name: o.name, x: o.x, y: o.y });
   const rectOf = (o) => new Phaser.Geom.Rectangle(o.x, o.y, o.width, o.height);
 
-  // Decor: pubs, station nameboards, the easel in the river.
+  // Decor: pubs, village houses, shops, lamps and market stalls, station
+  // nameboards, the easel in the river. All stand on their feet position.
+  const standing = (key, depth = DEPTH.decor) => (d) => scene.add.image(d.x, d.y, key(d)).setOrigin(0.5, 1).setDepth(depth);
+  const DECOR = {
+    house: standing((d) => houseTextureKey(prop(d, 'house'))),
+    shop: standing((d) => ensureShopTexture(scene, prop(d, 'text'))),
+    lamp: standing(() => TEX.LAMP, DEPTH.decor + 1),
+    stall: standing(() => TEX.STALL, DEPTH.decor + 1),
+  };
   for (const d of decor) {
     const t = typeOf(d);
+    DECOR[t]?.(d);
     if (t === 'pub') scene.add.image(d.x, d.y, pubTextureKey(prop(d, 'pub'))).setOrigin(0.5, 1).setDepth(DEPTH.decor);
     if (t === 'sign') scene.add.image(d.x, d.y, ensureSignTexture(scene, prop(d, 'text'))).setOrigin(0.5, 1).setDepth(DEPTH.decor);
     if (t === 'easel') {

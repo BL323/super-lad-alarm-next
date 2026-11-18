@@ -8,6 +8,9 @@ export const TEX = {
   ESPRESSO: 'espresso-martini',
   GLASS: 'glass', // broken-glass hazard
   BUCKET: 'chicken-bucket', // fried-chicken bucket hazard (outside The Black Bear)
+  KEBAB: 'kebab', // dropped-kebab hazard (Dorchester's high street)
+  LAMP: 'lamp', // Victorian street lamp (village scenery)
+  STALL: 'market-stall', // striped market stall (village scenery; crates in front are the steps)
   CHECKPOINT: 'checkpoint', // railway signal: red → green
   FINISH: 'finish', // The Avocet's front door: closed (padlocked) / open
   TILES: 'tiles',
@@ -30,7 +33,20 @@ export const FONT = {
 
 /** Texture key for a pub front (see PUBS) or a station nameboard. */
 export const pubTextureKey = (id) => `pub-${id}`;
-export const signTextureKey = (text) => `sign-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+const slug = (text) => text.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+export const signTextureKey = (text) => `sign-${slug(text)}`;
+/** Village scenery: a house (see HOUSES) or a shopfront with its name on the fascia. */
+export const houseTextureKey = (id) => `house-${id}`;
+export const shopTextureKey = (text) => `shop-${slug(text)}`;
+
+// Village houses drawn as background buildings, 64×64. `id` is referenced by
+// `house` decor objects in level JSON.
+export const HOUSES = {
+  'terrace-red': { wall: 'brick', roof: '#5f574f', door: '#1d2b53' },
+  'terrace-cream': { wall: '#eae6dc', roof: '#3a3a46', door: '#7e2553' },
+  'terrace-blue': { wall: '#a8c8e0', roof: '#5f574f', door: '#ffcd75' },
+  cottage: { wall: '#f4e4c1', roof: 'thatch', door: '#1f6b3a' }, // Dorset thatched cottage
+};
 
 // Pubs drawn as background buildings. `id` is referenced by `pub` objects in level JSON.
 export const PUBS = {
@@ -143,8 +159,12 @@ export const TILESET = {
     canopyPost: 15, // cast-iron column (background)
     water: 16, // river surface (background)
     waterDeep: 17,
+    girder: 18, // low bridge deck: a ceiling only (the validator caps jumps under it)
+    parapet: 19, // railing on top of a low bridge (background)
+    pavement: 20, // village pavement with a kerb (surface)
+    road: 21, // tarmac under the pavement
   },
-  count: 18,
+  count: 22,
 };
 
 // Animation keys, referenced by name everywhere else.

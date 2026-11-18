@@ -4,10 +4,19 @@
 //
 // Limits come from the jump in config.js (max height ~50 px, max distance
 // ~73 px) with roughly a one-third safety margin.
+//
+// Low bridges (girder tiles) are ceilings: under one, a full jump bumps its
+// head and comes straight back down, so the allowed gap and step-up shrink to
+// what that shorter jump can manage (same one-third margin).
+
+import { TILESET } from '../assets.js';
 
 export const LEVEL_RULES = {
   maxGapTiles: 3, // 48 px
   maxStepUpTiles: 2, // 32 px
+  minHeadroomTiles: 2, // clear space between a surface and a low bridge above it
+  // The jump, for ceilings. Keep in sync with PLAYER and PHYSICS in config.js.
+  jump: { velocity: 300, gravity: 900, runSpeed: 110, bodyHeight: 13, margin: 2 / 3 },
   bossTunings: ['first', 'final'], // keys of BOSS in config.js
   layer: 'ground',
   objectLayer: 'objects',
@@ -26,7 +35,10 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   const { width: cols, height: rows } = ground;
   const tw = map.tilewidth;
 
-  const solid = (c, r) => !!ground.data[r * cols + c];
+  const girderGid = TILESET.tiles.girder + 1;
+  const isCeiling = (c, r) => ground.data[r * cols + c] === girderGid;
+  // Ceiling tiles never count as ground, walls or ledges.
+  const solid = (c, r) => !!ground.data[r * cols + c] && !isCeiling(c, r);
 
   // Walkable surface per column: the top of the solid stack standing on the
   // bottom row (null = gap). Floating tiles above it (optional ledges) don't
@@ -37,6 +49,45 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     for (let r = rows - 1; r >= 0 && solid(c, r); r--) top = r;
     surface.push(top);
   }
+
+  // Low bridges: the lowest girder row in each column (null = open sky).
+  const ceiling = [];
+  for (let c = 0; c < cols; c++) {
+    let low = null;
+    for (let r = 0; r < (surface[c] ?? rows); r++) if (isCeiling(c, r)) low = r;
+    ceiling.push(low);
+  }
+  for (let c = 0; c < cols; c++) {
+    if (ceiling[c] === null || surface[c] === null) continue;
+    const clear = surface[c] - ceiling[c] - 1;
+    if (clear < rules.minHeadroomTiles) errors.push(`low bridge at col ${c} leaves ${clear} tile(s) of headroom (min ${rules.minHeadroomTiles})`);
+  }
+
+  // A jump from surface row `fromRow` with a ceiling at `ceilRow`: how high it
+  // can rise (px) and the gap / step-up it can safely clear (tiles).
+  const J = rules.jump;
+  const apex = (J.velocity * J.velocity) / (2 * J.gravity);
+  const underCeiling = (fromRow, ceilRow) => {
+    const rise = Math.min(apex, (fromRow - ceilRow - 1) * tw - J.bodyHeight);
+    if (rise <= 0) return { gap: 0, step: 0 };
+    const up = (J.velocity - Math.sqrt(J.velocity * J.velocity - 2 * J.gravity * rise)) / J.gravity;
+    const down = Math.sqrt((2 * rise) / J.gravity);
+    const air = rise >= apex ? (2 * J.velocity) / J.gravity : up + down;
+    return {
+      gap: Math.min(rules.maxGapTiles, Math.floor((J.runSpeed * air * J.margin) / tw)),
+      step: Math.min(rules.maxStepUpTiles, Math.floor((rise * J.margin) / tw)),
+    };
+  };
+  /** Limits for a jump from col `from` (surface row) to col `to`, given any ceilings between. */
+  const limitsBetween = (from, to) => {
+    let limits = { gap: rules.maxGapTiles, step: rules.maxStepUpTiles };
+    for (let k = from; k <= to; k++) {
+      if (ceiling[k] === null) continue;
+      const l = underCeiling(surface[from], ceiling[k]);
+      limits = { gap: Math.min(limits.gap, l.gap), step: Math.min(limits.step, l.step) };
+    }
+    return limits;
+  };
 
   // Floating ledges: solid tiles not part of a column's ground stack. Each
   // ledge top must be reachable: at most maxStepUpTiles above some surface or
@@ -67,13 +118,15 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   for (let c = 0; c < cols; c++) {
     if (surface[c] === null) continue;
     const gap = c - lastCol - 1;
-    if (lastCol >= 0 && gap > rules.maxGapTiles) {
-      errors.push(`gap of ${gap} tiles at cols ${lastCol + 1}–${c - 1} (max ${rules.maxGapTiles})`);
+    const limits = lastCol >= 0 ? limitsBetween(lastCol, c) : { gap: rules.maxGapTiles, step: rules.maxStepUpTiles };
+    const low = limits.gap < rules.maxGapTiles || limits.step < rules.maxStepUpTiles ? ' under a low bridge' : '';
+    if (lastCol >= 0 && gap > limits.gap) {
+      errors.push(`gap of ${gap} tiles at cols ${lastCol + 1}–${c - 1}${low} (max ${limits.gap})`);
     }
     if (lastSurface !== null) {
       const rise = lastSurface - surface[c];
-      if (rise > rules.maxStepUpTiles) {
-        errors.push(`step-up of ${rise} tiles into col ${c} (max ${rules.maxStepUpTiles})`);
+      if (rise > limits.step) {
+        errors.push(`step-up of ${rise} tiles into col ${c}${low} (max ${limits.step})`);
       }
     }
     lastSurface = surface[c];
@@ -136,7 +189,7 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   }
 
   // Hazards: every surface hazard (glass, bucket) needs a safe tile at the same height either side.
-  const SURFACE_HAZARDS = ['glass', 'bucket'];
+  const SURFACE_HAZARDS = ['glass', 'bucket', 'kebab'];
   const glassCols = new Set();
   for (const h of ofType('hazard').filter((h) => SURFACE_HAZARDS.includes(prop(h, 'kind')))) {
     for (let c = colOf(h.x); c <= colOf(h.x + h.width - 1); c++) glassCols.add(c);
@@ -164,6 +217,7 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   info.collectibles = counts;
   info.hazards = ofType('hazard').length;
   info.ledges = ledges.length;
+  info.lowBridgeCols = ceiling.filter((v) => v !== null).length;
   info.boss = bosses.length ? prop(bosses[0], 'kind') : null;
   return { errors, info };
 }

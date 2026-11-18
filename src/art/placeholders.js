@@ -5,10 +5,13 @@
 import {
   TEX,
   PUBS,
+  HOUSES,
   CHARACTERS,
   playerTextureKey,
   pubTextureKey,
   signTextureKey,
+  houseTextureKey,
+  shopTextureKey,
   PLAYER_FRAME,
   PLAYER_FRAMES,
   PINT_FRAME,
@@ -566,6 +569,39 @@ function makeTiles(scene) {
         rect(ctx, C.water, 2, 4, 5, 1);
         rect(ctx, C.water, 9, 11, 5, 1);
         break;
+      case t.girder:
+        // Riveted steel box girder seen side-on, painted bridge blue.
+        rect(ctx, '#3b5d8a', 0, 0, w, h);
+        rect(ctx, '#5b7fb0', 0, 0, w, 2); // top flange
+        rect(ctx, '#2a4466', 0, 14, w, 2); // bottom flange
+        rect(ctx, '#2a4466', 0, 7, w, 1);
+        for (const x of [2, 7, 12]) {
+          px(ctx, '#9ab4d6', x, 3);
+          px(ctx, '#9ab4d6', x, 11);
+        }
+        rect(ctx, '#2a4466', 15, 2, 1, 12); // panel joint
+        break;
+      case t.parapet:
+        // Iron railing standing on the deck (bottom of the tile).
+        rect(ctx, '#2a4466', 0, 6, w, 2); // top rail
+        rect(ctx, '#2a4466', 0, 14, w, 2); // bottom rail
+        for (let x = 1; x < w; x += 4) rect(ctx, '#2a4466', x, 8, 1, 6);
+        break;
+      case t.pavement:
+        // Paving slabs, a granite kerb and the road edge below.
+        rect(ctx, '#b8b8c0', 0, 0, w, 8);
+        rect(ctx, '#d4d4dc', 0, 0, w, 1);
+        rect(ctx, '#8e8e98', 7, 1, 1, 7); // slab joint
+        rect(ctx, '#8e8e98', 15, 1, 1, 7);
+        rect(ctx, '#8e8e98', 0, 4, 7, 1);
+        rect(ctx, '#d0ccc4', 0, 8, w, 3); // kerb
+        rect(ctx, '#9a968e', 0, 11, w, 1);
+        rect(ctx, '#3a3a46', 0, 12, w, 4); // road
+        break;
+      case t.road:
+        rect(ctx, '#3a3a46', 0, 0, w, h);
+        [[2, 3], [9, 7], [5, 12], [13, 10]].forEach(([x, y]) => px(ctx, '#4e4e5c', x, y));
+        break;
     }
   });
 }
@@ -659,6 +695,123 @@ function makePub(scene, id, def) {
     rect(ctx, C.gold, 43, 56, 10, 4); // fanlight
     px(ctx, C.orange, 52, 68); // knob
   });
+}
+
+// --- Village scenery ------------------------------------------------------
+
+// A dropped doner kebab: pitta, meat, salad and a splash of chilli sauce,
+// spilling out of its paper wrapper. Sits on the pavement.
+function makeKebab(scene) {
+  makeImage(scene, TEX.KEBAB, 16, 16, (ctx) => {
+    rect(ctx, C.white, 1, 12, 9, 3); // paper wrapper
+    rect(ctx, C.grey, 1, 14, 9, 1);
+    for (let x = 3; x < 15; x++) rect(ctx, '#e8c58a', x, 10 - Math.floor(Math.abs(x - 9) / 3), 1, 4); // pitta
+    rect(ctx, '#d0a860', 3, 13, 12, 1);
+    rect(ctx, '#8f4a1c', 5, 8, 8, 2); // meat
+    rect(ctx, '#a35f1f', 6, 8, 2, 1);
+    px(ctx, C.grass, 5, 7); // lettuce
+    px(ctx, C.grass, 9, 7);
+    px(ctx, C.grass, 12, 8);
+    px(ctx, C.red, 7, 7); // tomato
+    px(ctx, C.white, 11, 7); // onion
+    rect(ctx, '#e43b44', 12, 14, 3, 1); // chilli sauce on the ground
+    px(ctx, '#e43b44', 15, 13);
+  });
+}
+
+// Victorian cast-iron street lamp, 8×40, lit lantern on top.
+function makeLamp(scene) {
+  makeImage(scene, TEX.LAMP, 8, 40, (ctx) => {
+    rect(ctx, C.greenDark, 3, 9, 2, 29); // post
+    rect(ctx, C.greenDark, 2, 36, 4, 4); // base
+    rect(ctx, C.greenDark, 2, 14, 4, 1); // ladder bar
+    rect(ctx, C.greenDark, 1, 1, 6, 1); // lantern cap
+    px(ctx, C.greenDark, 4, 0);
+    rect(ctx, C.greenDark, 1, 2, 1, 6);
+    rect(ctx, C.greenDark, 6, 2, 1, 6);
+    rect(ctx, '#fff4b0', 2, 2, 4, 6); // glass
+    rect(ctx, C.yellow, 3, 4, 2, 3); // flame
+    rect(ctx, C.greenDark, 1, 8, 6, 1);
+  });
+}
+
+// Market stall, 48×40: striped awning, a counter of fruit and veg. Crates
+// stacked in front of it (tiles) are the steps.
+function makeStall(scene) {
+  makeImage(scene, TEX.STALL, 48, 40, (ctx) => {
+    rect(ctx, C.woodDark, 2, 8, 2, 32); // poles
+    rect(ctx, C.woodDark, 44, 8, 2, 32);
+    for (let x = 0; x < 48; x++) rect(ctx, Math.floor(x / 6) % 2 ? C.white : '#e43b44', x, 0, 1, 8); // awning
+    for (let x = 0; x < 48; x += 6) for (let r = 0; r < 3; r++) rect(ctx, Math.floor(x / 6) % 2 ? C.white : '#e43b44', x + r, 8 + r, 6 - r * 2, 1);
+    rect(ctx, C.wood, 4, 26, 40, 3); // counter
+    rect(ctx, C.woodDark, 4, 29, 40, 11);
+    for (let x = 6; x < 42; x += 4) {
+      const fruit = [C.orange, C.grass, '#e43b44', C.yellow][(x / 4) % 4];
+      rect(ctx, fruit, x, 23, 3, 3);
+    }
+  });
+}
+
+// Terraced house or thatched cottage, 64×64: roof, two upper windows, a front
+// door and a ground-floor window.
+function makeHouse(scene, id, def) {
+  const W = 64;
+  const H = 64;
+  makeImage(scene, houseTextureKey(id), W, H, (ctx) => {
+    if (def.roof === 'thatch') {
+      for (let r = 0; r < 18; r++) rect(ctx, r % 3 === 0 ? '#a07a3a' : '#c49a52', 10 - Math.floor(r / 2), 4 + r, W - 20 + r, 1);
+      rect(ctx, '#8a6530', 1, 21, W - 2, 2); // thatch eave
+    } else {
+      bricks(ctx, 44, 0, 8, 10); // chimney
+      rect(ctx, C.darkGrey, 43, 0, 10, 2);
+      for (let r = 0; r < 12; r++) rect(ctx, def.roof, 8 - Math.floor(r / 2), 10 + r, W - 16 + r, 1);
+      rect(ctx, C.ink, 2, 22, W - 4, 1);
+    }
+    if (def.wall === 'brick') bricks(ctx, 3, 23, W - 6, H - 23);
+    else rect(ctx, def.wall, 3, 23, W - 6, H - 23);
+    rect(ctx, C.ink, 3, 23, 1, H - 23);
+    rect(ctx, C.ink, W - 4, 23, 1, H - 23);
+    for (const x of [12, 38]) {
+      rect(ctx, C.white, x - 1, 27, 14, 12); // upper windows
+      rect(ctx, C.glassBlue, x, 28, 12, 10);
+      rect(ctx, C.white, x + 5, 28, 2, 10);
+    }
+    rect(ctx, C.white, 9, 44, 20, 14); // ground-floor window
+    rect(ctx, C.glassBlue, 10, 45, 18, 12);
+    rect(ctx, C.glassHi, 11, 46, 3, 1);
+    rect(ctx, def.door, 40, 43, 12, H - 43); // door
+    rect(ctx, C.gold, 44, 52, 1, 1);
+    rect(ctx, C.white, 39, 42, 14, 1);
+  });
+}
+
+// Shopfront with its name on the fascia, 64 px tall: flat-roofed upper floor,
+// a big display window and a door. Width fits the name.
+export function ensureShopTexture(scene, text) {
+  const key = shopTextureKey(text);
+  if (scene.textures.exists(key)) return key;
+  const tw = measurePixelText(text);
+  const W = Math.max(64, tw + 16);
+  const H = 64;
+  makeImage(scene, key, W, H, (ctx) => {
+    rect(ctx, '#eae6dc', 2, 6, W - 4, 20); // rendered upper floor
+    rect(ctx, '#cfc8b8', 0, 4, W, 3); // parapet
+    for (let x = 10; x + 12 <= W - 8; x += 22) {
+      rect(ctx, C.white, x - 1, 10, 14, 13);
+      rect(ctx, C.glassBlue, x, 11, 12, 11);
+    }
+    rect(ctx, '#7e2553', 2, 27, W - 4, 10); // fascia
+    rect(ctx, C.gold, 2, 27, W - 4, 1);
+    rect(ctx, C.gold, 2, 36, W - 4, 1);
+    drawPixelText(ctx, text, Math.round((W - tw) / 2), 30, C.white);
+    for (let x = 0; x < W; x++) rect(ctx, Math.floor(x / 4) % 2 ? C.white : '#29adff', x, 37, 1, 3); // awning
+    rect(ctx, C.woodDark, 4, 40, W - 22, H - 40); // window frame
+    rect(ctx, '#a0e4ff', 6, 42, W - 26, H - 46);
+    rect(ctx, C.white, 8, 43, 6, 1);
+    rect(ctx, C.woodDark, W - 16, 40, 12, H - 40); // door
+    rect(ctx, '#a0e4ff', W - 14, 42, 8, 8);
+  });
+  return key;
 }
 
 // --- Train Conductor (boss) -------------------------------------------------
@@ -849,6 +1002,9 @@ const BUILDERS = {
   [TEX.ESPRESSO]: makeEspresso,
   [TEX.GLASS]: makeGlass,
   [TEX.BUCKET]: makeBucket,
+  [TEX.KEBAB]: makeKebab,
+  [TEX.LAMP]: makeLamp,
+  [TEX.STALL]: makeStall,
   [TEX.CHECKPOINT]: makeCheckpoint,
   [TEX.FINISH]: makeFinish,
   [TEX.CONFETTI]: makeConfetti,
@@ -871,5 +1027,8 @@ export function createPlaceholderTextures(scene) {
   }
   for (const [id, def] of Object.entries(PUBS)) {
     if (!scene.textures.exists(pubTextureKey(id))) makePub(scene, id, def);
+  }
+  for (const [id, def] of Object.entries(HOUSES)) {
+    if (!scene.textures.exists(houseTextureKey(id))) makeHouse(scene, id, def);
   }
 }

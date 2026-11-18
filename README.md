@@ -19,7 +19,8 @@ This repo is the next version of the game. v1 is frozen at [BL323/super-lad-alar
 | 7. Polish and ship | Not started |
 | vNext stage M: mobile full screen | Done in code (fill scaling on touch, Home Screen app, Android full screen, iPhone hint, wider view); real-phone checks still to do |
 | vNext stage 0: level-based game | Done: level builders, registry, level picker, next stop screen, crawl timing, per-level themes, two boss tunings (still playing the v1 level) |
-| vNext: six levels | Planned ([docs/vNext-improvements.md](docs/vNext-improvements.md)) |
+| vNext stage 1: level 1 | Done: Poole → Dorchester South (Brewhouse), with the village street, low bridges, the kebab hazard and the morning sky. It replaces the v1 level, so there is no Conductor fight until level 3 |
+| vNext: levels 2–6 | Planned ([docs/vNext-improvements.md](docs/vNext-improvements.md)) |
 
 ## Requirements
 
@@ -46,7 +47,7 @@ Level tools:
 
 ```bash
 npm run build:levels      # rebuild every level in scripts/levels/ into public/assets/levels/<id>.json (and validate)
-npm run build:levels -- v1  # rebuild one level
+npm run build:levels -- level-01  # rebuild one level
 npm run validate:levels   # check every level against the rules, and the registry against the files
 ```
 
@@ -77,7 +78,7 @@ index.html              page shell (viewport, safe-area meta)
 vite.config.js          relative base, Phaser chunk
 netlify.toml            Netlify build and headers
 public/assets/levels/   Tiled JSON levels (generated, see Levels below)
-scripts/levels/         one builder per level (v1.mjs …) plus lib.mjs, the shared building blocks
+scripts/levels/         one builder per level (level-01.mjs …) plus lib.mjs, the shared building blocks
 scripts/                build-levels, validate-levels and build-icons (Node, no dependencies)
 src/
   main.js               Phaser.Game config and scene list
@@ -156,7 +157,7 @@ Measured in the stage 2 test strip: full speed in 0.23 s, stop in 0.15 s, full j
 
 ## Boss: the Train Conductor
 
-Naylor's arch-nemesis is fought on the roof of his own train, between Wareham and Parkstone (as in `docs/story.md`). The arena is two coupled carriages, one screen long (cols 158–177). Beat him, hop off at Parkstone and walk into The Avocet.
+**Not in the game right now:** the v1 level that had this fight was replaced by the new level 1, and the Conductor returns in level 3 (`BOSS.first`) and level 6 (`BOSS.final`). The code is unchanged; a level gets the fight by placing a `boss` inside an `end-zone`. This section describes the fight as it was in v1, on the roof of his own train: two coupled carriages, one screen long.
 
 - **Arena.** Jumping up onto his train (the `end-zone`) starts the fight. The camera pans to and locks on that screen, walls close on both sides, the hills race past (the train is moving), and "TICKETS PLEASE!" appears with a CONDUCTOR bar of three health pips. The finish is locked (dimmed) until he's beaten.
 - **His cycle:** walk towards you, throwing tickets (from the very first phase) → wind-up (flashes red, red "!" over his head) → dash across the platform → hit the arena edge and go dizzy (stars over his cap) → repeat.
@@ -200,18 +201,18 @@ To be completed on real phones (it can't be tested here):
 
 A level is a Tiled JSON map with:
 
-- **Tile layers** `background` (no collision: canopy posts, river), `ground` (every tile collides) and `foreground` (drawn over the player: station canopy). They use the tileset `tiles`, which is the generated `tiles` texture (layout in `src/assets.js`).
+- **Tile layers** `background` (no collision: canopy posts, river, bridge railings), `ground` (every tile collides; `girder` tiles are low-bridge ceilings) and `foreground` (drawn over the player: station canopy). They use the tileset `tiles`, which is the generated `tiles` texture (layout in `src/assets.js`).
 - **Map property `theme`:** a key of `THEMES` in `src/config.js` (sky colour, hills tint). Defaults to `day`.
-- **Object layer `objects`:** `spawn`, at least two `checkpoint`s (property `station`), `collectible`s (property `type`: `pint` or `espresso`), `hazard`s (property `kind`: `glass`, `bucket` or `water`), a `finish` at the target pub's door, and optional `secret` rectangles (the foreground fades while the player is inside). A boss level also has a `boss` (properties `kind`: `conductor`, and `tuning`: `first` or `final`) inside a `zone` named `end-zone`, the arena. Points for spawn, checkpoints and finish are at the player's feet.
-- **Object layer `decor`:** `pub` (property `pub`, an id from `PUBS` in `src/assets.js`), `sign` (property `text`) and `easel`.
+- **Object layer `objects`:** `spawn`, at least two `checkpoint`s (property `station`), `collectible`s (property `type`: `pint` or `espresso`), `hazard`s (property `kind`: `glass`, `bucket`, `kebab` or `water`), a `finish` at the target pub's door, and optional `secret` rectangles (the foreground fades while the player is inside). A boss level also has a `boss` (properties `kind`: `conductor`, and `tuning`: `first` or `final`) inside a `zone` named `end-zone`, the arena. Points for spawn, checkpoints and finish are at the player's feet.
+- **Object layer `decor`:** `pub` (property `pub`, an id from `PUBS` in `src/assets.js`), `house` (property `house`, an id from `HOUSES`), `shop` (property `text`, the fascia), `lamp`, `stall`, `sign` (property `text`) and `easel`.
 
 Maps are 12 rows (192 px) against a 180 px screen, so the loader shifts everything up 12 px. Only sky is cut off.
 
-Every level is generated by its own builder in `scripts/levels/` (for now just `v1.mjs`, the whole v1 crawl in one level). A builder exports `meta` (id, width in tiles, map properties) and a `build(L)` that reads like a description of the level (`platform(0, 21)`, `carriage(30, 10)`, `pint(33, 7)`...), using the helpers in `scripts/levels/lib.mjs`. Edit it and run `npm run build:levels`. Don't hand-edit the JSON.
+Every level is generated by its own builder in `scripts/levels/` (for now just `level-01.mjs`). A builder exports `meta` (id, width in tiles, map properties) and a `build(L)` that reads like a description of the level (`platform(0, 21)`, `carriage(30, 10)`, `pint(33, 7)`...), using the helpers in `scripts/levels/lib.mjs`. Edit it and run `npm run build:levels`. Don't hand-edit the JSON.
 
 **Adding a level:** add `scripts/levels/level-0N.mjs` and run `npm run build:levels`, then add an entry to `LEVELS` in `src/level/levels.js` (crawl order) and set the previous level's `next` to its id. `npm run validate:levels` checks the registry too: numbers in order, `next` links following the list, every file present, and each level finishing at the pub its entry names.
 
-**Validation rules** (from the jump numbers in `config.js`): gaps of at most 3 tiles, step-ups of at most 2 tiles going right, a safe tile at the same height either side of every glass or bucket hazard, every floating ledge reachable (no more than 2 tiles above a surface within 4 columns), one spawn, at least two checkpoints, one finish at a pub door (the same column as a `pub`), an `end-zone` if and only if there's a boss (flat, with the boss inside it and the finish inside or after it), at most one boss with a known `tuning`, and no collectibles inside a boss arena (so the missed-pint penalty never punishes the fight). `npm run build` refuses to build if any level fails, and the dev build logs an error at boot.
+**Validation rules** (from the jump numbers in `config.js`): gaps of at most 3 tiles, step-ups of at most 2 tiles going right, a safe tile at the same height either side of every glass or bucket hazard, every floating ledge reachable (no more than 2 tiles above a surface within 4 columns), at least 2 tiles of headroom under a low bridge, and under one the shorter jump's limits (2 tiles of headroom: gaps of 1, no step-ups; 3 tiles: gaps of 1, step-ups of 1), one spawn, at least two checkpoints, one finish at a pub door (the same column as a `pub`), an `end-zone` if and only if there's a boss (flat, with the boss inside it and the finish inside or after it), at most one boss with a known `tuning`, and no collectibles inside a boss arena (so the missed-pint penalty never punishes the fight). `npm run build` refuses to build if any level fails, and the dev build logs an error at boot.
 
 ## Game flow
 
@@ -253,22 +254,27 @@ All placeholder textures are generated in `src/art/placeholders.js` under the ke
 
 ## Story and theme
 
-Background story: [docs/story.md](docs/story.md). Naylor's "Lad Alarm Train Crawl" across Dorset. The story now describes vNext: six levels, one per leg from Poole to Parkstone, with two Conductor fights. The plan is in [docs/vNext-improvements.md](docs/vNext-improvements.md). Until those levels are built, the game is still the v1 level below.
+Background story: [docs/story.md](docs/story.md). Naylor's "Lad Alarm Train Crawl" across Dorset: six levels, one per leg from Poole to Parkstone, with two Conductor fights. The plan is in [docs/vNext-improvements.md](docs/vNext-improvements.md) and [docs/vNext-delivery-plan.md](docs/vNext-delivery-plan.md). The levels are being built one at a time; the v1 one-level game (Dorchester to Parkstone, with the Conductor fight) is frozen at [BL323/super-lad-alarm](https://github.com/BL323/super-lad-alarm).
 
-How the story maps onto the v1 level (agreed with the project owner):
+| Level | Route | Pub | State |
+| --- | --- | --- | --- |
+| 1 | Poole → Dorchester South | Brewhouse | Built |
+| 2 | Dorchester South → Moreton | Frampton | Planned |
+| 3 | Moreton → Wool | The Black Bear | Planned (first Conductor fight) |
+| 4 | Wool → Wareham | The Old Granary | Planned |
+| 5 | Wareham → Poole | The Rising Sun | Planned |
+| 6 | Poole → Parkstone | The Avocet | Planned (final Conductor fight) |
 
-| Brief element | In the game |
+**Level 1, Poole → Dorchester South** (`scripts/levels/level-01.mjs`, 167 tiles, morning sky): Poole platform under a canopy → three coupled carriages (a 2-tile and a 1-tile gap) → a lineside signal (checkpoint) → two more carriages under a low road bridge, where a full jump bumps your head so you hop → Dorchester South platform (checkpoint) → the high street (houses, a bakery, a market stall whose crates are the steps, a dropped kebab) → the Brewhouse door. No hazards before the village. The martini is on a crate ledge over the bakery, reached by turning back from the top crate and jumping up-left. An autopilot run that never stops takes about 23 s, collects 29 of 34 pints and misses the martini.
+
+| Element | In the game |
 | --- | --- |
-| Start | Dorchester station, Brewhouse pub behind |
-| Checkpoint 1 | Wool station, The Black Bear (angry locals in the windows, scenery only) |
-| Checkpoint 2 | Wareham station, The Old Granary, then the river (easel floating in it, scenery) |
-| Checkpoint 3 | Lineside embankment, just before the Conductor's train |
-| `end-zone` | The Train Conductor boss arena: the roof of his train, between Wareham and Parkstone |
-| Finish | The Avocet's front door at Parkstone |
-| Platforms | Parked British carriages (roof-hopping); gaps between carriages are the jumps |
+| Platforms | Station platforms, parked British carriages (roof-hopping) and village pavements |
 | Coin | Pint of stout; every one missed adds 2 s to the final time |
-| Hazard | Broken glass on platforms and roofs; a fried-chicken bucket outside The Black Bear; the river at Wareham |
-| Bonus | One hidden espresso martini; takes 5 s off the final time |
+| Hazards | Broken glass, a fried-chicken bucket, a dropped kebab, the river |
+| Ceilings | Low bridges: girders over the line that cap your jump |
+| Bonus | One hidden espresso martini per level; takes 5 s off the final time |
+| Finish | The target pub's front door |
 
 The game title stays **Super Lad Alarm**.
 
@@ -280,6 +286,7 @@ The game title stays **Super Lad Alarm**.
 - **Node 24.** It is the version installed locally and still an LTS line; `engines` is `>=24` so Node 26 LTS also works. Netlify and the Pages workflow (via `.nvmrc`) build with 24.
 - **Fill scaling on touch devices (vNext stage M).** Phones skip the whole-number snap below and use the largest scale that fits, because the snap could waste a third of the screen. Pixel-art (nearest-neighbour) rendering stays on, and uneven pixels are hard to see at phone densities. Desktop is unchanged.
 - **Full screen.** Requested only from a tap (START, or the menu's FULL SCREEN button) and only on touch devices that support it, never on desktop. iPhone Safari has no full-screen API for pages, so it gets the Home Screen hint and a web app manifest (`display: fullscreen`, landscape). The icon is the game's own pint drawn by `drawPint()` in `src/art/placeholders.js`, scaled up by a whole number. The old `black-fullscreen` status-bar value wasn't valid; it's now `black-translucent`.
+- **Level 1 and low bridges (vNext stage 1).** The new level 1 replaces the v1 level, which lives on in the frozen repo. Low bridges are `girder` tiles: solid, so a jump bumps its head, but the validator treats them only as ceilings, never as ledges or ground. Under one it works out the shorter jump from the same numbers as `config.js` (`LEVEL_RULES.jump`, kept in sync by hand) and shrinks the allowed gap and step-up. With two tiles of headroom a full jump still clears a 1-tile gap from anywhere in a ~38 px take-off window, checked by stepping frames. The martini ledge sits up-left of the market crates so a straight run misses it. Village scenery (houses, shopfronts, lamps, the stall) is decor drawn in code: `HOUSES` in `src/assets.js`, shopfronts sized to their name.
 - **Level-based structure (vNext stage 0).** The v1 level is now one entry (`v1`) in a level registry, built by `scripts/levels/v1.mjs`; the move was checked by rebuilding it byte-for-byte identical to the old `level-01.json`. The crawl total gets its own screen (CrawlComplete) rather than squeezing six level times onto the Complete screen, which now has one row of buttons: MENU, PLAY AGAIN, NEXT (TOTAL after the last level). Six level-picker rows fit above its buttons at 16 game px each.
 - **Wider view (vNext stage M).** `gameWidthFor()` in `src/systems/Scaling.js` picks an even width between `GAME_WIDTH` (320) and `MAX_GAME_WIDTH` (400) from the space's aspect ratio, and changes it live with `scale.setGameSize()`. Phaser resizes the cameras itself. The HUD, touch buttons and boss bar re-lay out on resize; the menu, outfit select and Complete screens restart with the same data (`src/ui/relayout.js`). In the boss fight the camera bounds grow evenly round the 320 px arena so it stays centred, and re-centre if the width changes mid-fight. The hills strips are made `MAX_GAME_WIDTH` wide. Levels needed no changes: their ends and the Avocet door stay clear of the jump button at 400 wide.
 - **Integer scaling** is computed in *device* pixels: the `#game` frame is sized to the largest whole multiple of the game size that fits in physical pixels, then Phaser FIT fills that frame. Below 1× it falls back to plain FIT. Examples: 1920×1080 → 320 wide at 6×, 1280×720 → 320 at 4×, an 844×390 desktop window → 388 at 2×.
@@ -291,7 +298,7 @@ The game title stays **Super Lad Alarm**.
 - **Keep the bottom corners clear.** The touch buttons cover roughly the bottom 42 game px at each side of the screen, which is where the ground runs. Spawn points, and anything the player must see at the very start and end of a level (where the camera stops scrolling), should sit at least ~100 px from the left edge and away from the bottom-right corner.
 - **Jump presses are latched** from key and touch events, not polled, so a tap shorter than one frame is never lost.
 - **Level authoring.** Levels are generated from short Node scripts (one per level in `scripts/levels/`, sharing `lib.mjs`) rather than drawn in Tiled, because no Tiled install is assumed and the script is easy to review. The output is standard Tiled JSON.
-- **Level length and pacing.** 198 tiles (3,168 px, 9.9 screens). Start is Dorchester (cols 0–53), middle is Wool to the embankment (cols 54–123), end is Wareham → the boss train (cols 158–177) → Parkstone (cols 178–197). The middle is about 3.5 screens, a little under the brief's 4–5, so the stations fit evenly. A non-stop run that never stops to collect takes about 23 s; a first-time player collecting pints will take longer.
+- **Level length and pacing (v1).** The v1 level was 198 tiles (9.9 screens), Dorchester → Wool → Wareham → the boss train → Parkstone, about 23 s non-stop. Level 1 is 167 tiles (8.3 screens), also about 23 s non-stop.
 - **Hazard placement.** The autopilot play test found two unfair spots, both now fixed: glass right where you land after dropping off a roof (removed), and a crate stair ending three tiles before a gap (moved two tiles earlier). Both had passed the validator's rules.
 - **Hidden espresso martini (moved at the owner's request so a straight run never collects it).** It sits on a small floating ledge tucked up in the Wool station canopy, up and to the left of the crate stair (col 71). Its glass just peeks above the canopy roof as a tease. The only way up is to turn back from the top crate (col 74) and jump up-left. The canopy is drawn in front of the player and fades to 35% while you're underneath it. An autopilot run through the level misses it; the up-left jump gets it and drops you straight back onto the course.
 - **Chicken-bucket hazard (owner's request).** The broken glass outside The Black Bear is a red-and-white fried-chicken bucket (no branding), just as deadly. Sprite hazards are listed in `HAZARD_SPRITES` in `src/level/LevelLoader.js` (texture and hitbox); the level builder places them with `hazard(kind, col)`.
