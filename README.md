@@ -4,6 +4,8 @@ A mobile-first 2D side-scrolling platformer prototype built with **Phaser 3** an
 
 The full spec is in [initial-build-brief.md](initial-build-brief.md).
 
+This repo is the next version of the game. v1 is frozen at [BL323/super-lad-alarm](https://github.com/BL323/super-lad-alarm) (live at https://bl323.github.io/super-lad-alarm/). The plan for this version is in [docs/vNext-improvements.md](docs/vNext-improvements.md); it's live at https://bl323.github.io/super-lad-alarm-next/.
+
 ## Status
 
 | Stage | State |
@@ -15,6 +17,7 @@ The full spec is in [initial-build-brief.md](initial-build-brief.md).
 | 5. Finish and flow | Done (plus a character select screen) |
 | 6. Mobile | Done |
 | 7. Polish and ship | Not started |
+| vNext: six levels | Planned ([docs/vNext-improvements.md](docs/vNext-improvements.md)) |
 
 ## Requirements
 
@@ -227,7 +230,9 @@ All placeholder textures are generated in `src/art/placeholders.js` under the ke
 
 ## Story and theme
 
-Background story: [docs/story.md](docs/story.md). Naylor's "Lad Alarm Train Crawl" across Dorset. How it maps onto the v1 level (agreed with the project owner):
+Background story: [docs/story.md](docs/story.md). Naylor's "Lad Alarm Train Crawl" across Dorset. The story now describes vNext: six levels, one per leg from Poole to Parkstone, with two Conductor fights. The plan is in [docs/vNext-improvements.md](docs/vNext-improvements.md). Until those levels are built, the game is still the v1 level below.
+
+How the story maps onto the v1 level (agreed with the project owner):
 
 | Brief element | In the game |
 | --- | --- |
