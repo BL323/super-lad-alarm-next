@@ -269,43 +269,50 @@ const PINT_COLORS = {
 
 function makePint(scene) {
   const { width, height, count } = PINT_FRAME;
+  makeSheet(scene, TEX.PINT, width, height, count, (ctx, i) => drawPint(ctx, i));
+}
+
+/**
+ * Draws pint frame `i` (0 = no glint) at 0,0 on anything with a canvas-style
+ * `fillStyle`/`fillRect`. Also used by scripts/build-icons.mjs for the
+ * home-screen icons.
+ */
+export function drawPint(ctx, i = 0) {
   const P = PINT_COLORS;
-  makeSheet(scene, TEX.PINT, width, height, count, (ctx, i) => {
-    PINT_ROWS.forEach(([x0, x1, part], y) => {
-      const w = x1 - x0 + 1;
-      switch (part) {
-        case 'headTop':
-          rect(ctx, P.headTop, x0, y, w, 1);
-          break;
-        case 'head':
-          rect(ctx, P.head, x0, y, w, 1);
-          rect(ctx, P.headTop, x0 + 2, y, w - 4, 1);
-          break;
-        case 'headShade':
-          rect(ctx, P.headShade, x0, y, w, 1);
-          break;
-        case 'base':
-          rect(ctx, P.base, x0, y, w, 1);
-          rect(ctx, P.baseHi, x0 + 2, y, w - 4, 1);
-          break;
-        case 'soft':
-          rect(ctx, P.stout, x0 + 1, y, w - 2, 1);
-          px(ctx, P.edge, x0, y);
-          px(ctx, P.edge, x1, y);
-          break;
-        default: // stout, ruby
-          rect(ctx, part === 'ruby' ? P.ruby : P.stout, x0, y, w, 1);
-          px(ctx, P.edge, x0, y);
-          px(ctx, P.edge, x1, y);
-      }
-    });
-    for (const [y, x] of Object.entries(PINT_SHEEN)) px(ctx, P.sheen, x, Number(y));
-    for (const y of [5, 6, 7]) px(ctx, P.rimShine, 10, y);
-    if (i > 0) {
-      const y = 3 + i * 2; // glint travelling down the curve: rows 5, 7, 9
-      px(ctx, C.white, PINT_SHEEN[y], y);
+  PINT_ROWS.forEach(([x0, x1, part], y) => {
+    const w = x1 - x0 + 1;
+    switch (part) {
+      case 'headTop':
+        rect(ctx, P.headTop, x0, y, w, 1);
+        break;
+      case 'head':
+        rect(ctx, P.head, x0, y, w, 1);
+        rect(ctx, P.headTop, x0 + 2, y, w - 4, 1);
+        break;
+      case 'headShade':
+        rect(ctx, P.headShade, x0, y, w, 1);
+        break;
+      case 'base':
+        rect(ctx, P.base, x0, y, w, 1);
+        rect(ctx, P.baseHi, x0 + 2, y, w - 4, 1);
+        break;
+      case 'soft':
+        rect(ctx, P.stout, x0 + 1, y, w - 2, 1);
+        px(ctx, P.edge, x0, y);
+        px(ctx, P.edge, x1, y);
+        break;
+      default: // stout, ruby
+        rect(ctx, part === 'ruby' ? P.ruby : P.stout, x0, y, w, 1);
+        px(ctx, P.edge, x0, y);
+        px(ctx, P.edge, x1, y);
     }
   });
+  for (const [y, x] of Object.entries(PINT_SHEEN)) px(ctx, P.sheen, x, Number(y));
+  for (const y of [5, 6, 7]) px(ctx, P.rimShine, 10, y);
+  if (i > 0) {
+    const y = 3 + i * 2; // glint travelling down the curve: rows 5, 7, 9
+    px(ctx, C.white, PINT_SHEEN[y], y);
+  }
 }
 
 function makeEspresso(scene) {

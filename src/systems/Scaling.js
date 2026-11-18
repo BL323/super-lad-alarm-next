@@ -1,13 +1,16 @@
 import { GAME_WIDTH, GAME_HEIGHT, SCALING } from '../config.js';
+import { isTouchDevice } from './device.js';
 
 // Sizes the #game frame so Phaser's FIT mode lands on an integer scale of the
 // base resolution, measured in physical (device) pixels, whenever at least 1×
-// fits. Otherwise the frame fills the available space and FIT scales freely.
+// fits. Otherwise (or on touch devices with SCALING.fillOnTouch) the frame
+// fills the available space and FIT scales freely.
 
 function frameSize(availW, availH) {
   const dpr = window.devicePixelRatio || 1;
   const devScale = Math.min((availW * dpr) / GAME_WIDTH, (availH * dpr) / GAME_HEIGHT);
-  if (!SCALING.integer || devScale < 1) {
+  const fill = SCALING.fillOnTouch && isTouchDevice();
+  if (!SCALING.integer || fill || devScale < 1) {
     return { width: availW, height: availH };
   }
   const s = Math.floor(devScale);

@@ -17,6 +17,7 @@ This repo is the next version of the game. v1 is frozen at [BL323/super-lad-alar
 | 5. Finish and flow | Done (plus a character select screen) |
 | 6. Mobile | Done |
 | 7. Polish and ship | Not started |
+| vNext stage M: mobile full screen | Steps 1–4 done (fill scaling on touch, Home Screen app, Android full screen, iPhone hint); step 5, the wider view, still to do |
 | vNext: six levels | Planned ([docs/vNext-improvements.md](docs/vNext-improvements.md)) |
 
 ## Requirements
@@ -169,6 +170,9 @@ All tuning lives in `BOSS` in `src/config.js`, with values per phase.
 - **Touch controls:** left and right at bottom left, jump at bottom right. They're 72 CSS px at 640×360 (the brief asks for at least 64), support several fingers at once, and move in away from notches and home bars.
 - **Browser gestures blocked:** no scrolling, pull-to-refresh, pinch or double-tap zoom, text selection or long-press menu. This uses CSS `touch-action: none` plus JS listeners, because iOS Safari ignores `user-scalable=no`.
 - **Viewport:** `100dvh` and `viewport-fit=cover`, and the canvas re-fits on resize and rotation.
+- **Fills the screen on phones.** On touch devices the game uses the largest scale that fits, even when it isn't a whole number (`SCALING.fillOnTouch`). Desktop keeps whole-number scaling.
+- **Full screen (Android):** tapping START asks the browser for full screen and a landscape lock. If the player leaves full screen, a FULL SCREEN button appears at the bottom right of the menu. A refusal changes nothing. See `src/systems/fullscreen.js`.
+- **Home Screen app (iPhone):** iPhone Safari can't make a page full screen, so the menu shows "FOR FULL SCREEN: SHARE - ADD TO HOME SCREEN" there. Opened from the Home Screen, the game runs with no browser bars, using `public/manifest.webmanifest` and the pint icons in `public/icons` (rebuild them with `npm run build:icons`).
 
 ## Manual device checklist (for the project owner)
 
@@ -182,6 +186,9 @@ To be completed on real phones (it can't be tested here):
 - [ ] Rotation re-fits the canvas; portrait shows the rotate overlay and the clock stops until you turn back
 - [ ] Pinch and double-tap never zoom the page (especially iOS Safari)
 - [ ] Frame rate stays smooth (60 fps) on a mid-range phone
+- [ ] Android Chrome: tapping START goes full screen in landscape; swiping out shows the FULL SCREEN button on the menu, and it goes back in
+- [ ] iPhone Safari: the menu shows the Add to Home Screen hint; added to the Home Screen, the game opens with the pint icon and no browser bars
+- [ ] Pixel art still looks sharp enough at the non-integer phone scale
 
 ## Levels
 
@@ -255,6 +262,8 @@ The game title stays **Super Lad Alarm**.
 - **Vite 8.** Phaser is split out with Rolldown's `output.codeSplitting` groups (Vite 8 replaces `manualChunks`).
 - **Hosting: GitHub Pages instead of Netlify** (owner's choice, once the repo was made public). Deploys run through GitHub Actions on every push to `main`. `netlify.toml` is kept as a fallback.
 - **Node 24.** It is the version installed locally and still an LTS line; `engines` is `>=24` so Node 26 LTS also works. Netlify and the Pages workflow (via `.nvmrc`) build with 24.
+- **Fill scaling on touch devices (vNext stage M).** Phones skip the whole-number snap below and use the largest scale that fits, because the snap could waste a third of the screen. Pixel-art (nearest-neighbour) rendering stays on, and uneven pixels are hard to see at phone densities. Desktop is unchanged.
+- **Full screen.** Requested only from a tap (START, or the menu's FULL SCREEN button) and only on touch devices that support it, never on desktop. iPhone Safari has no full-screen API for pages, so it gets the Home Screen hint and a web app manifest (`display: fullscreen`, landscape). The icon is the game's own pint drawn by `drawPint()` in `src/art/placeholders.js`, scaled up by a whole number. The old `black-fullscreen` status-bar value wasn't valid; it's now `black-translucent`.
 - **Integer scaling** is computed in *device* pixels: the `#game` frame is sized to the largest whole multiple of 320×180 that fits in physical pixels, then Phaser FIT fills that frame. Below 1× it falls back to plain FIT. Examples: 1920×1080 → 6×, 1280×720 → 4×, 844×390 → 2× (640×360 with letterboxing).
 - **Placeholder text** uses the system monospace font at 8 px (16 px for titles). It is readable but soft when upscaled; a code-generated pixel font can replace it later without touching callers (`src/ui/text.js`).
 - **Scene keys** live in `src/scenes/keys.js`; texture and animation keys in `src/assets.js`.

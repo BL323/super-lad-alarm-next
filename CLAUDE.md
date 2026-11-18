@@ -24,3 +24,4 @@
 - Listeners on `scene.events` 'update' can fire once more in the frame their owner is destroyed (snapshot emit); guard with `if (!this.scene) return`.
 - The finish is a pub door: put the `finish` object in the same column as its `pub` decor.
 - Sound: effects are synthesised in `src/audio/sfx.js` and built into the audio cache at boot (`Audio.registerSynthSounds`). Play with `Audio.play(key)`; a real file loaded under the same key replaces the synth. Don't add audio packages.
+- Phones scale to fill (`SCALING.fillOnTouch`); desktop keeps integer scaling. Full screen is only ever requested from a tap (`src/systems/fullscreen.js`); iPhone gets the Home Screen hint instead. Icons come from `npm run build:icons` (the game's pint art); don't hand-draw them.

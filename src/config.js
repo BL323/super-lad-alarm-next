@@ -14,9 +14,21 @@ export const GAME_HEIGHT = 180;
 export const TILE_SIZE = 16;
 
 // Scaling: Phaser FIT inside a frame snapped to an integer multiple of the base
-// resolution whenever at least 1x fits (see src/systems/Scaling.js).
+// resolution whenever at least 1x fits (see src/systems/Scaling.js). On touch
+// devices `fillOnTouch` drops the snapping and uses the largest scale that
+// fits: phone screens are dense enough that uneven pixels are hard to see, and
+// the whole-step snap can waste a third of the screen.
 export const SCALING = {
   integer: true,
+  fillOnTouch: true,
+};
+
+// Menu full-screen controls (src/systems/fullscreen.js). The button sits at the bottom right,
+// `x` px in from the right edge; the iPhone Home Screen hint sits under the
+// pint rule text.
+export const MENU_FULLSCREEN = {
+  button: { x: 46, y: 140, width: 76 },
+  hintY: 128,
 };
 
 // Arcade physics. One shared gravity value.
