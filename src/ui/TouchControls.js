@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, TOUCH } from '../config.js';
+import { GAME_HEIGHT, TOUCH } from '../config.js';
 import { safeAreaInGame, cssPerGamePixel } from './safeArea.js';
 
 // On-screen buttons: left and right together at bottom left, jump at bottom
@@ -35,18 +35,19 @@ export default class TouchControls {
     const safe = safeAreaInGame(scale);
     const size = Phaser.Math.Clamp(Math.ceil(TOUCH.minCssPx / cssPerGamePixel(scale)), TOUCH.minSize, TOUCH.maxSize);
     const pad = TOUCH.hitPadding;
+    const width = scale.width;
 
     const y = Math.round(GAME_HEIGHT - safe.bottom - TOUCH.margin - size);
     const leftX = Math.round(safe.left + TOUCH.margin);
     const rightX = leftX + size + TOUCH.gap;
-    const jumpX = Math.round(GAME_WIDTH - safe.right - TOUCH.margin - size);
+    const jumpX = Math.round(width - safe.right - TOUCH.margin - size);
     const split = rightX - TOUCH.gap / 2; // boundary between left and right zones
     const zoneTop = y - pad;
     const zoneH = GAME_HEIGHT - zoneTop;
 
     this.zones.left.setTo(0, zoneTop, split, zoneH);
     this.zones.right.setTo(split, zoneTop, rightX + size + pad - split, zoneH);
-    this.zones.jump.setTo(jumpX - pad, zoneTop, GAME_WIDTH - (jumpX - pad), zoneH);
+    this.zones.jump.setTo(jumpX - pad, zoneTop, width - (jumpX - pad), zoneH);
 
     this.drawButton(this.buttons.left.setPosition(leftX, y), size, 'left');
     this.drawButton(this.buttons.right.setPosition(rightX, y), size, 'right');

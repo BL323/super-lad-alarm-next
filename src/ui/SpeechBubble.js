@@ -1,5 +1,4 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH } from '../config.js';
 import { addPixelText } from './text.js';
 
 // A speech bubble that follows a sprite: dark rounded box, white pixel text,
@@ -43,7 +42,7 @@ export default class SpeechBubble extends Phaser.GameObjects.Container {
     const y = headY - 8 - this.boxH / 2;
     // Keep the box on screen; the tail still points at the speaker.
     const min = cam.scrollX + this.boxW / 2 + 2;
-    const max = cam.scrollX + GAME_WIDTH - this.boxW / 2 - 2;
+    const max = cam.scrollX + cam.width - this.boxW / 2 - 2;
     const x = Phaser.Math.Clamp(this.target.x, min, max);
     this.setPosition(Math.round(x), Math.round(y));
 

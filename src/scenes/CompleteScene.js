@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { SCENE } from './keys.js';
-import { GAME_WIDTH, TIMING } from '../config.js';
+import { TIMING } from '../config.js';
+import { restartOnWidthChange } from '../ui/relayout.js';
 import { playerTextureKey, playerAnimKey } from '../assets.js';
 import { addPixelText } from '../ui/text.js';
 import { addBackdrop, addPanel } from '../ui/backdrop.js';
@@ -25,7 +26,8 @@ export default class CompleteScene extends Phaser.Scene {
   create() {
     const r = this.result;
     const { groundY } = addBackdrop(this);
-    const cx = GAME_WIDTH / 2;
+    const cx = this.scale.width / 2;
+    restartOnWidthChange(this, () => this.result);
     const levelDef = getLevel(r.levelId);
 
     addPanel(this, cx, 68, 256, 120);

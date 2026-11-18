@@ -1,5 +1,3 @@
-import { GAME_WIDTH } from '../config.js';
-
 // Reads the device safe-area insets (notches, home bar) from CSS env() and
 // converts the part that overlaps the canvas into game pixels.
 
@@ -25,7 +23,7 @@ function cssInsets() {
 /** Safe-area insets that fall inside the canvas, in game pixels. */
 export function safeAreaInGame(scaleManager) {
   const b = scaleManager.canvasBounds; // CSS px, relative to the viewport
-  const s = b.width / GAME_WIDTH || 1;
+  const s = b.width / scaleManager.width || 1;
   const ins = cssInsets();
   return {
     top: Math.max(0, ins.top - b.y) / s,
@@ -37,5 +35,5 @@ export function safeAreaInGame(scaleManager) {
 
 /** How many CSS pixels one game pixel currently covers. */
 export function cssPerGamePixel(scaleManager) {
-  return scaleManager.canvasBounds.width / GAME_WIDTH || 1;
+  return scaleManager.canvasBounds.width / scaleManager.width || 1;
 }

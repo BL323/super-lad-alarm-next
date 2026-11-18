@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, PARALLAX } from '../config.js';
+import { MAX_GAME_WIDTH, GAME_HEIGHT, PARALLAX } from '../config.js';
 import { TEX, TILESET, pubTextureKey } from '../assets.js';
 import { ensureSignTexture } from '../art/placeholders.js';
 
@@ -50,9 +50,10 @@ export function loadLevel(scene, levelDef) {
   scene.physics.world.setBoundsCollision(true, true, true, false);
   scene.cameras.main.setBounds(0, 0, width, GAME_HEIGHT);
 
-  // Parallax hills, fixed to the camera and scrolled by hand.
+  // Parallax hills, fixed to the camera and scrolled by hand. As wide as the
+  // widest view, so a width change never needs it resized.
   const hills = scene.add
-    .tileSprite(0, PARALLAX.hillsBottom - 64, GAME_WIDTH, 64, TEX.HILLS)
+    .tileSprite(0, PARALLAX.hillsBottom - 64, MAX_GAME_WIDTH, 64, TEX.HILLS)
     .setOrigin(0)
     .setScrollFactor(0)
     .setDepth(DEPTH.backdrop);

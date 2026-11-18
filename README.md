@@ -17,7 +17,7 @@ This repo is the next version of the game. v1 is frozen at [BL323/super-lad-alar
 | 5. Finish and flow | Done (plus a character select screen) |
 | 6. Mobile | Done |
 | 7. Polish and ship | Not started |
-| vNext stage M: mobile full screen | Steps 1–4 done (fill scaling on touch, Home Screen app, Android full screen, iPhone hint); step 5, the wider view, still to do |
+| vNext stage M: mobile full screen | Done in code (fill scaling on touch, Home Screen app, Android full screen, iPhone hint, wider view); real-phone checks still to do |
 | vNext: six levels | Planned ([docs/vNext-improvements.md](docs/vNext-improvements.md)) |
 
 ## Requirements
@@ -171,6 +171,7 @@ All tuning lives in `BOSS` in `src/config.js`, with values per phase.
 - **Browser gestures blocked:** no scrolling, pull-to-refresh, pinch or double-tap zoom, text selection or long-press menu. This uses CSS `touch-action: none` plus JS listeners, because iOS Safari ignores `user-scalable=no`.
 - **Viewport:** `100dvh` and `viewport-fit=cover`, and the canvas re-fits on resize and rotation.
 - **Fills the screen on phones.** On touch devices the game uses the largest scale that fits, even when it isn't a whole number (`SCALING.fillOnTouch`). Desktop keeps whole-number scaling.
+- **Wider view on wide screens.** The height is always 180 game px; the width follows the screen's shape from 320 (16:9) up to 400 (20:9). An 844×390 phone gets 388 wide, so the game fills almost edge to edge. Rotating or resizing changes it live.
 - **Full screen (Android):** tapping START asks the browser for full screen and a landscape lock. If the player leaves full screen, a FULL SCREEN button appears at the bottom right of the menu. A refusal changes nothing. See `src/systems/fullscreen.js`.
 - **Home Screen app (iPhone):** iPhone Safari can't make a page full screen, so the menu shows "FOR FULL SCREEN: SHARE - ADD TO HOME SCREEN" there. Opened from the Home Screen, the game runs with no browser bars, using `public/manifest.webmanifest` and the pint icons in `public/icons` (rebuild them with `npm run build:icons`).
 
@@ -264,7 +265,8 @@ The game title stays **Super Lad Alarm**.
 - **Node 24.** It is the version installed locally and still an LTS line; `engines` is `>=24` so Node 26 LTS also works. Netlify and the Pages workflow (via `.nvmrc`) build with 24.
 - **Fill scaling on touch devices (vNext stage M).** Phones skip the whole-number snap below and use the largest scale that fits, because the snap could waste a third of the screen. Pixel-art (nearest-neighbour) rendering stays on, and uneven pixels are hard to see at phone densities. Desktop is unchanged.
 - **Full screen.** Requested only from a tap (START, or the menu's FULL SCREEN button) and only on touch devices that support it, never on desktop. iPhone Safari has no full-screen API for pages, so it gets the Home Screen hint and a web app manifest (`display: fullscreen`, landscape). The icon is the game's own pint drawn by `drawPint()` in `src/art/placeholders.js`, scaled up by a whole number. The old `black-fullscreen` status-bar value wasn't valid; it's now `black-translucent`.
-- **Integer scaling** is computed in *device* pixels: the `#game` frame is sized to the largest whole multiple of 320×180 that fits in physical pixels, then Phaser FIT fills that frame. Below 1× it falls back to plain FIT. Examples: 1920×1080 → 6×, 1280×720 → 4×, 844×390 → 2× (640×360 with letterboxing).
+- **Wider view (vNext stage M).** `gameWidthFor()` in `src/systems/Scaling.js` picks an even width between `GAME_WIDTH` (320) and `MAX_GAME_WIDTH` (400) from the space's aspect ratio, and changes it live with `scale.setGameSize()`. Phaser resizes the cameras itself. The HUD, touch buttons and boss bar re-lay out on resize; the menu, outfit select and Complete screens restart with the same data (`src/ui/relayout.js`). In the boss fight the camera bounds grow evenly round the 320 px arena so it stays centred, and re-centre if the width changes mid-fight. The hills strips are made `MAX_GAME_WIDTH` wide. Levels needed no changes: their ends and the Avocet door stay clear of the jump button at 400 wide.
+- **Integer scaling** is computed in *device* pixels: the `#game` frame is sized to the largest whole multiple of the game size that fits in physical pixels, then Phaser FIT fills that frame. Below 1× it falls back to plain FIT. Examples: 1920×1080 → 320 wide at 6×, 1280×720 → 320 at 4×, an 844×390 desktop window → 388 at 2×.
 - **Placeholder text** uses the system monospace font at 8 px (16 px for titles). It is readable but soft when upscaled; a code-generated pixel font can replace it later without touching callers (`src/ui/text.js`).
 - **Scene keys** live in `src/scenes/keys.js`; texture and animation keys in `src/assets.js`.
 - **Phaser console banner** is disabled to keep the console clean.

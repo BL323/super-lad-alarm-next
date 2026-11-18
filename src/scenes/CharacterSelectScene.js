@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { SCENE } from './keys.js';
-import { GAME_WIDTH } from '../config.js';
+import { restartOnWidthChange } from '../ui/relayout.js';
 import { CHARACTERS, getCharacter, playerTextureKey, playerAnimKey } from '../assets.js';
 import { addPixelText } from '../ui/text.js';
 import { addBackdrop } from '../ui/backdrop.js';
@@ -17,16 +17,21 @@ export default class CharacterSelectScene extends Phaser.Scene {
     super(SCENE.SELECT);
   }
 
+  init(data) {
+    this.startIndex = data?.index; // kept across a restart for a width change
+  }
+
   create() {
     addBackdrop(this);
-    const cx = GAME_WIDTH / 2;
+    const cx = this.scale.width / 2;
+    restartOnWidthChange(this, () => ({ index: this.index }));
     addPixelText(this, cx, 10, 'CHOOSE YOUR NAYLOR', { scale: 2, tint: 0xffcd75 }).setOrigin(0.5, 0);
     addPixelText(this, cx, 26, isTouchDevice() ? 'TAP AN OUTFIT, THEN GO' : 'LEFT/RIGHT TO CHOOSE - ENTER TO GO', {
       scale: 1,
     }).setOrigin(0.5, 0);
 
     const current = getCharacter(this.registry.get('characterId')).id; // falls back to the default (Casual)
-    this.index = CHARACTERS.findIndex((c) => c.id === current);
+    this.index = this.startIndex ?? CHARACTERS.findIndex((c) => c.id === current);
 
     this.cards = CHARACTERS.map((c, i) => {
       const x = cx + (i - (CHARACTERS.length - 1) / 2) * CARD.spacing;
@@ -42,7 +47,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     });
 
     new Button(this, 60, 154, 'BACK', () => this.back(), { width: 72 });
-    this.goButton = new Button(this, GAME_WIDTH - 60, 154, 'GO!', () => this.go(), { width: 72 }).setFocused(true);
+    this.goButton = new Button(this, this.scale.width - 60, 154, 'GO!', () => this.go(), { width: 72 }).setFocused(true);
 
     const kb = this.input.keyboard;
     kb.on('keydown-LEFT', () => this.select(this.index - 1));

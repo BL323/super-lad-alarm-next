@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { SCENE } from './keys.js';
-import { GAME_WIDTH, GAME_HEIGHT, MENU_FULLSCREEN } from '../config.js';
+import { GAME_HEIGHT, MENU_FULLSCREEN } from '../config.js';
+import { restartOnWidthChange } from '../ui/relayout.js';
 import { CHARACTERS, playerTextureKey, playerAnimKey } from '../assets.js';
 import { addPixelText } from '../ui/text.js';
 import { addBackdrop } from '../ui/backdrop.js';
@@ -21,7 +22,8 @@ export default class MenuScene extends Phaser.Scene {
 
   create() {
     const { groundY } = addBackdrop(this);
-    const cx = GAME_WIDTH / 2;
+    const cx = this.scale.width / 2;
+    restartOnWidthChange(this);
 
     addPixelText(this, cx, 22, 'SUPER LAD', { scale: 4, tint: 0xffcd75 }).setOrigin(0.5, 0);
     addPixelText(this, cx, 50, 'ALARM', { scale: 4, tint: 0xffcd75 }).setOrigin(0.5, 0);
@@ -70,7 +72,7 @@ export default class MenuScene extends Phaser.Scene {
     }
     if (!shouldOfferFullscreen()) return;
     const { x, y, width } = MENU_FULLSCREEN.button;
-    const button = new Button(this, GAME_WIDTH - x, y, 'FULL SCREEN', () => {
+    const button = new Button(this, this.scale.width - x, y, 'FULL SCREEN', () => {
       Audio.play('select');
       enterFullscreen();
     }, { width, scale: 1 });

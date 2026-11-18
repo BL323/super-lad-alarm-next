@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, HUD } from '../config.js';
+import { HUD } from '../config.js';
 import { TEX } from '../assets.js';
 import { addPixelText } from './text.js';
 import { formatTime, formatSeconds } from '../systems/GameState.js';
@@ -18,7 +18,7 @@ export default class Hud {
     this.coins = addPixelText(scene, 0, 0, '', { scale: HUD.textScale }).setOrigin(0, 0.5);
     this.timer = addPixelText(scene, 0, 0, '', { scale: HUD.textScale }).setOrigin(1, 0.5);
     this.shownTime = null;
-    this.toast = addPixelText(scene, GAME_WIDTH / 2, 40, '', { scale: HUD.textScale, tint: 0xffcd75 })
+    this.toast = addPixelText(scene, 0, 40, '', { scale: HUD.textScale, tint: 0xffcd75 })
       .setOrigin(0.5)
       .setAlpha(0);
 
@@ -53,7 +53,10 @@ export default class Hud {
     const safe = safeAreaInGame(this.scene.scale);
     const top = Math.round(safe.top + HUD.margin);
     const left = Math.round(safe.left + HUD.margin);
-    const right = Math.round(GAME_WIDTH - safe.right - HUD.margin);
+    const width = this.scene.scale.width;
+    const right = Math.round(width - safe.right - HUD.margin);
+    this.toast.x = Math.round(width / 2);
+    this.bossBar.container.x = Math.round(width / 2);
     this.icon.setPosition(left, top);
     const midY = top + 8; // centre of the 16 px icon
     this.coins.setPosition(left + 18, midY);

@@ -8,13 +8,17 @@ const params = new URLSearchParams(window.location.search);
 export const DEBUG = import.meta.env.DEV && params.has('debug');
 export const FORCE_TOUCH = params.has('touch');
 
-// Logical resolution (16:9) and tile size.
+// Logical resolution and tile size. The height is fixed; the width follows the
+// screen's shape between GAME_WIDTH (16:9) and MAX_GAME_WIDTH (20:9), so wide
+// phones see more of the level instead of black side bars. Read the current
+// width from `scene.scale.width`; GAME_WIDTH is only the narrowest view.
 export const GAME_WIDTH = 320;
+export const MAX_GAME_WIDTH = 400;
 export const GAME_HEIGHT = 180;
 export const TILE_SIZE = 16;
 
-// Scaling: Phaser FIT inside a frame snapped to an integer multiple of the base
-// resolution whenever at least 1x fits (see src/systems/Scaling.js). On touch
+// Scaling: Phaser FIT inside a frame snapped to an integer multiple of the
+// game size whenever at least 1x fits (see src/systems/Scaling.js). On touch
 // devices `fillOnTouch` drops the snapping and uses the largest scale that
 // fits: phone screens are dense enough that uneven pixels are hard to see, and
 // the whole-step snap can waste a third of the screen.

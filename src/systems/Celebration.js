@@ -1,4 +1,4 @@
-import { CONFETTI, GAME_WIDTH } from '../config.js';
+import { CONFETTI } from '../config.js';
 import { TEX, CONFETTI_FRAME } from '../assets.js';
 
 const FRAMES = [...Array(CONFETTI_FRAME.count).keys()];
@@ -26,7 +26,7 @@ export function celebrate(scene, x, y, depth) {
   const rain = scene.add
     .particles(0, 0, TEX.CONFETTI, {
       frame: FRAMES,
-      x: { min: cam.scrollX, max: cam.scrollX + GAME_WIDTH },
+      x: { min: cam.scrollX, max: cam.scrollX + cam.width },
       y: cam.scrollY - 4,
       speedY: { min: 30, max: 80 },
       speedX: { min: -25, max: 25 },

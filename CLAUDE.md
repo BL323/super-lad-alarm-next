@@ -25,3 +25,4 @@
 - The finish is a pub door: put the `finish` object in the same column as its `pub` decor.
 - Sound: effects are synthesised in `src/audio/sfx.js` and built into the audio cache at boot (`Audio.registerSynthSounds`). Play with `Audio.play(key)`; a real file loaded under the same key replaces the synth. Don't add audio packages.
 - Phones scale to fill (`SCALING.fillOnTouch`); desktop keeps integer scaling. Full screen is only ever requested from a tap (`src/systems/fullscreen.js`); iPhone gets the Home Screen hint instead. Icons come from `npm run build:icons` (the game's pint art); don't hand-draw them.
+- The game width varies (320–400, height fixed at 180): read `scene.scale.width` / `cam.width`, never `GAME_WIDTH` (that's only the narrowest view). Static screens call `restartOnWidthChange()` (`src/ui/relayout.js`); in-game UI re-lays out on the scale RESIZE event.

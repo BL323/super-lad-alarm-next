@@ -1,13 +1,14 @@
-import { GAME_WIDTH, GAME_HEIGHT, COLORS, PARALLAX } from '../config.js';
+import { GAME_HEIGHT, COLORS, PARALLAX } from '../config.js';
 import { TEX, TILESET } from '../assets.js';
 
 // Sky, slowly drifting hills and a strip of station platform, shared by the
 // menu screens so they match the level.
 export function addBackdrop(scene) {
   scene.cameras.main.setBackgroundColor(COLORS.sky);
-  const hills = scene.add.tileSprite(0, PARALLAX.hillsBottom - 64, GAME_WIDTH, 64, TEX.HILLS).setOrigin(0);
+  const width = scene.scale.width;
+  const hills = scene.add.tileSprite(0, PARALLAX.hillsBottom - 64, width, 64, TEX.HILLS).setOrigin(0);
   const T = TILESET.tileWidth;
-  for (let x = 0; x < GAME_WIDTH; x += T) {
+  for (let x = 0; x < width; x += T) {
     scene.add.image(x, GAME_HEIGHT - 2 * T, TEX.TILES, TILESET.tiles.platformTop).setOrigin(0);
     scene.add.image(x, GAME_HEIGHT - T, TEX.TILES, TILESET.tiles.platformBody).setOrigin(0);
   }

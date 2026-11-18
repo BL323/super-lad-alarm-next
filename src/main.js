@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import './style.css';
-import { GAME_WIDTH, GAME_HEIGHT, PHYSICS, INPUT, COLORS, GAME_TITLE } from './config.js';
+import { GAME_HEIGHT, PHYSICS, INPUT, COLORS, GAME_TITLE } from './config.js';
 import { setupScaling } from './systems/Scaling.js';
 import Audio from './systems/Audio.js';
 import { blockBrowserGestures, setupOrientationGuard } from './systems/mobile.js';
@@ -19,7 +19,7 @@ const game = new Phaser.Game({
   type: Phaser.AUTO,
   parent: 'game',
   title: GAME_TITLE,
-  width: GAME_WIDTH,
+  width: scaling.gameWidth,
   height: GAME_HEIGHT,
   backgroundColor: COLORS.background,
   pixelArt: true, // nearest-neighbour sampling, no antialiasing, rounded pixels

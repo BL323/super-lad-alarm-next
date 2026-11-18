@@ -59,6 +59,26 @@ export default class BossArena {
     player.on('died', () => {
       if (this.isActive) this.reset();
     });
+
+    // A width change mid-fight (rotating the phone) re-centres the locked camera.
+    this.cameraLocked = false;
+    const onResize = (gameSize) => {
+      if (this.cameraLocked) this.lockCamera(gameSize.width);
+    };
+    scene.scale.on(Phaser.Scale.Events.RESIZE, onResize);
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => scene.scale.off(Phaser.Scale.Events.RESIZE, onResize));
+  }
+
+  /**
+   * Keep the camera on the arena. When the view is wider than the arena (wide
+   * phones), the bounds grow evenly on both sides so the arena stays centred.
+   */
+  lockCamera(viewWidth = this.scene.cameras.main.width) {
+    const cam = this.scene.cameras.main;
+    const w = Math.max(this.zone.width, viewWidth);
+    const x = Phaser.Math.Clamp(this.zone.centerX - w / 2, 0, Math.max(0, this.levelWidth - w));
+    cam.setBounds(x, 0, w, GAME_HEIGHT);
+    this.cameraLocked = true;
   }
 
   get isActive() {
@@ -75,7 +95,7 @@ export default class BossArena {
     cam.stopFollow();
     cam.pan(this.zone.centerX, GAME_HEIGHT / 2, 500, 'Sine.easeInOut', false, (_c, progress) => {
       if (progress < 1 || this.status === 'idle') return;
-      cam.setBounds(this.zone.x, 0, this.zone.width, GAME_HEIGHT);
+      this.lockCamera();
       cam.startFollow(this.player, true, CAMERA.lerp, CAMERA.lerp);
     });
 
@@ -100,6 +120,7 @@ export default class BossArena {
   releaseCamera() {
     const cam = this.scene.cameras.main;
     cam.panEffect.reset();
+    this.cameraLocked = false;
     cam.setBounds(0, 0, this.levelWidth, GAME_HEIGHT);
     cam.startFollow(this.player, true, CAMERA.lerp, CAMERA.lerp);
   }
