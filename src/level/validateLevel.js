@@ -10,13 +10,21 @@
 // what that shorter jump can manage (same one-third margin).
 
 import { TILESET } from '../assets.js';
+import { PLAYER, PHYSICS, CROSSING } from '../config.js';
 
 export const LEVEL_RULES = {
   maxGapTiles: 3, // 48 px
   maxStepUpTiles: 2, // 32 px
   minHeadroomTiles: 2, // clear space between a surface and a low bridge above it
-  // The jump, for ceilings. Keep in sync with PLAYER and PHYSICS in config.js.
-  jump: { velocity: 300, gravity: 900, runSpeed: 110, bodyHeight: 13, margin: 2 / 3 },
+  maxCrumbleRun: 4, // crumbling crates in a row (they're stepping stones, never somewhere to stop)
+  // The jump, for ceilings, straight from config.js.
+  jump: {
+    velocity: -PLAYER.jumpVelocity,
+    gravity: PHYSICS.gravity,
+    runSpeed: PLAYER.maxRunSpeed,
+    bodyHeight: PLAYER.body.height,
+    margin: 2 / 3,
+  },
   bossTunings: ['first', 'final'], // keys of BOSS in config.js
   layer: 'ground',
   objectLayer: 'objects',
@@ -48,6 +56,25 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     let top = null;
     for (let r = rows - 1; r >= 0 && solid(c, r); r--) top = r;
     surface.push(top);
+  }
+
+  // Crumbling crates (objects, not tiles) are stepping stones over gaps: for
+  // the path they count as ground at their row, but nothing may rest on them.
+  const objAll = objectLayer.objects;
+  const crumbles = objAll.filter((o) => o.type === 'crumble' || o.class === 'crumble');
+  const crumbleCols = new Set();
+  for (const o of crumbles) {
+    const c = Math.floor(o.x / tw);
+    const r = Math.floor(o.y / tw);
+    if (crumbleCols.has(c)) errors.push(`two crumbling crates in col ${c}`);
+    crumbleCols.add(c);
+    if (surface[c] !== null) errors.push(`crumbling crate at col ${c} is over ground (it must bridge a gap)`);
+    else surface[c] = r;
+  }
+  let run = 0;
+  for (let c = 0; c <= cols; c++) {
+    run = crumbleCols.has(c) ? run + 1 : 0;
+    if (run === rules.maxCrumbleRun + 1) errors.push(`more than ${rules.maxCrumbleRun} crumbling crates in a row (at col ${c})`);
   }
 
   // Low bridges: the lowest girder row in each column (null = open sky).
@@ -184,12 +211,15 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   info.finishPub = finishes[0] ? (prop(pubs.find((p) => colOf(p.x) === colOf(finishes[0].x)) ?? {}, 'pub') ?? null) : null;
 
   for (const o of [...spawns, ...checkpoints, ...finishes, ...bosses]) {
+    if (crumbleCols.has(colOf(o.x))) errors.push(`${o.type} "${o.name}" at col ${colOf(o.x)} is on a crumbling crate`);
+  }
+  for (const o of [...spawns, ...checkpoints, ...finishes, ...bosses]) {
     const c = colOf(o.x);
     if (surface[c] === null) errors.push(`${o.type} "${o.name}" at col ${c} is over a gap`);
   }
 
   // Hazards: every surface hazard (glass, bucket) needs a safe tile at the same height either side.
-  const SURFACE_HAZARDS = ['glass', 'bucket', 'kebab'];
+  const SURFACE_HAZARDS = ['glass', 'bucket', 'kebab', 'cowpat'];
   const glassCols = new Set();
   for (const h of ofType('hazard').filter((h) => SURFACE_HAZARDS.includes(prop(h, 'kind')))) {
     for (let c = colOf(h.x); c <= colOf(h.x + h.width - 1); c++) glassCols.add(c);
@@ -201,6 +231,28 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
       if (surface[n] !== s) errors.push(`hazard at col ${c} has no safe landing tile at col ${n}`);
     }
     if (glassCols.has(c - 1) && glassCols.has(c + 1)) errors.push(`hazard at col ${c} is part of a run longer than 2`);
+  }
+
+  // Level crossings: flat road with a safe tile to wait on before the barrier,
+  // nothing to collect or trip over around it, and an open window long enough
+  // to walk across comfortably.
+  const crossings = ofType('crossing');
+  const crossMs = (w) => ((w + 3 * tw) / J.runSpeed) * 1000; // from the waiting tile to clear of the far side
+  for (const x of crossings) {
+    const c0 = colOf(x.x);
+    const c1 = colOf(x.x + x.width - 1);
+    const s0 = surface[c0];
+    for (let c = c0 - 2; c <= c1 + 1; c++) {
+      if (surface[c] === null || surface[c] !== s0) errors.push(`level crossing at cols ${c0}–${c1}: col ${c} is not flat road`);
+      if (glassCols.has(c)) errors.push(`level crossing at cols ${c0}–${c1}: hazard at col ${c}`);
+      if (crumbleCols.has(c)) errors.push(`level crossing at cols ${c0}–${c1}: crumbling crate at col ${c}`);
+    }
+    for (const o of [...spawns, ...checkpoints, ...finishes]) {
+      const c = colOf(o.x);
+      if (c >= c0 - 1 && c <= c1 + 1) errors.push(`${o.type} "${o.name}" is on the level crossing at col ${c}`);
+    }
+    const need = crossMs(x.width) * CROSSING.crossMargin;
+    if (CROSSING.openMs < need) errors.push(`level crossing at cols ${c0}–${c1} is open ${CROSSING.openMs} ms; crossing needs ${Math.round(need)} ms with margin`);
   }
 
   // Collectibles.
@@ -218,6 +270,8 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   info.hazards = ofType('hazard').length;
   info.ledges = ledges.length;
   info.lowBridgeCols = ceiling.filter((v) => v !== null).length;
+  info.crumbles = crumbles.length;
+  info.crossings = crossings.length;
   info.boss = bosses.length ? prop(bosses[0], 'kind') : null;
   return { errors, info };
 }

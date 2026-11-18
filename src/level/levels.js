@@ -16,6 +16,16 @@ export const LEVELS = [
     pub: 'brewhouse',
     mapKey: 'level-01',
     file: 'assets/levels/level-01.json',
+    next: 'level-02',
+  },
+  {
+    id: 'level-02',
+    number: 2,
+    from: 'Dorchester South',
+    to: 'Moreton',
+    pub: 'frampton',
+    mapKey: 'level-02',
+    file: 'assets/levels/level-02.json',
     next: null,
   },
 ];

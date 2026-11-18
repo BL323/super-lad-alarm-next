@@ -7,7 +7,7 @@
 - Phaser's `scale.refresh()` uses a cached parent size; call `scale.getParentBounds()` first (see `src/systems/Scaling.js`).
 - The Player reads only `VirtualInput.state`, never raw keys/pointers. All deaths go through `player.die()`.
 - Touch buttons cover the bottom corners: keep spawn points and level start/end content clear of them.
-- Low bridges are `girder` tiles (`bridge()` in `scripts/levels/lib.mjs`): solid ceilings the validator never treats as ground or ledges. Its jump numbers (`LEVEL_RULES.jump`) must match `PLAYER`/`PHYSICS` in config.
+- Low bridges are `girder` tiles (`bridge()` in `scripts/levels/lib.mjs`): solid ceilings the validator never treats as ground or ledges. `config.js` is importable from Node (no `window`/Vite env at import), so the validator and builders read tuning from it; keep it that way.
 - Test flags: `?touch` forces on-screen buttons on desktop; `?debug` (dev only) shows bodies and player state.
 - Phaser static bodies: `refreshBody()` resets the body size to the sprite, so call `body.setSize()` after it.
 - Story/theme: `docs/story.md`; the agreed mapping is in the README "Story and theme" section. Title stays "Super Lad Alarm".
@@ -24,6 +24,8 @@
 - Phaser Containers already have `x, y, z, w` (Transform): never store sizes as `this.w`/`this.h` on a Container (`setPosition()` resets `w` to 0).
 - Listeners on `scene.events` 'update' can fire once more in the frame their owner is destroyed (snapshot emit); guard with `if (!this.scene) return`.
 - The finish is a pub door: put the `finish` object in the same column as its `pub` decor.
+- Crumbling crates (`crumble()` objects, `src/systems/Crumbles.js`) bridge gap tiles only and all reset on player respawn. Level crossings (`crossing()`, `src/systems/LevelCrossing.js`): only the approach arm is ever solid, and only while the player is still before it; tuning in `CROSSING`.
+- If the preview pane is hidden, requestAnimationFrame doesn't run at all: drive boot and play with `__game.loop.sleep()` + `__game.step()` (Boot → Menu needs steps too).
 - Sound: effects are synthesised in `src/audio/sfx.js` and built into the audio cache at boot (`Audio.registerSynthSounds`). Play with `Audio.play(key)`; a real file loaded under the same key replaces the synth. Don't add audio packages.
 - Phones scale to fill (`SCALING.fillOnTouch`); desktop keeps integer scaling. Full screen is only ever requested from a tap (`src/systems/fullscreen.js`); iPhone gets the Home Screen hint instead. Icons come from `npm run build:icons` (the game's pint art); don't hand-draw them.
 - The game width varies (320–400, height fixed at 180): read `scene.scale.width` / `cam.width`, never `GAME_WIDTH` (that's only the narrowest view). Static screens call `restartOnWidthChange()` (`src/ui/relayout.js`); in-game UI re-lays out on the scale RESIZE event.

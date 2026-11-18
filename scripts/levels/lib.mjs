@@ -127,6 +127,17 @@ export function createLevel({ cols, properties = {} }) {
   const glass = (col, surfaceRow = SURFACE) => hazard('glass', col, surfaceRow);
   const bucket = (col, surfaceRow = SURFACE) => hazard('bucket', col, surfaceRow);
   const kebab = (col, surfaceRow = SURFACE) => hazard('kebab', col, surfaceRow);
+  const cowpat = (col, surfaceRow = SURFACE) => hazard('cowpat', col, surfaceRow);
+  /** A crumbling crate filling one gap tile at `row` (its top is the surface). Stepping stone only. */
+  const crumble = (col, row = SURFACE) => addObject('crumble', 'crumble', col * TS, row * TS, TS, TS);
+  /**
+   * A level crossing over the railway at cols c0–c1 of a flat road at
+   * `surfaceRow`. `offsetMs` shifts where in its open/warn/closed cycle it starts.
+   */
+  const crossing = (c0, c1, offsetMs = 0, surfaceRow = SURFACE) => {
+    for (let c = c0; c <= c1; c++) set('ground', c, surfaceRow, T.crossingDeck);
+    return addObject('crossing', 'crossing', c0 * TS, surfaceRow * TS, (c1 - c0 + 1) * TS, 0, { offsetMs });
+  };
   /** The level's boss. `tuning` names an entry of BOSS in src/config.js ('first' or 'final'). */
   const boss = (col, kind, surfaceRow = SURFACE, tuning = 'first') =>
     addObject('boss', kind, ...feet(col, surfaceRow), 0, 0, { kind, tuning });
@@ -139,6 +150,8 @@ export function createLevel({ cols, properties = {} }) {
   const shop = (col, text) => addObject('shop', text, ...feet(col), 0, 0, { text }, decor);
   const lamp = (col) => addObject('lamp', 'lamp', ...feet(col), 0, 0, {}, decor);
   const stall = (col) => addObject('stall', 'stall', ...feet(col), 0, 0, {}, decor);
+  /** A Friesian grazing by the line; `flip` faces it left. */
+  const cow = (col, flip = false) => addObject('cow', 'cow', ...feet(col), 0, 0, { flip }, decor);
   const easel = (col) => addObject('easel', 'easel', col * TS + TS / 2, (SURFACE + 1) * TS + 4, 0, 0, {}, decor);
 
   function toMap() {
@@ -221,6 +234,9 @@ export function createLevel({ cols, properties = {} }) {
     glass,
     bucket,
     kebab,
+    cowpat,
+    crumble,
+    crossing,
     boss,
     zone,
     secret,
@@ -231,6 +247,7 @@ export function createLevel({ cols, properties = {} }) {
     shop,
     lamp,
     stall,
+    cow,
     toMap,
   };
 }

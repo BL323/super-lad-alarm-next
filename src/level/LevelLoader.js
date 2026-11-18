@@ -20,6 +20,7 @@ export const HAZARD_SPRITES = {
   glass: { texture: TEX.GLASS, body: [12, 6, 2, 10] },
   bucket: { texture: TEX.BUCKET, body: [10, 8, 3, 8] }, // fried-chicken bucket outside The Black Bear
   kebab: { texture: TEX.KEBAB, body: [12, 6, 2, 9] }, // dropped kebab on Dorchester's high street
+  cowpat: { texture: TEX.COWPAT, body: [10, 5, 3, 11] }, // on Moreton's lanes
 };
 
 const prop = (obj, name) => obj.properties?.find((p) => p.name === name)?.value;
@@ -81,6 +82,7 @@ export function loadLevel(scene, levelDef) {
     shop: standing((d) => ensureShopTexture(scene, prop(d, 'text'))),
     lamp: standing(() => TEX.LAMP, DEPTH.decor + 1),
     stall: standing(() => TEX.STALL, DEPTH.decor + 1),
+    cow: (d) => standing(() => TEX.COW, DEPTH.decor + 1)(d).setFlipX(!!prop(d, 'flip')),
   };
   for (const d of decor) {
     const t = typeOf(d);
@@ -127,5 +129,7 @@ export function loadLevel(scene, levelDef) {
     secrets: ofType('secret').map(rectOf),
     boss: bossObj ? { kind: prop(bossObj, 'kind'), tuning: prop(bossObj, 'tuning'), x: bossObj.x, y: bossObj.y } : null,
     collectibles: ofType('collectible').map((o) => ({ x: o.x, y: o.y, type: prop(o, 'type') })),
+    crumbles: ofType('crumble').map((o) => ({ x: o.x, y: o.y })),
+    crossings: ofType('crossing').map((o) => ({ x: o.x, y: o.y, width: o.width, offsetMs: prop(o, 'offsetMs') ?? 0 })),
   };
 }

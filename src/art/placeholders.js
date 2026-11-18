@@ -20,9 +20,11 @@ import {
   CONDUCTOR_FRAME,
   FINISH_FRAME,
   CONFETTI_FRAME,
+  CROSSING_LIGHTS_FRAME,
   TILESET,
 } from '../assets.js';
 import { drawPixelText, measurePixelText } from './pixelFont.js';
+import { CROSSING } from '../config.js';
 
 // --- Player ---------------------------------------------------------------
 // Every character is Naylor in a different outfit. A look = head rows (0–6)
@@ -602,6 +604,15 @@ function makeTiles(scene) {
         rect(ctx, '#3a3a46', 0, 0, w, h);
         [[2, 3], [9, 7], [5, 12], [13, 10]].forEach(([x, y]) => px(ctx, '#4e4e5c', x, y));
         break;
+      case t.crossingDeck:
+        // Rubber crossing panels with the two rail heads set flush, seen end-on.
+        rect(ctx, '#2a2c3c', 0, 0, w, h);
+        rect(ctx, '#4e4e5c', 0, 0, w, 1);
+        rect(ctx, '#c2c3c7', 3, 0, 3, 2); // rail heads
+        rect(ctx, '#c2c3c7', 10, 0, 3, 2);
+        rect(ctx, '#5f574f', 1, 4, 14, 2); // sleeper below
+        rect(ctx, '#ffec27', 0, 12, w, 1); // yellow box marking
+        break;
     }
   });
 }
@@ -814,6 +825,178 @@ export function ensureShopTexture(scene, text) {
   return key;
 }
 
+// --- Moreton: lanes, fields and the level crossing ---------------------------
+
+// A crate that has seen better days: the usual crate, split and splintered.
+function makeCrumble(scene) {
+  makeImage(scene, TEX.CRUMBLE, 16, 16, (ctx) => {
+    rect(ctx, C.woodDark, 0, 0, 16, 16);
+    rect(ctx, C.wood, 1, 1, 14, 14);
+    rect(ctx, C.woodDark, 1, 5, 14, 1);
+    rect(ctx, C.woodDark, 1, 10, 14, 1);
+    // Cracks instead of the cross brace.
+    for (const [x, y] of [[4, 1], [5, 2], [5, 3], [6, 4], [7, 6], [7, 7], [8, 8], [9, 9], [9, 11], [10, 12], [11, 13], [12, 14]]) px(ctx, C.ink, x, y);
+    for (const [x, y] of [[12, 2], [11, 3], [11, 4], [10, 6], [3, 11], [4, 12], [3, 13]]) px(ctx, C.ink, x, y);
+    px(ctx, C.orange, 2, 2);
+    px(ctx, C.orange, 13, 8);
+    rect(ctx, '#c2c3c7', 0, 0, 2, 1); // a missing corner
+    ctx.clearRect(14, 0, 2, 1);
+    ctx.clearRect(15, 1, 1, 1);
+  });
+}
+
+// A cowpat on the lane: low, flat and unmistakable.
+function makeCowpat(scene) {
+  makeImage(scene, TEX.COWPAT, 16, 16, (ctx) => {
+    rect(ctx, '#4a3418', 2, 13, 12, 3);
+    rect(ctx, '#5d4420', 3, 11, 10, 3);
+    rect(ctx, '#6e5228', 5, 10, 6, 2);
+    rect(ctx, '#7e6232', 6, 9, 3, 1);
+    px(ctx, '#8f7a44', 5, 12);
+    px(ctx, '#8f7a44', 10, 11);
+    px(ctx, C.ink, 9, 7); // a fly
+    px(ctx, C.ink, 4, 8);
+  });
+}
+
+// Friesian cow, 32×20, grazing side-on (head down, to the right).
+function makeCow(scene) {
+  makeImage(scene, TEX.COW, 32, 20, (ctx) => {
+    rect(ctx, C.white, 3, 4, 22, 10); // body
+    rect(ctx, C.ink, 6, 4, 6, 5); // patches
+    rect(ctx, C.ink, 15, 8, 7, 5);
+    rect(ctx, C.ink, 20, 4, 3, 3);
+    rect(ctx, C.ink, 2, 5, 1, 7); // tail
+    rect(ctx, C.ink, 1, 11, 2, 2);
+    for (const x of [5, 9, 19, 23]) rect(ctx, x === 9 || x === 23 ? C.white : C.ink, x, 14, 2, 5); // legs
+    for (const x of [5, 9, 19, 23]) rect(ctx, C.darkGrey, x, 19, 2, 1); // hooves
+    rect(ctx, '#f4b8c8', 11, 14, 4, 2); // udder
+    rect(ctx, C.white, 25, 7, 4, 4); // neck, head lowered to the grass
+    rect(ctx, C.ink, 26, 10, 5, 6); // head
+    rect(ctx, '#f4b8c8', 29, 14, 3, 2); // muzzle
+    px(ctx, C.white, 28, 11); // eye shine
+    rect(ctx, C.cream, 25, 9, 1, 2); // horn
+  });
+}
+
+// Level-crossing warning lights on a post, 16×40: a pair of red lamps under a
+// St Andrew's cross. Frames: both off, left lit, right lit (they alternate).
+function makeCrossingLights(scene) {
+  const { width, height } = CROSSING_LIGHTS_FRAME;
+  makeSheet(scene, TEX.CROSSING_LIGHTS, width, height, 3, (ctx, i) => {
+    rect(ctx, C.darkGrey, 7, 10, 2, 30); // post
+    rect(ctx, C.darkGrey, 5, 38, 6, 2);
+    for (let d = 0; d < 8; d++) {
+      // the cross
+      px(ctx, C.white, 4 + d, d);
+      px(ctx, C.white, 11 - d, d);
+      px(ctx, '#e43b44', 4 + d, d + 1);
+      px(ctx, '#e43b44', 11 - d, d + 1);
+    }
+    rect(ctx, C.ink, 1, 12, 14, 7); // lamp board
+    const lamp = (x, lit) => {
+      rect(ctx, lit ? '#ff004d' : '#4a1020', x, 13, 5, 5);
+      if (lit) px(ctx, '#ffccd8', x + 1, 14);
+    };
+    lamp(2, i === CROSSING_LIGHTS_FRAME.left);
+    lamp(9, i === CROSSING_LIGHTS_FRAME.right);
+  });
+}
+
+// The train that runs through a level crossing, side-on and facing right:
+// a tail lamp, `carriages` coaches built from the carriage tiles (so they
+// match the trains you ride), and a diesel locomotive with a yellow nose and
+// headlight. 64 px tall, bogies at the bottom.
+const LOCO_W = 56;
+const COACH_W = 160; // 10 tiles
+const GANGWAY = 4;
+export const crossingTrainWidth = (carriages) => LOCO_W + carriages * (COACH_W + GANGWAY);
+
+function makeCrossingTrain(scene, carriages) {
+  const W = crossingTrainWidth(carriages);
+  const tiles = scene.textures.get(TEX.TILES).getSourceImage();
+  const T = TILESET.tiles;
+  const tile = (ctx, index, x, y) => ctx.drawImage(tiles, index * 16, 0, 16, 16, x, y, 16, 16);
+  makeImage(scene, TEX.CROSSING_TRAIN, W, 64, (ctx) => {
+    for (let k = 0; k < carriages; k++) {
+      const x0 = k * (COACH_W + GANGWAY);
+      for (let c = 0; c < 10; c++) {
+        const x = x0 + c * 16;
+        const isDoor = c === 1 || c === 8;
+        tile(ctx, c === 0 ? T.roofLeft : c === 9 ? T.roofRight : T.roofMid, x, 0);
+        tile(ctx, isDoor ? T.carriageDoor : T.carriageWindow, x, 16);
+        tile(ctx, isDoor ? T.carriageDoor : T.carriageLower, x, 32);
+        tile(ctx, [1, 2, 7, 8].includes(c) ? T.bogie : T.underframe, x, 48);
+      }
+      rect(ctx, C.ink, x0 + COACH_W, 20, GANGWAY, 24); // gangway bellows
+    }
+    rect(ctx, '#e43b44', 0, 34, 2, 3); // tail lamp on the last coach
+    px(ctx, '#ffccd8', 0, 34);
+
+    // Locomotive: rail-blue body, cab windows, yellow warning nose with a headlight.
+    const lx = W - LOCO_W;
+    rect(ctx, '#6b6b73', lx, 0, LOCO_W - 10, 5); // roof
+    rect(ctx, '#9a9aa2', lx, 0, LOCO_W - 10, 1);
+    rect(ctx, '#1d4b8a', lx, 5, LOCO_W - 14, 43); // body
+    for (const gx of [lx + 6, lx + 18]) rect(ctx, '#163a6b', gx, 12, 8, 14); // grilles
+    rect(ctx, C.white, lx + 2, 30, LOCO_W - 18, 2); // body stripe
+    // Nose: slopes back towards the roof, all yellow.
+    for (let y = 0; y < 48; y++) {
+      const reach = Math.min(14, 4 + Math.floor(y / 2));
+      rect(ctx, '#ffcd00', W - 14, y + 2, reach, 1);
+    }
+    rect(ctx, C.glassBlue, W - 13, 8, 8, 9); // windscreen
+    rect(ctx, C.glassHi, W - 12, 9, 2, 1);
+    rect(ctx, C.ink, W - 14, 18, 14, 1);
+    rect(ctx, C.white, W - 5, 36, 4, 4); // headlight
+    rect(ctx, '#fff4b0', W - 4, 37, 2, 2);
+    rect(ctx, C.ink, W - 14, 44, 14, 4); // buffer beam
+    rect(ctx, C.darkGrey, W - 2, 42, 2, 3); // buffer
+    for (const bx of [lx + 4, lx + 30]) tile(ctx, T.bogie, bx, 48);
+    rect(ctx, C.ink, lx, 48, LOCO_W, 2);
+  });
+}
+
+// Tall hedgerow, 14×68, either side of a level crossing: the train comes out
+// from behind one and disappears behind the other.
+function makeHedge(scene) {
+  makeImage(scene, TEX.HEDGE, 14, 68, (ctx) => {
+    rect(ctx, '#2b7a38', 1, 4, 12, 64);
+    for (let y = 2; y < 68; y += 5) {
+      for (let x = (y / 5) % 2 ? 0 : 2; x < 14; x += 5) {
+        rect(ctx, '#3fa34d', x, y, 3, 3);
+        px(ctx, '#5dbb63', x, y);
+      }
+    }
+    for (const [x, y] of [[3, 12], [9, 30], [4, 47], [10, 58]]) px(ctx, '#e43b44', x, y); // hawthorn berries
+    rect(ctx, '#1e5a28', 1, 64, 12, 4);
+  });
+}
+
+// Soft headlight glow, 32×32: concentric rings fading out from a white core.
+function makeHeadlight(scene) {
+  makeImage(scene, TEX.HEADLIGHT, 32, 32, (ctx) => {
+    for (let r = 16; r > 0; r--) {
+      ctx.globalAlpha = 0.08 + (1 - r / 16) * 0.5;
+      ctx.fillStyle = r < 4 ? '#ffffff' : '#fff4b0';
+      ctx.beginPath();
+      ctx.arc(16, 16, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  });
+}
+
+// Barrier arm, 48×4, red and white with a lamp on the tip; drawn level
+// (lowered) and rotated up to raise it. Its pivot is the left end.
+function makeBarrier(scene) {
+  makeImage(scene, TEX.BARRIER, 48, 4, (ctx) => {
+    for (let x = 0; x < 48; x++) rect(ctx, Math.floor(x / 6) % 2 ? C.white : '#e43b44', x, 0, 1, 4);
+    rect(ctx, C.ink, 0, 3, 48, 1);
+    rect(ctx, '#ff004d', 45, 0, 3, 2);
+  });
+}
+
 // --- Train Conductor (boss) -------------------------------------------------
 // Navy uniform, peaked cap with a gold band, grey moustache, silver whistle.
 // N navy, n sleeve, G gold, S skin, r cheeks, K black, W shirt, M moustache,
@@ -1005,6 +1188,13 @@ const BUILDERS = {
   [TEX.KEBAB]: makeKebab,
   [TEX.LAMP]: makeLamp,
   [TEX.STALL]: makeStall,
+  [TEX.CRUMBLE]: makeCrumble,
+  [TEX.COWPAT]: makeCowpat,
+  [TEX.COW]: makeCow,
+  [TEX.CROSSING_LIGHTS]: makeCrossingLights,
+  [TEX.BARRIER]: makeBarrier,
+  [TEX.HEADLIGHT]: makeHeadlight,
+  [TEX.HEDGE]: makeHedge,
   [TEX.CHECKPOINT]: makeCheckpoint,
   [TEX.FINISH]: makeFinish,
   [TEX.CONFETTI]: makeConfetti,
@@ -1031,4 +1221,6 @@ export function createPlaceholderTextures(scene) {
   for (const [id, def] of Object.entries(HOUSES)) {
     if (!scene.textures.exists(houseTextureKey(id))) makeHouse(scene, id, def);
   }
+  // Built from the carriage tiles, so it comes after them.
+  if (!scene.textures.exists(TEX.CROSSING_TRAIN)) makeCrossingTrain(scene, CROSSING.trainCarriages);
 }

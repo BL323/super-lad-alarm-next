@@ -9,6 +9,14 @@ export const TEX = {
   GLASS: 'glass', // broken-glass hazard
   BUCKET: 'chicken-bucket', // fried-chicken bucket hazard (outside The Black Bear)
   KEBAB: 'kebab', // dropped-kebab hazard (Dorchester's high street)
+  COWPAT: 'cowpat', // cowpat hazard (Moreton's lanes)
+  COW: 'cow', // Friesian cow by the line (scenery)
+  CRUMBLE: 'crumble-crate', // cracked crate that gives way (src/systems/Crumbles.js)
+  CROSSING_LIGHTS: 'crossing-lights', // level-crossing warning lights: off / left lit / right lit
+  BARRIER: 'barrier', // level-crossing barrier arm (red and white), drawn raised; rotated down
+  CROSSING_TRAIN: 'crossing-train', // the train through the level crossing: tail, carriages, locomotive nose (facing right)
+  HEADLIGHT: 'headlight', // soft glow of an approaching train's headlight
+  HEDGE: 'hedge', // tall Dorset hedgerow either side of a level crossing (the train runs behind it)
   LAMP: 'lamp', // Victorian street lamp (village scenery)
   STALL: 'market-stall', // striped market stall (village scenery; crates in front are the steps)
   CHECKPOINT: 'checkpoint', // railway signal: red → green
@@ -53,6 +61,7 @@ export const PUBS = {
   brewhouse: { name: 'BREWHOUSE', wall: 'brick', roof: '#5f574f', chimney: true },
   'black-bear': { name: 'THE BLACK BEAR', wall: 'render', roof: '#1a1c2c', angryLocals: true },
   'old-granary': { name: 'THE OLD GRANARY', wall: 'brick', roof: '#7e2553' },
+  frampton: { name: 'FRAMPTON', wall: 'render', roof: '#5f574f', chimney: true },
   avocet: { name: 'THE AVOCET', wall: 'render', roof: '#29366f' },
 };
 
@@ -163,9 +172,12 @@ export const TILESET = {
     parapet: 19, // railing on top of a low bridge (background)
     pavement: 20, // village pavement with a kerb (surface)
     road: 21, // tarmac under the pavement
+    crossingDeck: 22, // level-crossing road surface with the rails set in it
   },
-  count: 22,
+  count: 23,
 };
+
+export const CROSSING_LIGHTS_FRAME = { width: 16, height: 40, off: 0, left: 1, right: 2 };
 
 // Animation keys, referenced by name everywhere else.
 export const ANIM = {

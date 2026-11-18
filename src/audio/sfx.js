@@ -173,4 +173,6 @@ export const SOUNDS = {
   // Menus
   select: () => seq([[N.A5, 0.04], [N.E6, 0.07]], { duty: 0.25, vol: 0.15 }),
   move: () => voice({ from: N.A4, dur: 0.04, duty: 0.25, vol: 0.12 }),
+  crumble: () => voice({ wave: 'noise', from: 900, to: 200, dur: 0.25, vol: 0.18, release: 0.12, lowpass: 0.5 }), // crate giving way
+  bell: () => seq([[N.E6, 0.07], [N.C6, 0.07]], { duty: 0.5, vol: 0.1, release: 0.04 }), // level-crossing warning
 };

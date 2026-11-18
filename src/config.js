@@ -4,8 +4,10 @@ export const GAME_TITLE = 'Super Lad Alarm';
 
 // URL flags for testing: ?debug shows physics bodies and player state (dev
 // builds only); ?touch forces the on-screen buttons on a non-touch device.
-const params = new URLSearchParams(window.location.search);
-export const DEBUG = import.meta.env.DEV && params.has('debug');
+// Safe to import from Node too (the level builders and validator read the
+// jump and crossing numbers from here), where there's no window or Vite env.
+const params = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search);
+export const DEBUG = !!import.meta.env?.DEV && params.has('debug');
 export const FORCE_TOUCH = params.has('touch');
 
 // Logical resolution and tile size. The height is fixed; the width follows the
@@ -149,6 +151,26 @@ export const DEFAULT_BOSS_TUNING = 'first';
 // Delay between reaching the pub door and the Complete screen (the lad walks
 // in, confetti falls, "CHEERS!").
 export const FINISH_DELAY_MS = 2600;
+
+// Crumbling crates (src/systems/Crumbles.js): land on one and it shakes for
+// `shakeMs`, then drops away. It comes back `returnMs` later, or at once when
+// the player respawns.
+export const CRUMBLE = { shakeMs: 450, fallMs: 350, returnMs: 3000, shakePx: 1 };
+
+// Level crossings (src/systems/LevelCrossing.js): open → warning (lights, bell,
+// barrier lowering) → closed while a train passes (deadly) → raising → open.
+// The validator checks a player can cross comfortably inside `openMs`.
+// The train runs left to right through the crossing: its headlight glows at
+// the left edge through the warning, then the nose enters, the carriages pass
+// and the tail leaves on the right, all within `trainMs` (the deadly part).
+export const CROSSING = {
+  openMs: 2600,
+  warnMs: 1400,
+  trainMs: 2200,
+  raiseMs: 400,
+  trainCarriages: 3, // carriages behind the locomotive (sets the train's length, and so its speed)
+  crossMargin: 2.5,
+};
 
 // Level picker rows (game px) and the "next stop" screen shown before each level.
 export const LEVEL_SELECT = { top: 38, rowHeight: 16, rowWidth: 292 }; // six rows end above the buttons at y 140
