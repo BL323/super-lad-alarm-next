@@ -4,9 +4,10 @@ import { TEX } from '../assets.js';
 import Conductor, { BossState } from '../entities/Conductor.js';
 import { DEPTH } from '../level/LevelLoader.js';
 import Audio from './Audio.js';
+import Lobber from './Lobber.js';
 
-// The Train Conductor fight on the roof of his train (the level's end zone),
-// between Wareham and Parkstone.
+// The Train Conductor fight on the roof of his train (the level's `end-zone`):
+// level 3 (BOSS.first, between Moreton and Wool) and level 6 (BOSS.final).
 //
 // Entering the zone starts it: the camera pans to and locks on the arena,
 // walls close on both sides, and he begins after a short intro. Tickets
@@ -14,7 +15,7 @@ import Audio from './Audio.js';
 // back to full health, the walls open, the camera follows again) and the
 // player walks back in from the checkpoint beside the track. Three stomps
 // while he's dizzy beat him; the walls open, the camera follows again, and
-// the player hops off at Parkstone to the (now unlocked) pub door.
+// the player hops off and goes on to the (now unlocked) pub door.
 export default class BossArena {
   /**
    * @param {Phaser.Scene} scene GameScene
@@ -38,7 +39,12 @@ export default class BossArena {
       return w;
     });
 
-    this.tickets = scene.physics.add.group({ allowGravity: true });
+    this.tickets = new Lobber(scene, {
+      player,
+      texture: TEX.TICKET,
+      flightMs: this.tuning.ticketFlightMs,
+      isLive: () => this.isActive,
+    });
 
     this.boss = new Conductor(
       scene,
@@ -54,9 +60,6 @@ export default class BossArena {
     physics.collider(this.boss, this.walls);
     physics.collider(player, this.walls);
     physics.overlap(player, this.boss, () => this.onTouchBoss());
-    physics.overlap(player, this.tickets, () => {
-      if (this.isActive) player.die();
-    });
 
     // Dying anywhere during the fight resets it.
     player.on('died', () => {
@@ -130,9 +133,7 @@ export default class BossArena {
 
   update(time, delta) {
     this.boss.update(time, delta);
-    for (const t of this.tickets.getChildren()) {
-      if (t.y >= this.floorY - 2) this.landTicket(t);
-    }
+    this.tickets.update();
   }
 
   onTouchBoss() {
@@ -176,36 +177,10 @@ export default class BossArena {
   /** Lob a ticket from (x, y) so it lands on the floor at targetX after ticketFlightMs. */
   throwTicket(x, y, targetX) {
     const tx = Phaser.Math.Clamp(targetX, this.zone.x + 8, this.zone.right - 8);
-    const T = this.tuning.ticketFlightMs / 1000;
-    const g = this.scene.physics.world.gravity.y;
-    const vy = (this.floorY - 2 - y - 0.5 * g * T * T) / T;
-    const vx = (tx - x) / T;
-
-    const marker = this.scene.add
-      .image(tx, this.floorY, TEX.TICKET_MARKER)
-      .setOrigin(0.5, 1)
-      .setAlpha(0.25)
-      .setDepth(DEPTH.props);
-    this.scene.tweens.add({ targets: marker, alpha: 0.6, duration: 200, yoyo: true, repeat: -1 });
-
-    const ticket = this.tickets.create(x, y, TEX.TICKET).setDepth(DEPTH.player + 1);
-    ticket.body.setSize(8, 5).setVelocity(vx, vy);
-    ticket.setAngularVelocity(vx > 0 ? 540 : -540);
-    ticket.marker = marker;
-  }
-
-  landTicket(ticket) {
-    ticket.marker?.destroy();
-    const { x } = ticket;
-    ticket.destroy();
-    const puff = this.scene.add.image(x, this.floorY - 2, TEX.TICKET).setDepth(DEPTH.props).setAngle(Phaser.Math.Between(-20, 20));
-    this.scene.tweens.add({ targets: puff, alpha: 0, y: puff.y - 4, duration: 300, onComplete: () => puff.destroy() });
+    this.tickets.throw(x, y, tx, this.floorY);
   }
 
   clearTickets() {
-    for (const t of [...this.tickets.getChildren()]) {
-      t.marker?.destroy();
-      t.destroy();
-    }
+    this.tickets.clear();
   }
 }

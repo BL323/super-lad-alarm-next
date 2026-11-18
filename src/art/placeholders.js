@@ -604,6 +604,16 @@ function makeTiles(scene) {
         rect(ctx, '#3a3a46', 0, 0, w, h);
         [[2, 3], [9, 7], [5, 12], [13, 10]].forEach(([x, y]) => px(ctx, '#4e4e5c', x, y));
         break;
+      case t.slate:
+        // Slate roof seen from the side: a lead ridge on top, rows of slates below.
+        rect(ctx, '#4a4a58', 0, 0, w, h);
+        rect(ctx, '#83769c', 0, 0, w, 2); // ridge
+        rect(ctx, '#2e2e3a', 0, 2, w, 1);
+        for (let y = 5; y < h; y += 4) {
+          rect(ctx, '#3a3a46', 0, y, w, 1);
+          for (let x = (y % 8 === 5 ? 0 : 4); x < w; x += 8) rect(ctx, '#3a3a46', x, y - 3, 1, 3);
+        }
+        break;
       case t.crossingDeck:
         // Rubber crossing panels with the two rail heads set flush, seen end-on.
         rect(ctx, '#2a2c3c', 0, 0, w, h);
@@ -973,6 +983,21 @@ function makeHedge(scene) {
   });
 }
 
+// Beer mat, 10×10: a round card with a red ring, thrown frisbee-style.
+function makeBeerMat(scene) {
+  makeImage(scene, TEX.BEERMAT, 10, 10, (ctx) => {
+    for (let y = 0; y < 10; y++) {
+      const half = Math.round(Math.sqrt(25 - (y - 4.5) ** 2));
+      rect(ctx, '#f4e4c1', 5 - half, y, half * 2, 1);
+    }
+    for (let a = 0; a < 24; a++) {
+      const t = (a / 24) * Math.PI * 2;
+      px(ctx, '#e43b44', Math.round(4.5 + Math.cos(t) * 3.4), Math.round(4.5 + Math.sin(t) * 3.4));
+    }
+    rect(ctx, '#7e2553', 4, 4, 2, 2);
+  });
+}
+
 // Soft headlight glow, 32×32: concentric rings fading out from a white core.
 function makeHeadlight(scene) {
   makeImage(scene, TEX.HEADLIGHT, 32, 32, (ctx) => {
@@ -1195,6 +1220,7 @@ const BUILDERS = {
   [TEX.BARRIER]: makeBarrier,
   [TEX.HEADLIGHT]: makeHeadlight,
   [TEX.HEDGE]: makeHedge,
+  [TEX.BEERMAT]: makeBeerMat,
   [TEX.CHECKPOINT]: makeCheckpoint,
   [TEX.FINISH]: makeFinish,
   [TEX.CONFETTI]: makeConfetti,

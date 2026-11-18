@@ -16,6 +16,7 @@ export const TEX = {
   BARRIER: 'barrier', // level-crossing barrier arm (red and white), drawn raised; rotated down
   CROSSING_TRAIN: 'crossing-train', // the train through the level crossing: tail, carriages, locomotive nose (facing right)
   HEADLIGHT: 'headlight', // soft glow of an approaching train's headlight
+  BEERMAT: 'beer-mat', // thrown by the Black Bear's locals
   HEDGE: 'hedge', // tall Dorset hedgerow either side of a level crossing (the train runs behind it)
   LAMP: 'lamp', // Victorian street lamp (village scenery)
   STALL: 'market-stall', // striped market stall (village scenery; crates in front are the steps)
@@ -173,8 +174,9 @@ export const TILESET = {
     pavement: 20, // village pavement with a kerb (surface)
     road: 21, // tarmac under the pavement
     crossingDeck: 22, // level-crossing road surface with the rails set in it
+    slate: 23, // slate rooftop (the high road over the village)
   },
-  count: 23,
+  count: 24,
 };
 
 export const CROSSING_LIGHTS_FRAME = { width: 16, height: 40, off: 0, left: 1, right: 2 };

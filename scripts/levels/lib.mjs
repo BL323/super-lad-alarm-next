@@ -57,6 +57,11 @@ export function createLevel({ cols, properties = {} }) {
     }
   }
 
+  /** A run of slate rooftop at `row` (floating: the high road over the village). */
+  function roof(c0, c1, row) {
+    for (let c = c0; c <= c1; c++) set('ground', c, row, T.slate);
+  }
+
   function embankment(c0, c1) {
     for (let c = c0; c <= c1; c++) {
       set('ground', c, SURFACE, T.grassTop);
@@ -150,6 +155,16 @@ export function createLevel({ cols, properties = {} }) {
   const shop = (col, text) => addObject('shop', text, ...feet(col), 0, 0, { text }, decor);
   const lamp = (col) => addObject('lamp', 'lamp', ...feet(col), 0, 0, {}, decor);
   const stall = (col) => addObject('stall', 'stall', ...feet(col), 0, 0, {}, decor);
+  /**
+   * An angry local at a window, throwing beer mats at the street below. The
+   * window is `dx` px across from the centre of `col` and `height` px above
+   * the street at `floorRow`. `offsetMs` staggers it against other windows.
+   */
+  const thrower = (col, dx, height, floorRow = SURFACE, offsetMs = undefined) =>
+    addObject('thrower', 'thrower', col * TS + TS / 2 + dx, floorRow * TS - height, 0, 0, {
+      floorRow,
+      ...(offsetMs === undefined ? {} : { offsetMs }),
+    });
   /** A Friesian grazing by the line; `flip` faces it left. */
   const cow = (col, flip = false) => addObject('cow', 'cow', ...feet(col), 0, 0, { flip }, decor);
   const easel = (col) => addObject('easel', 'easel', col * TS + TS / 2, (SURFACE + 1) * TS + 4, 0, 0, {}, decor);
@@ -219,6 +234,7 @@ export function createLevel({ cols, properties = {} }) {
     platform,
     pavement,
     bridge,
+    roof,
     embankment,
     carriage,
     crates,
@@ -237,6 +253,7 @@ export function createLevel({ cols, properties = {} }) {
     cowpat,
     crumble,
     crossing,
+    thrower,
     boss,
     zone,
     secret,

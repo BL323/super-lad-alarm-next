@@ -10,7 +10,7 @@
 // what that shorter jump can manage (same one-third margin).
 
 import { TILESET } from '../assets.js';
-import { PLAYER, PHYSICS, CROSSING } from '../config.js';
+import { PLAYER, PHYSICS, CROSSING, THROWERS } from '../config.js';
 
 export const LEVEL_RULES = {
   maxGapTiles: 3, // 48 px
@@ -116,9 +116,12 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     return limits;
   };
 
-  // Floating ledges: solid tiles not part of a column's ground stack. Each
-  // ledge top must be reachable: at most maxStepUpTiles above some surface or
-  // ledge within maxGapTiles columns.
+  // Floating ledges: solid tiles not part of a column's ground stack (crate
+  // ledges, the rooftop route). Every ledge must be reachable from the spawn
+  // by a chain of jumps: up at most maxStepUpTiles and across at most
+  // maxGapTiles + 1 columns per jump, from ground or from another ledge.
+  // (Checking each ledge only against its neighbours would let a floating
+  // run "reach" itself.)
   const ledges = [];
   for (let c = 0; c < cols; c++) {
     for (let r = 0; r < rows; r++) {
@@ -126,18 +129,29 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
       if (solid(c, r) && !inStack && (r === 0 || !solid(c, r - 1))) ledges.push({ c, r });
     }
   }
-  const tops = (c) => [surface[c], ...ledges.filter((l) => l.c === c).map((l) => l.r)].filter((v) => v !== null);
-  for (const l of ledges) {
-    let reachable = false;
-    for (let dc = -rules.maxGapTiles - 1; dc <= rules.maxGapTiles + 1 && !reachable; dc++) {
-      const n = l.c + dc;
-      if (dc === 0 || n < 0 || n >= cols) continue;
-      // Rows grow downwards: t - l.r is how far below the ledge a neighbouring top is
-      // (negative = above it, so you can drop onto the ledge).
-      reachable = tops(n).some((t) => t - l.r <= rules.maxStepUpTiles);
+  const nodes = [];
+  for (let c = 0; c < cols; c++) if (surface[c] !== null) nodes.push({ c, r: surface[c], ground: true });
+  for (const l of ledges) nodes.push({ ...l, ground: false });
+  const spawnObj = objAll.find((o) => o.type === 'spawn' || o.class === 'spawn');
+  const startCol = spawnObj ? Math.floor(spawnObj.x / tw) : 0;
+  const reached = new Set();
+  const key = (n) => `${n.c},${n.r}`;
+  const queue = nodes.filter((n) => n.ground && n.c === startCol);
+  queue.forEach((n) => reached.add(key(n)));
+  while (queue.length) {
+    const from = queue.shift();
+    for (const to of nodes) {
+      if (reached.has(key(to))) continue;
+      if (Math.abs(to.c - from.c) > rules.maxGapTiles + 1) continue;
+      if (from.r - to.r > rules.maxStepUpTiles) continue; // rows grow downwards: this is the rise
+      reached.add(key(to));
+      queue.push(to);
     }
-    if (!reachable) errors.push(`ledge at col ${l.c} row ${l.r} can't be reached (nothing within ${rules.maxStepUpTiles} tiles below it nearby)`);
   }
+  for (const l of ledges) {
+    if (!reached.has(key(l))) errors.push(`ledge at col ${l.c} row ${l.r} can't be reached from the spawn by jumping`);
+  }
+  const tops = (c) => [surface[c], ...ledges.filter((l) => l.c === c).map((l) => l.r)].filter((v) => v !== null);
 
   // Gaps and step-ups along the intended left-to-right path.
   let lastSurface = null;
@@ -255,6 +269,22 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     if (CROSSING.openMs < need) errors.push(`level crossing at cols ${c0}–${c1} is open ${CROSSING.openMs} ms; crossing needs ${Math.round(need)} ms with margin`);
   }
 
+  // Window throwers: the street they throw at must be flat ground at their
+  // floor row across their whole range (the floor markers sit on it), and no
+  // spawn or checkpoint may be in range (you'd respawn under fire).
+  const throwers = ofType('thrower');
+  const throwRange = THROWERS.rangeTiles;
+  for (const t of throwers) {
+    const c0 = colOf(t.x);
+    const floorRow = prop(t, 'floorRow');
+    for (let c = Math.max(0, c0 - throwRange); c <= Math.min(cols - 1, c0 + throwRange); c++) {
+      if (surface[c] !== floorRow) errors.push(`thrower at col ${c0}: col ${c} in its range is not flat street at row ${floorRow}`);
+    }
+    for (const o of [...spawns, ...checkpoints]) {
+      if (Math.abs(colOf(o.x) - c0) <= throwRange) errors.push(`${o.type} "${o.name}" is within range of the thrower at col ${c0}`);
+    }
+  }
+
   // Collectibles.
   const collectibles = ofType('collectible');
   const counts = {};
@@ -272,6 +302,7 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   info.lowBridgeCols = ceiling.filter((v) => v !== null).length;
   info.crumbles = crumbles.length;
   info.crossings = crossings.length;
+  info.throwers = throwers.length;
   info.boss = bosses.length ? prop(bosses[0], 'kind') : null;
   return { errors, info };
 }

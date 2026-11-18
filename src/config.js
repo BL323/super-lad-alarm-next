@@ -157,6 +157,12 @@ export const FINISH_DELAY_MS = 2600;
 // the player respawns.
 export const CRUMBLE = { shakeMs: 450, fallMs: 350, returnMs: 3000, shakePx: 1 };
 
+// Angry locals throwing beer mats from pub windows (src/systems/Throwers.js).
+// Each one throws every `everyMs` while the player is on the street within
+// `rangeTiles` of the window; a mat lands where its floor marker shows,
+// `flightMs` after the throw. Up on the rooftops you're out of reach.
+export const THROWERS = { everyMs: 1500, flightMs: 950, rangeTiles: 12, firstDelayMs: 600, staggerMs: 750 };
+
 // Level crossings (src/systems/LevelCrossing.js): open → warning (lights, bell,
 // barrier lowering) → closed while a train passes (deadly) → raising → open.
 // The validator checks a player can cross comfortably inside `openMs`.
@@ -236,5 +242,6 @@ export const COLORS = {
 export const THEMES = {
   day: { sky: COLORS.sky, hillsTint: 0xffffff },
   morning: { sky: '#c4e8ff', hillsTint: 0xf4ffe8 }, // level 1: pale, fresh late-morning light
+  afternoon: { sky: '#9cd6ff', hillsTint: 0xfff4dc }, // level 3: a warmer mid-afternoon
 };
 export const DEFAULT_THEME = 'day';

@@ -130,6 +130,12 @@ export function loadLevel(scene, levelDef) {
     boss: bossObj ? { kind: prop(bossObj, 'kind'), tuning: prop(bossObj, 'tuning'), x: bossObj.x, y: bossObj.y } : null,
     collectibles: ofType('collectible').map((o) => ({ x: o.x, y: o.y, type: prop(o, 'type') })),
     crumbles: ofType('crumble').map((o) => ({ x: o.x, y: o.y })),
+    throwers: ofType('thrower').map((o) => ({
+      x: o.x,
+      y: o.y,
+      floorY: prop(o, 'floorRow') * map.tileHeight + offsetY,
+      offsetMs: prop(o, 'offsetMs'),
+    })),
     crossings: ofType('crossing').map((o) => ({ x: o.x, y: o.y, width: o.width, offsetMs: prop(o, 'offsetMs') ?? 0 })),
   };
 }
