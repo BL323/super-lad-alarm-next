@@ -10,16 +10,16 @@
 - Test flags: `?touch` forces on-screen buttons on desktop; `?debug` (dev only) shows bodies and player state.
 - Phaser static bodies: `refreshBody()` resets the body size to the sprite, so call `body.setSize()` after it.
 - Story/theme: `docs/story.md`; the agreed mapping is in the README "Story and theme" section. Title stays "Super Lad Alarm".
-- Level-01 is generated: edit `scripts/build-level-01.mjs`, then `npm run build:level` (it validates too). Don't hand-edit the JSON.
+- Levels are generated: one builder per level in `scripts/levels/` (shared helpers in `lib.mjs`), then `npm run build:levels` (it validates too). Don't hand-edit the JSON. Register levels in `src/level/levels.js` in crawl order; `npm run validate:levels` checks the registry against the files.
 - Browser testing: the preview pane throttles requestAnimationFrame, so for gameplay tests call `__game.loop.sleep()` and step frames manually with `__game.step(t, 1000/60)`. Tweens don't advance under manual stepping; check those with the loop running. `scene.restart()` keeps `scene.events` listeners, so reload the page between scripted runs.
 - HUD and other crisp text: `addPixelText()` (bitmap font; upper case, digits and `+-./:!'` only). `Phaser.GameObjects.RetroFont.Parse` returns the full cache entry, so pass it straight to `cache.bitmapFont.add`.
 - Collected items are destroyed when their pop tween finishes, so under manual frame stepping check `item.collected`, not group size.
 - Characters are Naylor's outfits, looks only (`CHARACTERS` in `src/assets.js` + `PLAYER_LOOKS` in `src/art/placeholders.js`); default is `casual`. Never give them different movement without updating the level validator.
-- Scene flow: Menu → CharacterSelect → Game(+UI) → Complete. Selected lad lives in `registry.get('characterId')`.
+- Scene flow: Menu → CharacterSelect → LevelSelect → NextStop → Game(+UI) → Complete → NextStop … → CrawlComplete. Selected lad lives in `registry.get('characterId')`, the crawl (per-level results) in `registry.get(CRAWL_KEY)`; the menu clears it.
 - Listeners on `scene.events` / `game.events` / `scale` must be removed on SHUTDOWN (emitters outlive restarts).
 - Runs are timed, not scored: no points, no saved best, no pause (owner's decision, overrides the brief). Final time = clock + 2 s per missed pint − bonus `timeBonusMs`; see `finalTime()` in `src/systems/GameState.js`. Don't add localStorage.
 - Portrait freeze uses `game.loop.sleep()`/`wake()` (src/systems/mobile.js); always `loop.resetDelta()` before `wake()` or the clock jumps.
-- Boss: `src/systems/BossArena.js` + `src/entities/Conductor.js`, tuned by `BOSS` in config. The fight is on the roof of his train (cols 158–177), then Parkstone and the pub door follow. Any player death during the fight resets it. Camera `pan()` needs long ease names (`'Sine.easeInOut'`); tweens accept short ones.
+- Boss: `src/systems/BossArena.js` + `src/entities/Conductor.js`, tuned by `BOSS.first` / `BOSS.final` in config (the boss object's `tuning` property picks one; read per-phase values with `conductor.perPhase()`). The fight is on the roof of his train (cols 158–177), then Parkstone and the pub door follow. Any player death during the fight resets it. Camera `pan()` needs long ease names (`'Sine.easeInOut'`); tweens accept short ones.
 - Phaser Containers already have `x, y, z, w` (Transform): never store sizes as `this.w`/`this.h` on a Container (`setPosition()` resets `w` to 0).
 - Listeners on `scene.events` 'update' can fire once more in the frame their owner is destroyed (snapshot emit); guard with `if (!this.scene) return`.
 - The finish is a pub door: put the `finish` object in the same column as its `pub` decor.

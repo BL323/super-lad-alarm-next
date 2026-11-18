@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { MAX_GAME_WIDTH, GAME_HEIGHT, PARALLAX } from '../config.js';
+import { MAX_GAME_WIDTH, GAME_HEIGHT, PARALLAX, THEMES, DEFAULT_THEME } from '../config.js';
 import { TEX, TILESET, pubTextureKey } from '../assets.js';
 import { ensureSignTexture } from '../art/placeholders.js';
 
@@ -23,6 +23,9 @@ export const HAZARD_SPRITES = {
 
 const prop = (obj, name) => obj.properties?.find((p) => p.name === name)?.value;
 const typeOf = (obj) => obj.type || obj.class;
+// Phaser keeps a Tiled map's properties as an array of { name, value } (or an object for some formats).
+const mapProp = (map, name) =>
+  Array.isArray(map.properties) ? map.properties.find((p) => p.name === name)?.value : map.properties?.[name];
 
 /**
  * Builds a level from its Tiled map: tile layers, collisions, world and camera
@@ -35,6 +38,10 @@ const typeOf = (obj) => obj.type || obj.class;
  */
 export function loadLevel(scene, levelDef) {
   const map = scene.make.tilemap({ key: levelDef.mapKey });
+  const themeId = mapProp(map, 'theme') ?? DEFAULT_THEME;
+  if (!THEMES[themeId] && import.meta.env.DEV) console.error(`Unknown level theme "${themeId}"`);
+  const theme = THEMES[themeId] ?? THEMES[DEFAULT_THEME];
+  scene.cameras.main.setBackgroundColor(theme.sky);
   const tileset = map.addTilesetImage(TILESET.name, TEX.TILES);
   const offsetY = GAME_HEIGHT - map.heightInPixels;
   const width = map.widthInPixels;
@@ -56,6 +63,7 @@ export function loadLevel(scene, levelDef) {
     .tileSprite(0, PARALLAX.hillsBottom - 64, MAX_GAME_WIDTH, 64, TEX.HILLS)
     .setOrigin(0)
     .setScrollFactor(0)
+    .setTint(theme.hillsTint)
     .setDepth(DEPTH.backdrop);
 
   const objects = (map.getObjectLayer('objects')?.objects ?? []).map((o) => ({ ...o, y: o.y + offsetY }));
@@ -97,6 +105,7 @@ export function loadLevel(scene, levelDef) {
 
   return {
     map,
+    theme,
     layers: { background, ground, foreground },
     width,
     hills,
@@ -106,7 +115,7 @@ export function loadLevel(scene, levelDef) {
     finish: finishObj ? point(finishObj) : null,
     endZone: endZoneObj ? rectOf(endZoneObj) : null,
     secrets: ofType('secret').map(rectOf),
-    boss: bossObj ? { kind: prop(bossObj, 'kind'), x: bossObj.x, y: bossObj.y } : null,
+    boss: bossObj ? { kind: prop(bossObj, 'kind'), tuning: prop(bossObj, 'tuning'), x: bossObj.x, y: bossObj.y } : null,
     collectibles: ofType('collectible').map((o) => ({ x: o.x, y: o.y, type: prop(o, 'type') })),
   };
 }

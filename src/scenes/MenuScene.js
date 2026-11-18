@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { SCENE } from './keys.js';
 import { GAME_HEIGHT, MENU_FULLSCREEN } from '../config.js';
 import { restartOnWidthChange } from '../ui/relayout.js';
+import { CRAWL_KEY } from '../systems/GameState.js';
 import { CHARACTERS, playerTextureKey, playerAnimKey } from '../assets.js';
 import { addPixelText } from '../ui/text.js';
 import { addBackdrop } from '../ui/backdrop.js';
@@ -22,6 +23,7 @@ export default class MenuScene extends Phaser.Scene {
 
   create() {
     const { groundY } = addBackdrop(this);
+    this.registry.remove(CRAWL_KEY); // back at the menu: any crawl in progress is over
     const cx = this.scale.width / 2;
     restartOnWidthChange(this);
 

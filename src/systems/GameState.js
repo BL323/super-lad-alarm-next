@@ -31,6 +31,31 @@ export function finalTime(state) {
   return { elapsedMs: state.elapsedMs, missed, penaltyMs, bonusMs: state.timeBonusMs, finalMs };
 }
 
+// --- The crawl: a run of levels -------------------------------------------
+// Created when a level is picked and kept in the game registry under
+// CRAWL_KEY, so it survives scene changes. One finalTime() result per level
+// finished; replaying a level replaces its result. Going back to the menu
+// discards it. Nothing is saved between sessions.
+
+export const CRAWL_KEY = 'crawl';
+
+export function createCrawl(startLevelId) {
+  return { startLevelId, results: [] };
+}
+
+/** Record (or replace) a finished level's result. `result` has levelId and finalMs. */
+export function recordResult(crawl, result) {
+  const entry = { levelId: result.levelId, finalMs: result.finalMs };
+  const i = crawl.results.findIndex((r) => r.levelId === result.levelId);
+  if (i >= 0) crawl.results[i] = entry;
+  else crawl.results.push(entry);
+}
+
+/** Total crawl time: the sum of the final times of the levels played. */
+export function crawlTotal(crawl) {
+  return crawl.results.reduce((sum, r) => sum + r.finalMs, 0);
+}
+
 /** Format milliseconds as m:ss.t (e.g. 1:07.4). */
 export function formatTime(ms) {
   const tenths = Math.floor(ms / 100);

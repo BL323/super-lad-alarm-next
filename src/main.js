@@ -7,6 +7,9 @@ import { blockBrowserGestures, setupOrientationGuard } from './systems/mobile.js
 import BootScene from './scenes/BootScene.js';
 import MenuScene from './scenes/MenuScene.js';
 import CharacterSelectScene from './scenes/CharacterSelectScene.js';
+import LevelSelectScene from './scenes/LevelSelectScene.js';
+import NextStopScene from './scenes/NextStopScene.js';
+import CrawlCompleteScene from './scenes/CrawlCompleteScene.js';
 import GameScene from './scenes/GameScene.js';
 import UIScene from './scenes/UIScene.js';
 import CompleteScene from './scenes/CompleteScene.js';
@@ -39,7 +42,17 @@ const game = new Phaser.Game({
   input: {
     activePointers: INPUT.maxPointers,
   },
-  scene: [BootScene, MenuScene, CharacterSelectScene, GameScene, UIScene, CompleteScene],
+  scene: [
+    BootScene,
+    MenuScene,
+    CharacterSelectScene,
+    LevelSelectScene,
+    NextStopScene,
+    GameScene,
+    UIScene,
+    CompleteScene,
+    CrawlCompleteScene,
+  ],
 });
 
 scaling.attach(game);

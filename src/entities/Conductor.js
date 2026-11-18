@@ -1,5 +1,4 @@
 import Phaser from 'phaser';
-import { BOSS } from '../config.js';
 import { TEX, ANIM, CONDUCTOR_FRAME } from '../assets.js';
 import { addPixelText } from '../ui/text.js';
 import Audio from '../systems/Audio.js';
@@ -33,17 +32,19 @@ export default class Conductor extends Phaser.Physics.Arcade.Sprite {
    * @param {{ left: number, right: number, floorY: number }} arena world bounds of the fight
    * @param {() => { x: number, y: number }} getTarget the player's position
    * @param {(fromX: number, fromY: number, targetX: number) => void} throwTicket
+   * @param {object} tuning one entry of BOSS in config.js (BOSS.first or BOSS.final)
    */
-  constructor(scene, start, arena, getTarget, throwTicket) {
+  constructor(scene, start, arena, getTarget, throwTicket, tuning) {
     super(scene, start.x, start.y - F.height / 2, TEX.CONDUCTOR, F.idle);
     scene.add.existing(this);
     scene.physics.add.existing(this);
+    this.tuning = tuning;
     this.start = start;
     this.arena = arena;
     this.getTarget = getTarget;
     this.throwTicket = throwTicket;
 
-    const b = BOSS.body;
+    const b = this.tuning.body;
     this.body.setSize(b.width, b.height, false).setOffset(b.offsetX, b.offsetY);
     this.setCollideWorldBounds(true);
 
@@ -62,7 +63,7 @@ export default class Conductor extends Phaser.Physics.Arcade.Sprite {
 
   /** Back to the start, full health, waiting for the player. */
   reset() {
-    this.hp = BOSS.hits;
+    this.hp = this.tuning.hits;
     this.body.enable = true;
     this.body.reset(this.start.x, this.start.y - F.height / 2);
     this.scene.tweens.killTweensOf(this);
@@ -70,9 +71,15 @@ export default class Conductor extends Phaser.Physics.Arcade.Sprite {
     this.enter(BossState.WAITING);
   }
 
-  /** Phase index 0..2: how many times he has been stomped. */
+  /** Phase index 0..hits-1: how many times he has been stomped. */
   get phase() {
-    return Math.min(BOSS.hits - this.hp, BOSS.walkSpeed.length - 1);
+    return Math.min(this.tuning.hits - this.hp, this.tuning.hits - 1);
+  }
+
+  /** A per-phase tuning value; arrays shorter than the phase count reuse their last entry. */
+  perPhase(name, phase = this.phase) {
+    const v = this.tuning[name];
+    return Array.isArray(v) ? v[Math.min(phase, v.length - 1)] : v;
   }
 
   get isHarmful() {
@@ -108,7 +115,7 @@ export default class Conductor extends Phaser.Physics.Arcade.Sprite {
         break;
       case BossState.WALK:
         this.play(ANIM.CONDUCTOR_WALK);
-        this.throwMs = BOSS.throwEveryMs[this.phase] * 0.6; // first volley comes quickly
+        this.throwMs = this.perPhase('throwEveryMs') * 0.6; // first volley comes quickly
         break;
       case BossState.WINDUP:
         this.setFrame(F.windup);
@@ -158,7 +165,7 @@ export default class Conductor extends Phaser.Physics.Arcade.Sprite {
 
     switch (this.state) {
       case BossState.INTRO:
-        if (this.stateMs >= BOSS.introMs) this.enter(BossState.WALK);
+        if (this.stateMs >= this.tuning.introMs) this.enter(BossState.WALK);
         break;
 
       case BossState.WALK: {
@@ -166,13 +173,13 @@ export default class Conductor extends Phaser.Physics.Arcade.Sprite {
         const dx = target.x - this.x;
         if (Math.abs(dx) > 6) {
           this.setFlipX(dx < 0);
-          this.body.setVelocityX(Math.sign(dx) * BOSS.walkSpeed[p]);
+          this.body.setVelocityX(Math.sign(dx) * this.perPhase('walkSpeed', p));
         } else {
           this.body.setVelocityX(0);
         }
         // Tickets, from the very first phase.
         this.throwMs += delta;
-        if (this.throwMs >= BOSS.throwEveryMs[p]) {
+        if (this.throwMs >= this.perPhase('throwEveryMs', p)) {
           this.throwMs = 0;
           this.throwVolley();
         }
@@ -180,7 +187,7 @@ export default class Conductor extends Phaser.Physics.Arcade.Sprite {
           this.throwPoseMs -= delta;
           if (this.throwPoseMs <= 0) this.play(ANIM.CONDUCTOR_WALK);
         }
-        if (this.stateMs >= BOSS.walkMs[p]) this.enter(BossState.WINDUP);
+        if (this.stateMs >= this.perPhase('walkMs', p)) this.enter(BossState.WINDUP);
         break;
       }
 
@@ -188,11 +195,11 @@ export default class Conductor extends Phaser.Physics.Arcade.Sprite {
         // Flash and shout before charging.
         this.setTint(Math.floor(this.stateMs / 90) % 2 ? 0xffffff : 0xff8080);
         this.warning.setVisible(Math.floor(this.stateMs / 120) % 2 === 0);
-        if (this.stateMs >= BOSS.windupMs[p]) this.enter(BossState.DASH);
+        if (this.stateMs >= this.perPhase('windupMs', p)) this.enter(BossState.DASH);
         break;
 
       case BossState.DASH: {
-        this.body.setVelocityX(this.dashDir * BOSS.dashSpeed[p]);
+        this.body.setVelocityX(this.dashDir * this.perPhase('dashSpeed', p));
         const hitWall =
           (this.dashDir < 0 && (this.body.blocked.left || this.body.left <= this.arena.left + 1)) ||
           (this.dashDir > 0 && (this.body.blocked.right || this.body.right >= this.arena.right - 1));
@@ -201,11 +208,11 @@ export default class Conductor extends Phaser.Physics.Arcade.Sprite {
       }
 
       case BossState.DIZZY:
-        if (this.stateMs >= BOSS.dizzyMs) this.enter(BossState.WALK);
+        if (this.stateMs >= this.tuning.dizzyMs) this.enter(BossState.WALK);
         break;
 
       case BossState.HURT:
-        if (this.stateMs >= BOSS.hurtMs) this.enter(BossState.WALK);
+        if (this.stateMs >= this.tuning.hurtMs) this.enter(BossState.WALK);
         break;
 
       default:
@@ -219,12 +226,12 @@ export default class Conductor extends Phaser.Physics.Arcade.Sprite {
   }
 
   throwVolley() {
-    const n = BOSS.ticketsPerVolley[this.phase];
+    const n = this.perPhase('ticketsPerVolley');
     const target = this.getTarget().x;
     const handX = this.x + (this.flipX ? -6 : 6);
     const handY = this.body.top + 4;
     for (let i = 0; i < n; i++) {
-      const offset = (i - (n - 1) / 2) * BOSS.ticketSpread;
+      const offset = (i - (n - 1) / 2) * this.tuning.ticketSpread;
       this.throwTicket(handX, handY, target + offset);
     }
     this.anims.stop();
@@ -248,18 +255,18 @@ export default class Conductor extends Phaser.Physics.Arcade.Sprite {
 
     const { x, y } = this;
     const fallY = this.scene.cameras.main.scrollY + this.scene.scale.gameSize.height + this.displayHeight;
-    this.scene.tweens.add({ targets: this, angle: awayDir * 540, duration: BOSS.exitMs });
-    this.scene.tweens.add({ targets: this, x: x + awayDir * BOSS.exitDistance, duration: BOSS.exitMs });
+    this.scene.tweens.add({ targets: this, angle: awayDir * 540, duration: this.tuning.exitMs });
+    this.scene.tweens.add({ targets: this, x: x + awayDir * this.tuning.exitDistance, duration: this.tuning.exitMs });
     this.scene.tweens.add({
       targets: this,
       y: y - 26,
-      duration: BOSS.exitMs * 0.3,
+      duration: this.tuning.exitMs * 0.3,
       ease: 'Quad.Out',
       onComplete: () =>
         this.scene.tweens.add({
           targets: this,
           y: fallY,
-          duration: BOSS.exitMs * 0.7,
+          duration: this.tuning.exitMs * 0.7,
           ease: 'Quad.In',
           onComplete: () => {
             this.setVisible(false);

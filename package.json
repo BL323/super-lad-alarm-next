@@ -11,7 +11,7 @@
     "dev": "vite",
     "build": "npm run validate:levels && vite build",
     "preview": "vite preview",
-    "build:level": "node scripts/build-level-01.mjs",
+    "build:levels": "node scripts/build-levels.mjs",
     "build:icons": "node scripts/build-icons.mjs",
     "validate:levels": "node scripts/validate-levels.mjs"
   },

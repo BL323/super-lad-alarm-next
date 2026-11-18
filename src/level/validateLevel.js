@@ -8,6 +8,7 @@
 export const LEVEL_RULES = {
   maxGapTiles: 3, // 48 px
   maxStepUpTiles: 2, // 32 px
+  bossTunings: ['first', 'final'], // keys of BOSS in config.js
   layer: 'ground',
   objectLayer: 'objects',
 };
@@ -92,7 +93,10 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   const finishes = ofType('finish');
   if (finishes.length !== 1) errors.push(`expected 1 finish, found ${finishes.length}`);
   const endZone = objs.find((o) => o.name === 'end-zone');
-  if (!endZone) errors.push('missing "end-zone" rectangle');
+  const bosses = ofType('boss');
+  // The end-zone is the boss arena: a level has one if and only if it has a boss.
+  if (bosses.length && !endZone) errors.push('boss level is missing its "end-zone" rectangle');
+  if (endZone && !bosses.length) errors.push('"end-zone" rectangle but no boss');
   if (endZone && finishes[0] && finishes[0].x < endZone.x) {
     errors.push('finish is before the end-zone (it must be inside it or after it)');
   }
@@ -103,8 +107,11 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     if (s.some((v) => v !== s[0])) errors.push('end-zone is not flat');
   }
 
-  const bosses = ofType('boss');
   if (bosses.length > 1) errors.push(`expected at most 1 boss, found ${bosses.length}`);
+  for (const b of bosses) {
+    const t = prop(b, 'tuning');
+    if (!rules.bossTunings.includes(t)) errors.push(`boss tuning "${t}" is not one of ${rules.bossTunings.join(', ')}`);
+  }
   for (const b of bosses) {
     if (!endZone || b.x < endZone.x || b.x > endZone.x + endZone.width) errors.push('boss is not inside the end-zone');
   }
@@ -114,6 +121,14 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     );
     if (inArena.length) errors.push(`${inArena.length} collectible(s) inside the boss arena`);
   }
+
+  // The finish is the target pub's door, so it shares the pub's column.
+  const decorLayer = map.layers.find((l) => l.name === 'decor');
+  const pubs = (decorLayer?.objects ?? []).filter((o) => o.type === 'pub' || o.class === 'pub');
+  for (const f of finishes) {
+    if (!pubs.some((p) => colOf(p.x) === colOf(f.x))) errors.push(`finish at col ${colOf(f.x)} is not at a pub door`);
+  }
+  info.finishPub = finishes[0] ? (prop(pubs.find((p) => colOf(p.x) === colOf(finishes[0].x)) ?? {}, 'pub') ?? null) : null;
 
   for (const o of [...spawns, ...checkpoints, ...finishes, ...bosses]) {
     const c = colOf(o.x);

@@ -18,6 +18,7 @@ This repo is the next version of the game. v1 is frozen at [BL323/super-lad-alar
 | 6. Mobile | Done |
 | 7. Polish and ship | Not started |
 | vNext stage M: mobile full screen | Done in code (fill scaling on touch, Home Screen app, Android full screen, iPhone hint, wider view); real-phone checks still to do |
+| vNext stage 0: level-based game | Done: level builders, registry, level picker, next stop screen, crawl timing, per-level themes, two boss tunings (still playing the v1 level) |
 | vNext: six levels | Planned ([docs/vNext-improvements.md](docs/vNext-improvements.md)) |
 
 ## Requirements
@@ -44,8 +45,9 @@ npm run preview   # serves dist/ locally to check the build
 Level tools:
 
 ```bash
-npm run build:level       # regenerate public/assets/levels/level-01.json from scripts/build-level-01.mjs
-npm run validate:levels   # check every level against the gap / step-up / hazard rules
+npm run build:levels      # rebuild every level in scripts/levels/ into public/assets/levels/<id>.json (and validate)
+npm run build:levels -- v1  # rebuild one level
+npm run validate:levels   # check every level against the rules, and the registry against the files
 ```
 
 The build uses a relative base (`./`), so `dist/` works from a site root or a subpath. Phaser is emitted as its own chunk (~320 KB gzipped).
@@ -74,8 +76,9 @@ The build uses relative paths (`base: './'`), so it works under the `/super-lad-
 index.html              page shell (viewport, safe-area meta)
 vite.config.js          relative base, Phaser chunk
 netlify.toml            Netlify build and headers
-public/assets/levels/   Tiled JSON levels (level-01.json is generated, see below)
-scripts/                level builder and validator (Node, no dependencies)
+public/assets/levels/   Tiled JSON levels (generated, see Levels below)
+scripts/levels/         one builder per level (v1.mjs …) plus lib.mjs, the shared building blocks
+scripts/                build-levels, validate-levels and build-icons (Node, no dependencies)
 src/
   main.js               Phaser.Game config and scene list
   config.js             title, resolution, physics, movement and scoring tuning, text style
@@ -85,13 +88,13 @@ src/
   art/animations.js     every animation, defined once and referenced by name
   art/pixelFont.js      3×5 pixel font for signs painted into textures
   art/bitmapFont.js     the same font as a Phaser bitmap font (HUD text)
-  level/levels.js       level registry (id, map key, file, theme, next)
+  level/levels.js       level registry in crawl order (id, number, from, to, pub, map key, file, next)
   level/LevelLoader.js  tilemap, collisions, bounds, parallax, decor, hazards; parses objects
   level/validateLevel.js difficulty rules, shared by the CLI script and a dev-only boot check
-  scenes/               Boot, Menu, CharacterSelect, Game, UI (HUD and touch buttons), Complete; keys.js holds scene keys
+  scenes/               Boot, Menu, CharacterSelect, LevelSelect, NextStop, Game, UI (HUD and touch buttons), Complete, CrawlComplete; keys.js holds scene keys
   entities/Player.js    movement, jump feel, animation state machine, die()/respawn()
   entities/Collectible.js collectible type registry and pickup pop
-  systems/GameState.js  plain run state (clock, pints, checkpoint) and final-time maths
+  systems/GameState.js  plain run state (clock, pints, checkpoint), final-time maths and the crawl (results per level, total)
   systems/Checkpoints.js railway-signal checkpoints
   systems/BossArena.js  Train Conductor fight: camera lock, wall, tickets, stomp/contact rules, reset, win
   entities/Conductor.js the boss's state machine (walk/throw, wind-up, dash, dizzy, hurt, defeated)
@@ -106,6 +109,8 @@ src/
   systems/mobile.js     iOS gesture blocking and the portrait rotate overlay (freezes the game)
   ui/Hud.js             pint counter, run timer, bonus toast
   ui/Button.js          pixel-font button for touch, mouse and keyboard focus
+  ui/buttonFocus.js     keyboard focus, Enter/Space/Esc and sounds for a row of buttons
+  ui/relayout.js        restarts a static screen when the game width changes
   ui/backdrop.js        sky, hills and platform behind the menu screens
   ui/TouchControls.js   on-screen left/right/jump buttons
   ui/safeArea.js        safe-area insets in game pixels
@@ -162,7 +167,7 @@ Naylor's arch-nemesis is fought on the roof of his own train, between Wareham an
 - **When he's beaten** the final stomp knocks him off the train. He flips and tumbles away from you, out of sight in under a second (`BOSS.exitMs`). "CONDUCTOR BEATEN!" appears, the lad says **"I'M PAYING TO BE HERE"** in a speech bubble (`SPEECH.bossDefeated` in `config.js`), the walls open, the train stops (the hills stop racing), and The Avocet's door at Parkstone unlocks and swings open.
 - **The finish is the pub door.** It's padlocked while he's in the arena. Walking into the open door stops the clock. The lad walks inside, "CHEERS!" appears, confetti bursts out of the doorway and rains across the screen, and the Complete screen follows (`FINISH_DELAY_MS`, `CONFETTI` in `config.js`).
 
-All tuning lives in `BOSS` in `src/config.js`, with values per phase.
+All tuning lives in `BOSS` in `src/config.js`. There are two tunings, `BOSS.first` (this fight) and `BOSS.final` (the level 6 rematch, a copy until stage 6 tunes it), picked by the boss object's `tuning` property. Values are per phase, one phase per hit; an array shorter than the number of hits reuses its last entry.
 
 ## Mobile
 
@@ -196,27 +201,37 @@ To be completed on real phones (it can't be tested here):
 A level is a Tiled JSON map with:
 
 - **Tile layers** `background` (no collision: canopy posts, river), `ground` (every tile collides) and `foreground` (drawn over the player: station canopy). They use the tileset `tiles`, which is the generated `tiles` texture (layout in `src/assets.js`).
-- **Object layer `objects`:** `spawn`, at least two `checkpoint`s (property `station`), `collectible`s (property `type`: `pint` or `espresso`), `hazard`s (property `kind`: `glass`, `bucket` or `water`), a `zone` named `end-zone`, an optional `boss` (property `kind`: `conductor`) inside it, a `finish`, and optional `secret` rectangles (the foreground fades while the player is inside). Points for spawn, checkpoints and finish are at the player's feet.
+- **Map property `theme`:** a key of `THEMES` in `src/config.js` (sky colour, hills tint). Defaults to `day`.
+- **Object layer `objects`:** `spawn`, at least two `checkpoint`s (property `station`), `collectible`s (property `type`: `pint` or `espresso`), `hazard`s (property `kind`: `glass`, `bucket` or `water`), a `finish` at the target pub's door, and optional `secret` rectangles (the foreground fades while the player is inside). A boss level also has a `boss` (properties `kind`: `conductor`, and `tuning`: `first` or `final`) inside a `zone` named `end-zone`, the arena. Points for spawn, checkpoints and finish are at the player's feet.
 - **Object layer `decor`:** `pub` (property `pub`, an id from `PUBS` in `src/assets.js`), `sign` (property `text`) and `easel`.
 
 Maps are 12 rows (192 px) against a 180 px screen, so the loader shifts everything up 12 px. Only sky is cut off.
 
-`level-01.json` is generated by `scripts/build-level-01.mjs`, which reads like a description of the level (`platform(0, 21)`, `carriage(30, 10)`, `pint(33, 7)`...). Edit that script and run `npm run build:level`. You can also edit the JSON in Tiled, but then stop running the builder for that level so it doesn't overwrite your edits.
+Every level is generated by its own builder in `scripts/levels/` (for now just `v1.mjs`, the whole v1 crawl in one level). A builder exports `meta` (id, width in tiles, map properties) and a `build(L)` that reads like a description of the level (`platform(0, 21)`, `carriage(30, 10)`, `pint(33, 7)`...), using the helpers in `scripts/levels/lib.mjs`. Edit it and run `npm run build:levels`. Don't hand-edit the JSON.
 
-**Adding a level:** create its JSON in `public/assets/levels/`, add an entry to `src/level/levels.js`, and set the previous level's `next` to its id. `npm run validate:levels` checks it.
+**Adding a level:** add `scripts/levels/level-0N.mjs` and run `npm run build:levels`, then add an entry to `LEVELS` in `src/level/levels.js` (crawl order) and set the previous level's `next` to its id. `npm run validate:levels` checks the registry too: numbers in order, `next` links following the list, every file present, and each level finishing at the pub its entry names.
 
-**Validation rules** (from the jump numbers in `config.js`): gaps of at most 3 tiles, step-ups of at most 2 tiles going right, a safe tile at the same height either side of every glass or bucket hazard, every floating ledge reachable (no more than 2 tiles above a surface within 4 columns), one spawn, at least two checkpoints, one finish inside or after a flat `end-zone`, at most one boss (inside the end zone), and no collectibles inside a boss arena (so the missed-pint penalty never punishes the fight). `npm run build` refuses to build if any level fails, and the dev build logs an error at boot.
+**Validation rules** (from the jump numbers in `config.js`): gaps of at most 3 tiles, step-ups of at most 2 tiles going right, a safe tile at the same height either side of every glass or bucket hazard, every floating ledge reachable (no more than 2 tiles above a surface within 4 columns), one spawn, at least two checkpoints, one finish at a pub door (the same column as a `pub`), an `end-zone` if and only if there's a boss (flat, with the boss inside it and the finish inside or after it), at most one boss with a known `tuning`, and no collectibles inside a boss arena (so the missed-pint penalty never punishes the fight). `npm run build` refuses to build if any level fails, and the dev build logs an error at boot.
 
 ## Game flow
 
-Boot → Menu → Outfit select → Game (with the UI scene on top) → Complete. On the Complete screen, PLAY AGAIN goes straight back into the level with the same lad and a fresh run; MENU returns to the title (and from there to the selector). If the level registry gives the level a `next`, a NEXT button appears.
+Boot → Menu → Outfit select → Level picker → Next stop → Game (with the UI scene on top) → Complete → Next stop → … → Complete → Crawl complete.
+
+- **Level picker:** one row per level (number, route, target pub). Picking one starts a crawl that runs from there to the last level.
+- **Next stop:** "NEXT STOP: <STATION> · <PUB>" before every level. It moves on by itself after `NEXT_STOP.durationMs`, or on a tap or key.
+- **Complete:** that level's time breakdown. PLAY AGAIN replays the level with the same lad (its new time replaces the old one in the crawl); NEXT goes on to the next level; after the last level, TOTAL opens the crawl summary.
+- **Crawl complete:** each level's final time and the total for the levels played. PLAY AGAIN starts a fresh crawl from the same first level.
+- The crawl lives in the Phaser registry (`crawl`) next to `characterId`. Going back to the menu ends it, and nothing is saved.
 
 | Screen | Touch / mouse | Keyboard |
 | --- | --- | --- |
 | Menu | START button | Enter / Space |
 | Character select | tap a lad, then GO! (or tap the chosen lad again); BACK | ←/→ or A/D, Enter / Space, Esc |
 | Game | on-screen buttons | arrows / A D, Space / Up |
-| Complete | PLAY AGAIN, MENU | ←/→, Enter / Space, Esc for menu |
+| Level picker | tap a row, then GO! (or tap it again); BACK | ↑/↓ or W/S, Enter / Space, Esc |
+| Next stop | tap to skip | any key to skip |
+| Complete | MENU, PLAY AGAIN, NEXT / TOTAL | ←/→, Enter / Space, Esc for menu |
+| Crawl complete | MENU, PLAY AGAIN | ←/→, Enter / Space, Esc for menu |
 
 There is no pause feature (removed at the owner's request). When the page is hidden, Phaser stops its own loop, so the clock doesn't count that time.
 
@@ -265,6 +280,7 @@ The game title stays **Super Lad Alarm**.
 - **Node 24.** It is the version installed locally and still an LTS line; `engines` is `>=24` so Node 26 LTS also works. Netlify and the Pages workflow (via `.nvmrc`) build with 24.
 - **Fill scaling on touch devices (vNext stage M).** Phones skip the whole-number snap below and use the largest scale that fits, because the snap could waste a third of the screen. Pixel-art (nearest-neighbour) rendering stays on, and uneven pixels are hard to see at phone densities. Desktop is unchanged.
 - **Full screen.** Requested only from a tap (START, or the menu's FULL SCREEN button) and only on touch devices that support it, never on desktop. iPhone Safari has no full-screen API for pages, so it gets the Home Screen hint and a web app manifest (`display: fullscreen`, landscape). The icon is the game's own pint drawn by `drawPint()` in `src/art/placeholders.js`, scaled up by a whole number. The old `black-fullscreen` status-bar value wasn't valid; it's now `black-translucent`.
+- **Level-based structure (vNext stage 0).** The v1 level is now one entry (`v1`) in a level registry, built by `scripts/levels/v1.mjs`; the move was checked by rebuilding it byte-for-byte identical to the old `level-01.json`. The crawl total gets its own screen (CrawlComplete) rather than squeezing six level times onto the Complete screen, which now has one row of buttons: MENU, PLAY AGAIN, NEXT (TOTAL after the last level). Six level-picker rows fit above its buttons at 16 game px each.
 - **Wider view (vNext stage M).** `gameWidthFor()` in `src/systems/Scaling.js` picks an even width between `GAME_WIDTH` (320) and `MAX_GAME_WIDTH` (400) from the space's aspect ratio, and changes it live with `scale.setGameSize()`. Phaser resizes the cameras itself. The HUD, touch buttons and boss bar re-lay out on resize; the menu, outfit select and Complete screens restart with the same data (`src/ui/relayout.js`). In the boss fight the camera bounds grow evenly round the 320 px arena so it stays centred, and re-centre if the width changes mid-fight. The hills strips are made `MAX_GAME_WIDTH` wide. Levels needed no changes: their ends and the Avocet door stay clear of the jump button at 400 wide.
 - **Integer scaling** is computed in *device* pixels: the `#game` frame is sized to the largest whole multiple of the game size that fits in physical pixels, then Phaser FIT fills that frame. Below 1× it falls back to plain FIT. Examples: 1920×1080 → 320 wide at 6×, 1280×720 → 320 at 4×, an 844×390 desktop window → 388 at 2×.
 - **Placeholder text** uses the system monospace font at 8 px (16 px for titles). It is readable but soft when upscaled; a code-generated pixel font can replace it later without touching callers (`src/ui/text.js`).
@@ -274,7 +290,7 @@ The game title stays **Super Lad Alarm**.
 - **Touch buttons came early.** They were planned for stage 6 and were built in stage 2 because the game is mobile-first. Buttons are 36 game px at 2× scale (72 CSS px, above the brief's 64 px minimum). They grow when the canvas is drawn smaller and move in from safe-area insets. Each has an invisible hit area 12 px larger than the button. Left and right share a border, so a thumb can slide between them.
 - **Keep the bottom corners clear.** The touch buttons cover roughly the bottom 42 game px at each side of the screen, which is where the ground runs. Spawn points, and anything the player must see at the very start and end of a level (where the camera stops scrolling), should sit at least ~100 px from the left edge and away from the bottom-right corner.
 - **Jump presses are latched** from key and touch events, not polled, so a tap shorter than one frame is never lost.
-- **Level authoring.** `level-01.json` is generated from a short Node script rather than drawn in Tiled, because no Tiled install is assumed and the script is easy to review. The output is standard Tiled JSON.
+- **Level authoring.** Levels are generated from short Node scripts (one per level in `scripts/levels/`, sharing `lib.mjs`) rather than drawn in Tiled, because no Tiled install is assumed and the script is easy to review. The output is standard Tiled JSON.
 - **Level length and pacing.** 198 tiles (3,168 px, 9.9 screens). Start is Dorchester (cols 0–53), middle is Wool to the embankment (cols 54–123), end is Wareham → the boss train (cols 158–177) → Parkstone (cols 178–197). The middle is about 3.5 screens, a little under the brief's 4–5, so the stations fit evenly. A non-stop run that never stops to collect takes about 23 s; a first-time player collecting pints will take longer.
 - **Hazard placement.** The autopilot play test found two unfair spots, both now fixed: glass right where you land after dropping off a roof (removed), and a crate stair ending three tiles before a gap (moved two tiles earlier). Both had passed the validator's rules.
 - **Hidden espresso martini (moved at the owner's request so a straight run never collects it).** It sits on a small floating ledge tucked up in the Wool station canopy, up and to the left of the crate stair (col 71). Its glass just peeks above the canopy roof as a tease. The only way up is to turn back from the top crate (col 74) and jump up-left. The canopy is drawn in front of the player and fades to 35% while you're underneath it. An autopilot run through the level misses it; the up-left jump gets it and drops you straight back onto the course.

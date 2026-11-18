@@ -8,12 +8,11 @@ import { addBackdrop, addPanel } from '../ui/backdrop.js';
 import Button from '../ui/Button.js';
 import { getLevel } from '../level/levels.js';
 import { formatTime, formatSeconds } from '../systems/GameState.js';
-import Audio from '../systems/Audio.js';
+import { setupButtonFocus } from '../ui/buttonFocus.js';
 
 // "Level Complete": the run time, +2 s for every pint left behind, −5 s for
 // the espresso martini, and the final time. Nothing is saved. Play again
 // goes straight back to the same level with the same lad and fresh state.
-// If the level registry names a next level, a NEXT button is offered.
 export default class CompleteScene extends Phaser.Scene {
   constructor() {
     super(SCENE.COMPLETE);
@@ -46,49 +45,26 @@ export default class CompleteScene extends Phaser.Scene {
     addPixelText(this, cx, 89, r.missed ? `${formatSeconds(TIMING.missedPintPenaltyMs)} FOR EACH MISSED PINT` : 'NO PENALTY', { scale: 1 }).setOrigin(0.5, 0);
     row(102, 'FINAL TIME', formatTime(r.finalMs), 0xffcd75);
 
-    // The lad celebrates on the platform.
-    const lad = this.add.sprite(36, groundY, playerTextureKey(r.characterId)).setOrigin(0.5, 1);
+    // The lad celebrates on the platform, just left of the buttons.
+    const lad = this.add.sprite(cx - 147, groundY, playerTextureKey(r.characterId)).setOrigin(0.5, 1);
     lad.play(playerAnimKey(r.characterId, 'jump'));
     this.tweens.add({ targets: lad, y: groundY - 14, duration: 300, yoyo: true, repeat: -1, ease: 'Quad.Out' });
 
+    // PLAY AGAIN replays this level (its new time replaces this one in the
+    // crawl). NEXT goes on via the next stop screen; after the last level,
+    // TOTAL shows the crawl summary instead.
     const again = () => this.scene.start(SCENE.GAME, { levelId: r.levelId, characterId: r.characterId });
     const menu = () => this.scene.start(SCENE.MENU);
-    const next = levelDef.next
-      ? () => this.scene.start(SCENE.GAME, { levelId: levelDef.next, characterId: r.characterId })
-      : null;
+    const [nextLabel, onNext] = levelDef.next
+      ? ['NEXT', () => this.scene.start(SCENE.NEXT_STOP, { levelId: levelDef.next })]
+      : ['TOTAL', () => this.scene.start(SCENE.CRAWL_COMPLETE)];
 
-    this.buttons = [
-      new Button(this, cx - 58, 154, 'MENU', menu, { width: 84 }),
-      new Button(this, cx + 58, 154, 'PLAY AGAIN', again, { width: 112 }),
+    // One row under the panel: MENU, PLAY AGAIN, NEXT (or TOTAL), 268 px wide.
+    const buttons = [
+      new Button(this, cx - 103, 154, 'MENU', menu, { width: 62 }),
+      new Button(this, cx - 10, 154, 'PLAY AGAIN', again, { width: 112 }),
+      new Button(this, cx + 93, 154, nextLabel, onNext, { width: 82 }),
     ];
-    if (next) this.buttons.push(new Button(this, cx + 58, 124, 'NEXT', next, { width: 112 }));
-    this.focus = next ? 2 : 1;
-    // Every button blips when pressed (tap or keyboard).
-    for (const b of this.buttons) {
-      const run = b.onClick;
-      b.onClick = () => {
-        Audio.play('select');
-        run();
-      };
-    }
-    this.actions = this.buttons.map((b) => b.onClick);
-    this.refreshFocus();
-
-    const kb = this.input.keyboard;
-    kb.on('keydown-LEFT', () => this.moveFocus(-1));
-    kb.on('keydown-RIGHT', () => this.moveFocus(1));
-    kb.once('keydown-ENTER', () => this.actions[this.focus]());
-    kb.once('keydown-SPACE', () => this.actions[this.focus]());
-    kb.once('keydown-ESC', menu);
-  }
-
-  moveFocus(d) {
-    Audio.play('move');
-    this.focus = Phaser.Math.Wrap(this.focus + d, 0, this.buttons.length);
-    this.refreshFocus();
-  }
-
-  refreshFocus() {
-    this.buttons.forEach((b, i) => b.setFocused(i === this.focus));
+    setupButtonFocus(this, buttons, { focus: 2, onEscape: menu });
   }
 }

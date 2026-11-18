@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
 import { SCENE } from './keys.js';
-import { COLORS, CAMERA, DEBUG, GAME_HEIGHT, PARALLAX, SECRET_REVEAL_ALPHA, FINISH_DELAY_MS, SPEECH } from '../config.js';
+import { CAMERA, DEBUG, GAME_HEIGHT, PARALLAX, SECRET_REVEAL_ALPHA, FINISH_DELAY_MS, SPEECH } from '../config.js';
 import { TEX, FINISH_FRAME, getCharacter } from '../assets.js';
 import { addText } from '../ui/text.js';
 import VirtualInput from '../systems/Input.js';
-import { createGameState, addPickup, finalTime } from '../systems/GameState.js';
+import { createGameState, addPickup, finalTime, CRAWL_KEY, createCrawl, recordResult } from '../systems/GameState.js';
 import Audio from '../systems/Audio.js';
 import Checkpoints from '../systems/Checkpoints.js';
 import BossArena from '../systems/BossArena.js';
@@ -26,7 +26,6 @@ export default class GameScene extends Phaser.Scene {
   }
 
   create() {
-    this.cameras.main.setBackgroundColor(COLORS.sky);
     this.gameState = createGameState(this.levelDef.id);
     this.level = loadLevel(this, this.levelDef);
 
@@ -163,6 +162,11 @@ export default class GameScene extends Phaser.Scene {
     });
 
     const result = { ...s, ...finalTime(s), characterId: this.characterId };
+    // Add this level to the crawl (started from the level picker; a level
+    // reached any other way starts its own).
+    const crawl = this.registry.get(CRAWL_KEY) ?? createCrawl(s.levelId);
+    recordResult(crawl, result);
+    this.registry.set(CRAWL_KEY, crawl);
     this.time.delayedCall(FINISH_DELAY_MS, () => this.scene.start(SCENE.COMPLETE, result));
   }
 

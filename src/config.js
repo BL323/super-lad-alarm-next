@@ -102,18 +102,10 @@ export const HUD = {
 
 // Train Conductor boss fight. Arrays are per phase: [before 1st hit, after 1st, after 2nd].
 // He gets faster each time he's stomped. Three stomps beat him; dying resets him.
-export const BOSS = {
-  hits: 3,
+// Values every Conductor fight shares.
+const BOSS_SHARED = {
   introMs: 1200, // "TICKETS PLEASE!" before he starts
-  walkSpeed: [30, 40, 52], // px/s, plodding towards the player
-  walkMs: [2400, 2000, 1600], // walking (and throwing) before each wind-up
-  throwEveryMs: [1200, 1000, 850],
-  ticketsPerVolley: [1, 2, 3],
   ticketSpread: 32, // px between tickets in a volley
-  ticketFlightMs: 1100, // time from throw to landing; the floor marker shows where
-  windupMs: [700, 550, 450], // whistle telegraph before the dash
-  dashSpeed: [150, 185, 220], // px/s; he's dizzy after hitting the arena edge
-  dizzyMs: 1600, // stomp window
   hurtMs: 700,
   stompBounce: -260, // player bounce off his cap
   exitMs: 850, // final stomp: knocked off the train, spinning, gone in this time
@@ -121,9 +113,46 @@ export const BOSS = {
   body: { width: 12, height: 26, offsetX: 2, offsetY: 4 },
 };
 
+// One tuning per fight, picked by the `tuning` property of the level's boss
+// object. Arrays are per phase (one phase per hit taken, so `hits` phases);
+// they can be any length, and the last entry is used for later phases.
+export const BOSS = {
+  // Level 3: the v1 fight, unchanged.
+  first: {
+    ...BOSS_SHARED,
+    hits: 3,
+    walkSpeed: [30, 40, 52], // px/s, plodding towards the player
+    walkMs: [2400, 2000, 1600], // walking (and throwing) before each wind-up
+    throwEveryMs: [1200, 1000, 850],
+    ticketsPerVolley: [1, 2, 3],
+    ticketFlightMs: 1100, // time from throw to landing; the floor marker shows where
+    windupMs: [700, 550, 450], // whistle telegraph before the dash
+    dashSpeed: [150, 185, 220], // px/s; he's dizzy after hitting the arena edge
+    dizzyMs: 1600, // stomp window
+  },
+  // Level 6: the harder rematch. A copy of `first` until stage 6 tunes it.
+  final: {
+    ...BOSS_SHARED,
+    hits: 3,
+    walkSpeed: [30, 40, 52],
+    walkMs: [2400, 2000, 1600],
+    throwEveryMs: [1200, 1000, 850],
+    ticketsPerVolley: [1, 2, 3],
+    ticketFlightMs: 1100,
+    windupMs: [700, 550, 450],
+    dashSpeed: [150, 185, 220],
+    dizzyMs: 1600,
+  },
+};
+export const DEFAULT_BOSS_TUNING = 'first';
+
 // Delay between reaching the pub door and the Complete screen (the lad walks
 // in, confetti falls, "CHEERS!").
 export const FINISH_DELAY_MS = 2600;
+
+// Level picker rows (game px) and the "next stop" screen shown before each level.
+export const LEVEL_SELECT = { top: 38, rowHeight: 16, rowWidth: 292 }; // six rows end above the buttons at y 140
+export const NEXT_STOP = { durationMs: 2400, minMs: 400 }; // moves on by itself; a tap skips after minMs
 
 // Sound. Effects are synthesised in src/audio/sfx.js (retro square/noise voices).
 export const AUDIO = {
@@ -178,3 +207,11 @@ export const COLORS = {
   textDim: '#c2c3c7',
   accent: '#ffec27',
 };
+
+// Level looks, picked by the `theme` property of a level's map (see
+// LevelLoader). `sky` is the background colour; `hillsTint` tints the
+// parallax hills (0xffffff = as drawn). Later stages add weather and lamps.
+export const THEMES = {
+  day: { sky: COLORS.sky, hillsTint: 0xffffff },
+};
+export const DEFAULT_THEME = 'day';

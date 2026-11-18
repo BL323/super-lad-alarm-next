@@ -10,7 +10,7 @@ import Audio from '../systems/Audio.js';
 
 const CARD = { w: 92, h: 78, y: 82, spacing: 100, spriteScale: 3 }; // wide enough for "SEA LORD"
 
-// Pick Naylor's outfit before the level loads. Looks only; everyone plays the same.
+// Pick Naylor's outfit, then where to start (the level picker). Looks only; everyone plays the same.
 // The choice is kept in the game registry ('characterId') for replays.
 export default class CharacterSelectScene extends Phaser.Scene {
   constructor() {
@@ -85,7 +85,7 @@ export default class CharacterSelectScene extends Phaser.Scene {
     Audio.play('select');
     const id = this.cards[this.index].c.id;
     this.registry.set('characterId', id);
-    this.scene.start(SCENE.GAME, { characterId: id });
+    this.scene.start(SCENE.LEVEL_SELECT);
   }
 
   back() {

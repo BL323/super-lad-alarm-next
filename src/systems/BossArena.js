@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { BOSS, CAMERA, GAME_HEIGHT } from '../config.js';
+import { BOSS, DEFAULT_BOSS_TUNING, CAMERA, GAME_HEIGHT } from '../config.js';
 import { TEX } from '../assets.js';
 import Conductor, { BossState } from '../entities/Conductor.js';
 import { DEPTH } from '../level/LevelLoader.js';
@@ -27,6 +27,8 @@ export default class BossArena {
     this.levelWidth = levelWidth;
     this.floorY = boss.y;
     this.status = 'idle'; // idle | intro | fighting | won
+    // BOSS.first or BOSS.final, named by the level's boss object.
+    this.tuning = BOSS[boss.tuning] ?? BOSS[DEFAULT_BOSS_TUNING];
 
     // Walls that close on both sides once the fight starts.
     this.walls = [zone.x - 4, zone.right + 4].map((x) => {
@@ -44,6 +46,7 @@ export default class BossArena {
       { left: zone.x, right: zone.right, floorY: boss.y },
       () => player,
       (x, y, tx) => this.throwTicket(x, y, tx),
+      this.tuning,
     ).setDepth(DEPTH.player - 1);
 
     const physics = scene.physics.add;
@@ -101,7 +104,7 @@ export default class BossArena {
 
     this.boss.begin();
     this.status = 'fighting';
-    this.scene.events.emit('boss-start', { hits: BOSS.hits });
+    this.scene.events.emit('boss-start', { hits: this.tuning.hits });
   }
 
   reset() {
@@ -143,11 +146,11 @@ export default class BossArena {
 
     if (fromAbove) {
       if (boss.isVulnerable) {
-        p.bounce(BOSS.stompBounce);
+        p.bounce(this.tuning.stompBounce);
         this.scene.events.emit('boss-hit', { hp: boss.hp - 1 });
         if (boss.takeHit()) this.win();
       } else if (boss.state !== BossState.HURT && boss.state !== BossState.DEFEATED) {
-        p.bounce(BOSS.stompBounce * 0.8); // harmless bounce off his cap
+        p.bounce(this.tuning.stompBounce * 0.8); // harmless bounce off his cap
         Audio.play('bounce');
       }
       return;
@@ -173,7 +176,7 @@ export default class BossArena {
   /** Lob a ticket from (x, y) so it lands on the floor at targetX after ticketFlightMs. */
   throwTicket(x, y, targetX) {
     const tx = Phaser.Math.Clamp(targetX, this.zone.x + 8, this.zone.right - 8);
-    const T = BOSS.ticketFlightMs / 1000;
+    const T = this.tuning.ticketFlightMs / 1000;
     const g = this.scene.physics.world.gravity.y;
     const vy = (this.floorY - 2 - y - 0.5 * g * T * T) / T;
     const vx = (tx - x) / T;
