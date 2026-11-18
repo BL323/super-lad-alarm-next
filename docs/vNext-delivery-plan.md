@@ -8,6 +8,7 @@ The game stays playable and deployable after every stage. Each stage is its own 
 
 | Stage | Delivers | New systems it introduces |
 | --- | --- | --- |
+| M | Mobile full screen (independent; can ship before or alongside stage 0) | Fill scaling on touch, wider view, Android full screen, iPhone Home Screen app |
 | 0 | Level-based game, still playing the v1 level | Level builders, registry, level picker, next stop screen, crawl timing, per-level theme, boss tunings |
 | 1 | Level 1: Poole → Dorchester South (Brewhouse) | Village section, low bridges, sky per level, market crates and kebab |
 | 2 | Level 2: Dorchester South → Moreton (Frampton) | Crumbling crates, level crossing, cowpats |
@@ -18,6 +19,22 @@ The game stays playable and deployable after every stage. Each stage is its own 
 | 7 | Polish | Difficulty pass across all six, docs tidy-up |
 
 Each new system arrives in the first level that needs it. Later levels reuse it, so they get quicker to build.
+
+## Stage M: mobile full screen
+
+This doesn't depend on the levels, so it can ship first: it's the change players will notice straight away. Details are in section 5 of [vNext-improvements.md](vNext-improvements.md).
+
+1. **Fill scaling on touch.** Add a `SCALING` option to fill the space with a non-integer scale on touch devices, keeping integer scaling on desktop. Check that pixels stay sharp enough at 844×390 and 640×360 and on a real phone.
+2. **Fix the iPhone meta tags.** Change the status bar style to `black-translucent`, and add `public/manifest.webmanifest` (`display: fullscreen`, `orientation: landscape`) and home-screen icons drawn from the existing art.
+3. **Android full screen.** Request full screen and a landscape lock on the START tap, and add a full-screen button on the menu. The portrait freeze (`src/systems/mobile.js`) must still work when it's refused or the player leaves full screen.
+4. **Home Screen hint.** Show "Add to Home Screen to play full screen" on the menu in iPhone Safari only, never when it's already running from the Home Screen.
+5. **Wider view.** Let the game width follow the screen's shape between 320 and about 400, with height fixed at 180. This is the biggest step: every screen and the HUD lay out from `scale.width`, and the validator's touch-button clearance and end-of-level camera checks use the widest view. It can be split into its own pull request.
+
+### Stage M done when
+
+- On an iPhone opened from the Home Screen, and on Android after tapping START, the game fills the screen with no browser bars and no black bars on a typical phone.
+- In a normal Safari tab it fills the space between the browser bars.
+- Desktop looks the same as before, and the four standard sizes still pass.
 
 ## Stage 0: a level-based game
 

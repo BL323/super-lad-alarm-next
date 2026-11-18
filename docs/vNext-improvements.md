@@ -139,3 +139,19 @@ Every idea here uses only left, right and jump.
 - **New hazards.** Cowpats, kebab and crates use the sprite-hazard list (`HAZARD_SPRITES`). Swans and seagulls need simple patrol and swoop movement. The Black Bear's throwers reuse the ticket-volley code.
 - **Sky and weather.** Per-level sky colours and a lamp-lit night look, plus a rain effect, are set in each level's map properties.
 - **Touch buttons.** Every level's start and end must stay clear of the bottom corners, as in v1. The level picker must work by touch.
+
+## 5. Mobile full screen
+
+On phones the game doesn't fill the screen: it sits in a box with black bars on every side, under the browser's address and tab bars. There are three causes:
+
+1. **Integer scaling.** `src/systems/Scaling.js` snaps the game to a whole multiple of 320×180 in device pixels, which keeps pixels crisp but can leave a lot of unused space. On a phone it often lands a whole step below what would fit.
+2. **Fixed 16:9 shape.** Modern phones are about 19.5:9 in landscape, so even a perfect fit leaves bars at the sides.
+3. **Browser bars.** The page never asks for full screen. On iPhone, Safari can't make a page full screen, so the only way to lose the bars there is to add the game to the Home Screen. The page has no web app manifest or icon for that, and `apple-mobile-web-app-status-bar-style` is set to `black-fullscreen`, which isn't a valid value.
+
+What we'll change:
+
+- **Fill on touch devices.** Use the largest scale that fits, even when it isn't a whole number, while keeping pixel-art (nearest-neighbour) rendering. On high-density phone screens uneven pixels are hard to see. Desktop keeps integer scaling. This becomes a setting in `SCALING` in `config.js`.
+- **Wider view on wide screens.** Keep the height at 180 and let the width grow with the screen's shape (from 320 up to about 400), so a phone shows more of the level instead of side bars. Menus, the HUD and the touch buttons lay out from the actual width rather than a fixed `GAME_WIDTH`. Level ends, the boss arena camera lock and the touch-button clearance rules are rechecked for the widest view.
+- **Full screen on Android.** The first tap (START) asks the browser to go full screen and lock to landscape where it's allowed, and the game copes if it's refused. A small full-screen button on the menu lets the player go back in after leaving.
+- **Home Screen app on iPhone.** Add a web app manifest (`display: fullscreen`, landscape, theme colours) and home-screen icons, and fix the status-bar meta tag to `black-translucent`. The menu shows a short "Add to Home Screen to play full screen" hint in iPhone Safari only. Opened from the Home Screen, the game runs with no browser bars.
+- **Safe areas.** With the bars gone the game reaches the notch and the rounded corners, so the touch buttons and HUD keep using the safe-area insets (as they already do).
