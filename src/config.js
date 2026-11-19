@@ -123,37 +123,37 @@ const BOSS_SHARED = {
 // object. Arrays are per phase (one phase per hit taken, so `hits` phases);
 // they can be any length, and the last entry is used for later phases.
 export const BOSS = {
-  // Level 3: the v1 fight, unchanged.
+  // Level 3: the v1 fight with a fourth stomp added.
   first: {
     ...BOSS_SHARED,
-    hits: 3,
-    walkSpeed: [30, 40, 52], // px/s, plodding towards the player
-    walkMs: [2400, 2000, 1600], // walking (and throwing) before each wind-up
-    throwEveryMs: [1200, 1000, 850],
-    ticketsPerVolley: [1, 2, 3],
-    ticketFlightMs: 1100, // time from throw to landing; the floor marker shows where
-    windupMs: [700, 550, 450], // whistle telegraph before the dash
-    dashSpeed: [150, 185, 220], // px/s; he's dizzy after hitting the arena edge
-    dizzyMs: 1600, // stomp window
+    hits: 4,
+    walkSpeed: [34, 42, 52, 58], // px/s, plodding towards the player
+    walkMs: [2200, 1900, 1600, 1500], // walking (and throwing) before each wind-up
+    throwEveryMs: [1100, 950, 850, 800],
+    ticketsPerVolley: [1, 2, 3, 3],
+    ticketFlightMs: 1050, // time from throw to landing; the floor marker shows where
+    windupMs: [650, 520, 450, 420], // whistle telegraph before the dash
+    dashSpeed: [160, 190, 220, 230], // px/s; he's dizzy after hitting the arena edge
+    dizzyMs: 1500, // stomp window
   },
-  // Level 6: the harder rematch. Five stomps; every phase starts where the
+  // Level 6: the harder rematch. Six stomps; every phase starts where the
   // first fight ended and climbs. In the later phases he sometimes dashes
   // straight back after hitting a wall (`doubleDashChance`), with a short
   // flashing turn (`turnMs`) first, so hiding in the far corner isn't safe.
   final: {
     ...BOSS_SHARED,
     introText: 'TICKETS PLEASE! AGAIN!',
-    hits: 5,
-    walkSpeed: [52, 58, 64, 70, 76],
-    walkMs: [1800, 1600, 1500, 1400, 1300],
-    throwEveryMs: [900, 850, 800, 760, 720],
-    ticketsPerVolley: [3, 3, 4, 4, 5],
+    hits: 6,
+    walkSpeed: [52, 58, 64, 70, 76, 78],
+    walkMs: [1800, 1600, 1500, 1400, 1300, 1250],
+    throwEveryMs: [900, 850, 800, 760, 720, 700],
+    ticketsPerVolley: [3, 3, 4, 4, 5, 5],
     ticketSpread: 28,
     ticketFlightMs: 900,
-    windupMs: [450, 420, 400, 380, 360],
-    dashSpeed: [220, 230, 240, 250, 260],
+    windupMs: [450, 420, 400, 380, 360, 350],
+    dashSpeed: [220, 230, 240, 250, 260, 265],
     dizzyMs: 1250,
-    doubleDashChance: [0, 0.35, 0.5, 0.6, 0.7],
+    doubleDashChance: [0, 0.35, 0.5, 0.6, 0.7, 1], // the last phase always dashes back
     turnMs: 320,
     doubleDashDizzyMs: 2000, // longer after a dash back: he ends up at the far wall
   },
@@ -167,7 +167,7 @@ export const FINISH_DELAY_MS = 2600;
 // Crumbling crates (src/systems/Crumbles.js): land on one and it shakes for
 // `shakeMs`, then drops away. It comes back `returnMs` later, or at once when
 // the player respawns.
-export const CRUMBLE = { shakeMs: 450, fallMs: 350, returnMs: 3000, shakePx: 1 };
+export const CRUMBLE = { shakeMs: 380, fallMs: 350, returnMs: 3000, shakePx: 1 };
 
 // Angry locals throwing beer mats from pub windows (src/systems/Throwers.js).
 // Each one throws every `everyMs` while the player is on the street within
@@ -175,7 +175,7 @@ export const CRUMBLE = { shakeMs: 450, fallMs: 350, returnMs: 3000, shakePx: 1 }
 // where its floor marker shows, `flightMs` later. Keep moving and they land
 // behind you; hesitate (or stop to line up a jump) and you're hit. Up on the
 // rooftops you're out of reach. `lead` > 0 would aim ahead of a moving player.
-export const THROWERS = { everyMs: 1000, flightMs: 800, rangeTiles: 16, firstDelayMs: 300, staggerMs: 500, lead: 0 };
+export const THROWERS = { everyMs: 850, flightMs: 800, rangeTiles: 16, firstDelayMs: 300, staggerMs: 500, lead: 0 };
 
 // Level crossings (src/systems/LevelCrossing.js): open → warning (lights, bell,
 // barrier lowering) → closed while a train passes (deadly) → raising → open.
@@ -232,7 +232,7 @@ export const AWNINGS = { velocity: 420, squashMs: 140, dropPx: 4 };
 // the stretch, faster if you run ahead. Drop off the left edge of the screen
 // and you've missed the train (a death). The validator keeps `speed` under
 // `maxPace` of your run speed and keeps anything you'd wait for out of it.
-export const AUTOSCROLL = { speed: 62, maxPace: 0.7, followLead: 0.4, startText: 'ALL ABOARD!', missedText: 'MISSED THE TRAIN!' };
+export const AUTOSCROLL = { speed: 70, maxPace: 0.7, followLead: 0.4, startText: 'ALL ABOARD!', missedText: 'MISSED THE TRAIN!' };
 
 // Rain (src/systems/Weather.js), from a level's `weather` map property.
 export const RAIN = { dropsPerSecond: 140, speed: 330, drift: -40, alpha: 0.55, splashesPerSecond: 18 };

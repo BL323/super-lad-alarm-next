@@ -30,47 +30,47 @@ export default function build(L) {
   crates(20, 9);
   pint(20, 7);
 
-  // The train (cols 25–72): glass on the roofs and a pair of crumbling crates.
+  /** Luggage piled on a carriage roof at `col`, up to `topRow`. */
+  const luggage = (col, topRow) => {
+    for (let r = topRow; r < ROOF; r++) set('ground', col, r, T.crate);
+  };
+
+  // The train (cols 25–98): 3-tile gaps, glass, luggage, three crumbling
+  // crates in a row, a low bridge over a gap.
   carriage(25, 10); // 1-tile gap at 24, step up onto the roof
-  glass(29, ROOF);
-  carriage(37, 10); // 2-tile gap at 35–36
+  glass(30, ROOF);
   pint(27, 7);
-  pint(29, 5);
-  pint(32, 7);
-  pint(35, 6);
-  pint(36, 6);
-  pint(41, 7);
+  pint(30, 5);
+  pint(33, 7);
+  [35, 36, 37].forEach((c) => pint(c, 6)); // over the 3-tile gap at 35–37
+  carriage(38, 10);
+  luggage(41, 6);
+  pint(41, 4);
   pint(44, 7);
-  // Gap 47–50: 1-tile gap, crumbling crates at 48–49, 1-tile gap.
-  [48, 49].forEach((c) => {
+  // Gap 48–52: 1-tile gap, crumbling crates at 49–51, 1-tile gap.
+  [49, 50, 51].forEach((c) => {
     crumble(c, ROOF);
     pint(c, 7);
   });
-  carriage(51, 10);
-  glass(56, ROOF);
-  carriage(63, 10); // 2-tile gap at 61–62
-  pint(53, 7);
-  pint(56, 5);
-  pint(59, 7);
-  pint(61, 6);
-  pint(62, 6);
-  pint(66, 7);
-  pint(70, 7);
-
-  // More train (cols 73–98): a 3-tile gap, glass, a single crumbling crate
-  // and a low bridge.
-  [73, 74, 75].forEach((c) => pint(c, 6)); // over the 3-tile gap at 73–75
-  carriage(76, 10);
-  glass(80, ROOF);
-  pint(78, 7);
-  pint(80, 5);
-  pint(83, 7);
-  // Gap 86–88: 1-tile gap, a crumbling crate at 87, 1-tile gap.
-  crumble(87, ROOF);
-  pint(87, 7);
-  carriage(89, 10);
-  bridge(91, 95, 5); // short hops under it
-  [91, 93, 95].forEach((c) => pint(c, 7));
+  carriage(53, 10);
+  glass(58, ROOF);
+  pint(55, 7);
+  pint(58, 5);
+  pint(61, 7);
+  [63, 64, 65].forEach((c) => pint(c, 6)); // over the 3-tile gap at 63–65
+  carriage(66, 10);
+  carriage(77, 10); // 1-tile gap at 76, under the bridge
+  bridge(68, 78, 5);
+  [68, 70, 72, 74, 76, 78].forEach((c) => pint(c, 7)); // short hops under it
+  glass(82, ROOF);
+  pint(82, 5);
+  // Gap 87–89: one crumbling crate in the middle.
+  crumble(88, ROOF);
+  pint(88, 7);
+  carriage(90, 9);
+  luggage(93, 7);
+  pint(93, 5);
+  pint(96, 7);
 
   // Lineside (cols 101–113): drop to the embankment. The checkpoint is the
   // respawn point for the fight: any death in it puts you back here.
@@ -122,21 +122,27 @@ export default function build(L) {
   pint(186, 7);
   pint(187, 6);
 
-  // The high road: slate roofs on three runs of buildings, with an alley
-  // (2-tile gap) and a narrow gap (1 tile) between them. More pints up here,
+  // The high road: slate roofs on three runs of buildings, with a wide alley
+  // (3-tile gap), a narrow gap (1 tile) and chimneys to hop. More pints up here,
   // and the beer mats can't reach you.
   house(191, 'terrace-blue');
   shop(195, 'NEWSAGENT');
   house(199, 'terrace-red');
   roof(189, 200, 5);
   lamp(202); // in the alley
-  house(205, 'terrace-cream');
+  house(206, 'terrace-cream');
   shop(209, 'CHIPPY');
-  roof(203, 210, 5);
+  roof(204, 210, 5); // a 3-tile alley at 201–203
+  set('ground', 196, 4, T.crate); // chimneys
+  set('ground', 207, 4, T.crate);
   house(214, 'cottage');
   shop(218, 'POST OFFICE');
   roof(212, 219, 5);
-  [190, 192, 194, 196, 198, 200, 201, 202, 204, 206, 208, 210, 211, 213, 215, 217, 219].forEach((c) => pint(c, 4));
+  set('ground', 216, 4, T.crate); // a tall chimney
+  set('ground', 216, 3, T.crate);
+  [190, 192, 194, 198, 200, 201, 202, 203, 205, 209, 210, 211, 213, 215, 218, 219].forEach((c) => pint(c, 4));
+  [196, 207].forEach((c) => pint(c, 3));
+  pint(216, 2);
   // The martini: on a crate up and to the LEFT of the first roof, above the
   // stair. Jump back up-left from the start of the high road to reach it.
   set('ground', 186, 3, T.crate);
@@ -146,9 +152,11 @@ export default function build(L) {
   // its locals at the windows and a fried-chicken bucket outside.
   pint(193, 9);
   pint(204, 9);
+  bucket(208);
+  pint(208, 7);
   pint(215, 9);
-  bucket(224);
-  pint(224, 7);
+  bucket(227); // past where a jump off the end of the roofs lands
+  pint(227, 7);
   pub(231, 'black-bear');
   thrower(231, -28, 20); // ground-floor windows, where the angry faces are
   thrower(231, 28, 20);

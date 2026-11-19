@@ -26,6 +26,7 @@ export default class Awnings {
       Object.assign(strip.body.checkCollision, { down: false, left: false, right: false });
     }
     scene.physics.add.collider(player, this.group, (p, strip) => {
+      p.standOn();
       if (!p.body.touching.down || p.dead) return;
       p.bounce(-AWNINGS.velocity, { fixed: true });
       Audio.play('boing');

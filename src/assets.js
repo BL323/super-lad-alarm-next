@@ -73,9 +73,9 @@ export const PUBS = {
   'black-bear': { name: 'THE BLACK BEAR', wall: 'render', roof: '#1a1c2c', angryLocals: true },
   'old-granary': { name: 'THE OLD GRANARY', wall: 'brick', roof: '#7e2553' },
   frampton: { name: 'FRAMPTON', wall: 'render', roof: '#5f574f', chimney: true },
-  'kings-arms': { name: 'KINGS ARMS', wall: 'render', roof: '#3a3a46', chimney: true }, // Wareham scenery only
+  'kings-arms': { name: 'KINGS ARMS', wall: 'render', roof: '#3a3a46', chimney: true, angryLocals: true }, // Wareham scenery only
   'rising-sun': { name: 'THE RISING SUN', wall: '#f2c46b', roof: '#5f574f', chimney: true, sun: true }, // Poole, by the quay
-  avocet: { name: 'THE AVOCET', wall: 'render', roof: '#29366f' },
+  avocet: { name: 'THE AVOCET', wall: 'render', roof: '#29366f', angryLocals: true },
 };
 
 // Playable characters, in select-screen order (left to right): all Naylor (red hair, same skin tone) in different

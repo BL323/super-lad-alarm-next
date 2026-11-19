@@ -26,7 +26,10 @@ export default class Crumbles {
       img.state = 'idle';
       return img;
     });
-    scene.physics.add.collider(player, this.group, (_p, crate) => this.onTouch(crate));
+    scene.physics.add.collider(player, this.group, (_p, crate) => {
+      player.standOn();
+      this.onTouch(crate);
+    });
 
     const onRespawn = () => this.items.forEach((c) => this.restore(c));
     player.on('respawned', onRespawn);

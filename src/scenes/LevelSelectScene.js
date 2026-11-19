@@ -25,6 +25,8 @@ export default class LevelSelectScene extends Phaser.Scene {
   }
 
   create() {
+    // Phaser reuses this scene object on every visit: clear last visit's flag.
+    this.going = false;
     addBackdrop(this);
     const width = this.scale.width;
     const cx = width / 2;

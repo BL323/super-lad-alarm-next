@@ -10,13 +10,13 @@
 // the chain ferry takes you over the harbour to The Rising Sun.
 //
 //   Wareham (0–21) → the departing train (23–121, auto-scroll 24–130)
-//   → Holton Heath (124–135) → one carriage (139–148) → Poole station (151–170)
-//   → the high street, awnings and rooftops (171–206) → the quay (207–218)
-//   → the harbour and the ferry (219–232) → The Rising Sun (col 248)
+//   → Holton Heath (124–136) → one carriage (139–148) → Poole station (151–170)
+//   → the high street, awnings and rooftops (171–213) → the quay (214–225)
+//   → the harbour and the ferry (226–239) → The Rising Sun (col 255)
 
 export const meta = {
   id: 'level-05',
-  cols: 257, // ~12.9 screens of 20 tiles
+  cols: 264, // ~13.2 screens of 20 tiles
   properties: { title: 'Wareham to Poole', theme: 'stormy', weather: 'rain' }, // THEMES in src/config.js; weather: src/systems/Weather.js
 };
 
@@ -82,14 +82,15 @@ export default function build(L) {
   bridge(114, 119, 5);
   [114, 116, 118].forEach((c) => pint(c, 7)); // short hops under the bridge
 
-  // Holton Heath (cols 124–135): drop off onto the embankment.
-  embankment(124, 135); // 2-tile gap at 122–123
+  // Holton Heath (cols 124–136): drop off onto the embankment.
+  embankment(124, 136); // 2-tile gap at 122–123
   checkpoint(132, 'Holton Heath');
   [126, 128].forEach((c) => pint(c, 9));
 
-  // One more carriage (cols 139–148): a 3-tile gap and a step up onto it.
+  // One more carriage (cols 139–148): a 2-tile gap and a step up onto it.
   carriage(139, 10);
-  [136, 137, 138].forEach((c) => pint(c, 7));
+  pint(136, 9);
+  [137, 138].forEach((c) => pint(c, 7));
   luggage(143, 6);
   luggage(144, 7);
   pint(143, 4);
@@ -101,16 +102,18 @@ export default function build(L) {
   canopy(156, 167, 4, [157, 167]);
   [162, 165].forEach((c) => pint(c, 9));
 
-  // Poole high street (cols 171–206). Each striped awning is bouncy: land on
+  // Poole high street (cols 171–213). Each striped awning is bouncy: land on
   // it and it throws you up onto the rooftops (the high road, with the pints).
-  pavement(171, 218);
+  pavement(171, 225);
   lamp(172);
   shop(176, 'GIFTS');
   awning(174, 178, 8);
   house(181, 'terrace-blue');
   house(185, 'terrace-cream');
   L.roof(180, 187, 5);
-  [180, 182, 184, 186, 187].forEach((c) => pint(c, 4));
+  set('ground', 184, 4, T.crate); // chimney
+  [180, 182, 186, 187].forEach((c) => pint(c, 4));
+  pint(184, 3);
   lamp(189); // in the alley
   shop(192, 'CHANDLERY');
   awning(190, 194, 8);
@@ -120,28 +123,40 @@ export default function build(L) {
   house(197, 'terrace-red');
   shop(201, 'ICE CREAM');
   L.roof(196, 203, 5);
-  [196, 198, 200, 202].forEach((c) => pint(c, 4));
+  set('ground', 199, 4, T.crate); // a tall chimney
+  set('ground', 199, 3, T.crate);
+  [196, 198, 201, 202, 203].forEach((c) => pint(c, 4));
+  pint(199, 2);
+  // A third run of roofs over a 2-tile alley, with no awning: only from the
+  // roofs before it. Another tall chimney.
+  house(208, 'cottage');
+  house(212, 'terrace-blue');
+  L.roof(206, 213, 5);
+  set('ground', 210, 4, T.crate);
+  set('ground', 210, 3, T.crate);
+  [204, 205, 207, 209, 212, 213].forEach((c) => pint(c, 4));
+  pint(210, 2);
   pint(188, 9); // the low road
   pint(204, 9);
-  house(206, 'cottage');
+  pint(211, 9);
 
-  // The quay (cols 207–218): a gull swoops along it.
-  gull(209, 216);
-  pint(207, 9);
+  // The quay (cols 214–225): a gull swoops along it.
+  gull(216, 223);
+  pint(214, 9);
 
-  // The harbour (cols 219–232): the chain ferry across.
-  river(219, 232);
-  yacht(225);
-  mover('ferry', 220, 231, SURFACE);
-  [223, 226, 229].forEach((c) => pint(c, 9)); // ride through them
+  // The harbour (cols 226–239): the chain ferry across.
+  river(226, 239);
+  yacht(232);
+  mover('ferry', 227, 238, SURFACE);
+  [230, 233, 236].forEach((c) => pint(c, 9)); // ride through them
 
-  // The far quay (cols 233–256): another gull, then The Rising Sun.
-  pavement(233, 256);
-  gull(236, 242, SURFACE, 1800);
-  lamp(244);
-  pint(245, 9);
-  pub(248, 'rising-sun');
+  // The far quay (cols 240–263): another gull, then The Rising Sun.
+  pavement(240, 263);
+  gull(243, 249, SURFACE, 1800);
+  lamp(251);
+  pint(252, 9);
+  pub(255, 'rising-sun');
 
   // The finish is the pub door (same column), 8 tiles from the end.
-  finish(248);
+  finish(255);
 }

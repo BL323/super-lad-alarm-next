@@ -19,6 +19,8 @@ export default class NextStopScene extends Phaser.Scene {
   }
 
   create() {
+    // Phaser reuses this scene object on every visit: clear last visit's flag.
+    this.leaving = false;
     const { groundY } = addBackdrop(this);
     const width = this.scale.width;
     const cx = width / 2;

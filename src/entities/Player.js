@@ -43,6 +43,14 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.jumpCut = false;
     this.lastGroundedAt = -Infinity;
     this.lastJumpPressedAt = -Infinity;
+    // Physics steps so far, and the last one in which a collider called
+    // standOn(). (A 120 Hz frame can have no physics step: then nothing changes.)
+    this.physicsStep = 0;
+    this.stoodOnStep = -1;
+    const world = scene.physics.world;
+    const onStep = () => this.physicsStep++;
+    world.on(Phaser.Physics.Arcade.Events.WORLD_STEP, onStep);
+    scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => world.off(Phaser.Physics.Arcade.Events.WORLD_STEP, onStep));
 
     this.applyStats();
     this.setCollideWorldBounds(true);
@@ -64,14 +72,25 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     return this;
   }
 
+  /**
+   * Colliders with bodies you can stand on (moving decks, crumbling crates,
+   * awnings) call this. `body.touching.down` alone isn't proof of ground:
+   * overlaps (pints, hazards, the door trigger) set it too, which used to
+   * give a free jump in mid-air off a pint.
+   */
+  standOn() {
+    if (this.body.touching.down) this.stoodOnStep = this.physicsStep; // WORLD_STEP comes after the colliders
+  }
+
   update(time, delta) {
     if (this.dead || this.enteringDoor) return;
+    const onBody = this.stoodOnStep === this.physicsStep - 1;
 
     const s = this.stats;
     const input = this.controls.state;
     const body = this.body;
     const dt = delta / 1000;
-    const onFloor = body.blocked.down || body.touching.down;
+    const onFloor = body.blocked.down || onBody;
 
     if (onFloor) {
       this.lastGroundedAt = time;

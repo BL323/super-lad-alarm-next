@@ -42,7 +42,7 @@ export default class MovingPlatforms {
       sprite.body.updateFromGameObject();
       return item;
     });
-    scene.physics.add.collider(player, this.group);
+    scene.physics.add.collider(player, this.group, () => player.standOn());
 
     // Steer each deck once per physics step.
     const world = scene.physics.world;

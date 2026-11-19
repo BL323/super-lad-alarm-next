@@ -81,6 +81,15 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     if (surface[c] !== null) errors.push(`crumbling crate at col ${c} is over ground (it must bridge a gap)`);
     else surface[c] = r;
   }
+  // A crate shakes sideways before it drops, so one right up against ground
+  // pushes you into the side of the next tile: leave a gap tile either side.
+  for (const c of crumbleCols) {
+    for (const n of [c - 1, c + 1]) {
+      if (!crumbleCols.has(n) && surface[n] !== null && surface[n] !== undefined) {
+        errors.push(`crumbling crate at col ${c} is right next to ground at col ${n} (leave a gap tile)`);
+      }
+    }
+  }
   let run = 0;
   for (let c = 0; c <= cols; c++) {
     run = crumbleCols.has(c) ? run + 1 : 0;
@@ -235,6 +244,13 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
       const rise = lastSurface - surface[c];
       if (rise > limits.step) {
         errors.push(`step-up of ${rise} tiles into col ${c}${low} (max ${limits.step})`);
+      }
+      // A wide gap and a step up together: a running jump taking off a tile
+      // before the edge must still be above the far side when it gets there.
+      if (gap > 0 && rise > 0 && !low) {
+        const t = ((gap + 1) * tw) / J.runSpeed;
+        const height = J.velocity * t - (J.gravity * t * t) / 2;
+        if (height < rise * tw) errors.push(`gap of ${gap} tiles with a step-up of ${rise} at cols ${lastCol + 1}–${c - 1} (too far up and across in one jump)`);
       }
     }
     lastSurface = surface[c];

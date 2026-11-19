@@ -14,7 +14,7 @@ import Lobber from './Lobber.js';
 // land where their floor markers show. Dying resets the whole encounter (he's
 // back to full health, the walls open, the camera follows again) and the
 // player walks back in from the checkpoint beside the track. `tuning.hits`
-// stomps while he's dizzy beat him (3 in the first fight, 5 in the final); the walls open, the camera follows again, and
+// stomps while he's dizzy beat him (4 in the first fight, 6 in the final); the walls open, the camera follows again, and
 // the player hops off and goes on to the (now unlocked) pub door.
 export default class BossArena {
   /**
@@ -146,6 +146,7 @@ export default class BossArena {
     const fromAbove = p.body.velocity.y >= 0 && prevBottom <= boss.body.top + 6;
 
     if (fromAbove) {
+      p.standOn(); // his cap is something to jump off, like the ground
       if (boss.isVulnerable) {
         p.bounce(this.tuning.stompBounce);
         this.scene.events.emit('boss-hit', { hp: boss.hp - 1 });
