@@ -7,7 +7,13 @@ import Audio from '../systems/Audio.js';
 // state, so everything stops when the scene stops.
 //
 //   waiting → intro → walk (throwing tickets) → windup → dash → dizzy → walk …
-//   stomped while dizzy → hurt → walk (faster) … third stomp → defeated
+//   stomped while dizzy → hurt → walk (faster) … last stomp → defeated
+//
+// With the final tuning he sometimes dashes straight back after hitting a
+// wall: dash → turn (a short flashing pause at the wall) → dash → dizzy. The
+// chance per phase is `doubleDashChance`; he only ever turns once per wind-up,
+// and stays dizzy longer afterwards (`doubleDashDizzyMs`), since he ends up at
+// the far wall.
 //
 // Only the dizzy state can be stomped. Walking, winding up and dashing into
 // the player kills them; landing on his cap at other times just bounces.
@@ -17,12 +23,13 @@ export const BossState = {
   WALK: 'walk',
   WINDUP: 'windup',
   DASH: 'dash',
+  TURN: 'turn',
   DIZZY: 'dizzy',
   HURT: 'hurt',
   DEFEATED: 'defeated',
 };
 
-const HARMFUL = new Set([BossState.WALK, BossState.WINDUP, BossState.DASH]);
+const HARMFUL = new Set([BossState.WALK, BossState.WINDUP, BossState.DASH, BossState.TURN]);
 const F = CONDUCTOR_FRAME;
 
 export default class Conductor extends Phaser.Physics.Arcade.Sprite {
@@ -33,12 +40,14 @@ export default class Conductor extends Phaser.Physics.Arcade.Sprite {
    * @param {() => { x: number, y: number }} getTarget the player's position
    * @param {(fromX: number, fromY: number, targetX: number) => void} throwTicket
    * @param {object} tuning one entry of BOSS in config.js (BOSS.first or BOSS.final)
+   * @param {() => number} [random] 0..1, rolled for the double dash
    */
-  constructor(scene, start, arena, getTarget, throwTicket, tuning) {
+  constructor(scene, start, arena, getTarget, throwTicket, tuning, random = Math.random) {
     super(scene, start.x, start.y - F.height / 2, TEX.CONDUCTOR, F.idle);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.tuning = tuning;
+    this.random = random;
     this.start = start;
     this.arena = arena;
     this.getTarget = getTarget;
@@ -118,6 +127,7 @@ export default class Conductor extends Phaser.Physics.Arcade.Sprite {
         this.throwMs = this.perPhase('throwEveryMs') * 0.6; // first volley comes quickly
         break;
       case BossState.WINDUP:
+        this.dashedBack = false;
         this.setFrame(F.windup);
         this.faceTarget();
         this.warning.setVisible(true);
@@ -127,6 +137,15 @@ export default class Conductor extends Phaser.Physics.Arcade.Sprite {
         this.setFrame(F.dash);
         this.dashDir = this.flipX ? -1 : 1;
         Audio.play('dash');
+        break;
+      case BossState.TURN:
+        // Turned round at the wall, about to come straight back.
+        this.dashedBack = true;
+        this.setFrame(F.windup);
+        this.setFlipX(!this.flipX);
+        this.warning.setVisible(true);
+        this.scene.cameras.main.shake(100, 0.004);
+        Audio.play('whistle');
         break;
       case BossState.DIZZY:
         this.setFrame(F.dizzy);
@@ -203,13 +222,24 @@ export default class Conductor extends Phaser.Physics.Arcade.Sprite {
         const hitWall =
           (this.dashDir < 0 && (this.body.blocked.left || this.body.left <= this.arena.left + 1)) ||
           (this.dashDir > 0 && (this.body.blocked.right || this.body.right >= this.arena.right - 1));
-        if (hitWall) this.enter(BossState.DIZZY);
+        if (!hitWall) break;
+        const chance = this.perPhase('doubleDashChance', p) ?? 0;
+        if (!this.dashedBack && chance > 0 && this.random() < chance) this.enter(BossState.TURN);
+        else this.enter(BossState.DIZZY);
         break;
       }
 
-      case BossState.DIZZY:
-        if (this.stateMs >= this.tuning.dizzyMs) this.enter(BossState.WALK);
+      case BossState.TURN:
+        this.setTint(Math.floor(this.stateMs / 70) % 2 ? 0xffffff : 0xff8080);
+        this.warning.setVisible(Math.floor(this.stateMs / 90) % 2 === 0);
+        if (this.stateMs >= this.tuning.turnMs) this.enter(BossState.DASH);
         break;
+
+      case BossState.DIZZY: {
+        const dizzyMs = this.dashedBack ? this.tuning.doubleDashDizzyMs : this.tuning.dizzyMs;
+        if (this.stateMs >= dizzyMs) this.enter(BossState.WALK);
+        break;
+      }
 
       case BossState.HURT:
         if (this.stateMs >= this.tuning.hurtMs) this.enter(BossState.WALK);

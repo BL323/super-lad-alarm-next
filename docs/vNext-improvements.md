@@ -53,7 +53,7 @@ Each level keeps its own pints and can hide its own espresso martini.
 - **Bigger volleys:** up to 4–5 tickets, and they land sooner (shorter flight time), so there's less time to read the floor markers.
 - **Shorter warnings:** a shorter whistle wind-up before each dash.
 - **Smaller stomp window:** he recovers from being dizzy sooner.
-- **Double dash (later phases):** after hitting one wall he sometimes dashes straight back before getting dizzy, so the player can't just wait in the far corner.
+- **Double dash (later phases):** after hitting one wall he sometimes dashes straight back before getting dizzy, so the player can't just wait in the far corner. *(Built in stage 6: after a dash back he stays dizzy longer, 2 s instead of 1.25 s, because he ends up at the far wall and you have to run after him. Without that, play testing showed you could survive a dash back but rarely stomp him.)*
 - **New intro line**, e.g. "TICKETS PLEASE! AGAIN!", so it's clear it's a rematch.
 
 The exact numbers get tuned by play testing, the same way the first fight was. The final fight must still be beatable without taking a hit on every phase, and the rule that he can only be stomped while dizzy stays.

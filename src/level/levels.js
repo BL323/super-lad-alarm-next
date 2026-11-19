@@ -56,6 +56,16 @@ export const LEVELS = [
     pub: 'rising-sun',
     mapKey: 'level-05',
     file: 'assets/levels/level-05.json',
+    next: 'level-06',
+  },
+  {
+    id: 'level-06',
+    number: 6,
+    from: 'Poole',
+    to: 'Parkstone',
+    pub: 'avocet',
+    mapKey: 'level-06',
+    file: 'assets/levels/level-06.json',
     next: null,
   },
 ];

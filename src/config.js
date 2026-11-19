@@ -106,7 +106,11 @@ export const HUD = {
 // He gets faster each time he's stomped. Three stomps beat him; dying resets him.
 // Values every Conductor fight shares.
 const BOSS_SHARED = {
-  introMs: 1200, // "TICKETS PLEASE!" before he starts
+  introMs: 1200, // the intro line (`introText`) before he starts
+  introText: 'TICKETS PLEASE!',
+  doubleDashChance: 0, // chance per dash of dashing straight back (final fight only)
+  turnMs: 300, // the flashing turn before a dash back
+  doubleDashDizzyMs: 1600, // dizzy time after a dash back (instead of dizzyMs)
   ticketSpread: 32, // px between tickets in a volley
   hurtMs: 700,
   stompBounce: -260, // player bounce off his cap
@@ -132,18 +136,26 @@ export const BOSS = {
     dashSpeed: [150, 185, 220], // px/s; he's dizzy after hitting the arena edge
     dizzyMs: 1600, // stomp window
   },
-  // Level 6: the harder rematch. A copy of `first` until stage 6 tunes it.
+  // Level 6: the harder rematch. Five stomps; every phase starts where the
+  // first fight ended and climbs. In the later phases he sometimes dashes
+  // straight back after hitting a wall (`doubleDashChance`), with a short
+  // flashing turn (`turnMs`) first, so hiding in the far corner isn't safe.
   final: {
     ...BOSS_SHARED,
-    hits: 3,
-    walkSpeed: [30, 40, 52],
-    walkMs: [2400, 2000, 1600],
-    throwEveryMs: [1200, 1000, 850],
-    ticketsPerVolley: [1, 2, 3],
-    ticketFlightMs: 1100,
-    windupMs: [700, 550, 450],
-    dashSpeed: [150, 185, 220],
-    dizzyMs: 1600,
+    introText: 'TICKETS PLEASE! AGAIN!',
+    hits: 5,
+    walkSpeed: [52, 58, 64, 70, 76],
+    walkMs: [1800, 1600, 1500, 1400, 1300],
+    throwEveryMs: [900, 850, 800, 760, 720],
+    ticketsPerVolley: [3, 3, 4, 4, 5],
+    ticketSpread: 28,
+    ticketFlightMs: 900,
+    windupMs: [450, 420, 400, 380, 360],
+    dashSpeed: [220, 230, 240, 250, 260],
+    dizzyMs: 1250,
+    doubleDashChance: [0, 0.35, 0.5, 0.6, 0.7],
+    turnMs: 320,
+    doubleDashDizzyMs: 2000, // longer after a dash back: he ends up at the far wall
   },
 };
 export const DEFAULT_BOSS_TUNING = 'first';
@@ -292,5 +304,11 @@ export const THEMES = {
   afternoon: { sky: '#9cd6ff', hillsTint: 0xfff4dc }, // level 3: a warmer mid-afternoon
   golden: { sky: '#f7d58e', hillsTint: 0xffdc96 }, // level 4: golden late afternoon at Wareham
   stormy: { sky: '#8a90ad', hillsTint: 0xa4abc4 }, // level 5: a rainy dusk on the way back to Poole
+  // Level 6: night at Parkstone. `lampsLit` puts a warm glow round every street lamp.
+  night: { sky: '#2b3166', hillsTint: 0x5a6196, lampsLit: true },
 };
 export const DEFAULT_THEME = 'day';
+
+// Lit street lamps (themes with `lampsLit`): a soft glow round the lantern
+// that flickers gently.
+export const LAMP_GLOW = { radius: 22, alpha: 0.55, flickerAlpha: 0.12, flickerMs: 900 };

@@ -13,11 +13,11 @@ export default class BossBar {
     this.container.add([this.label, this.pips]);
 
     const handlers = {
-      'boss-start': ({ hits }) => {
+      'boss-start': ({ hits, introText }) => {
         this.total = hits;
         this.draw(hits);
         this.container.setVisible(true);
-        showToast('TICKETS PLEASE!');
+        showToast(introText ?? 'TICKETS PLEASE!');
       },
       'boss-hit': ({ hp }) => {
         this.draw(hp);

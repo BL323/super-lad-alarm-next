@@ -27,6 +27,7 @@ export const TEX = {
   RAINDROP: 'raindrop',
   YACHT: 'yacht', // moored in Poole harbour (scenery)
   LAMP: 'lamp', // Victorian street lamp (village scenery)
+  LAMP_GLOW: 'lamp-glow', // soft light round a lit lamp (night theme)
   STALL: 'market-stall', // striped market stall (village scenery; crates in front are the steps)
   CHECKPOINT: 'checkpoint', // railway signal: red → green
   FINISH: 'finish', // The Avocet's front door: closed (padlocked) / open

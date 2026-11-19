@@ -24,7 +24,7 @@ import {
   TILESET,
 } from '../assets.js';
 import { drawPixelText, measurePixelText } from './pixelFont.js';
-import { CROSSING } from '../config.js';
+import { CROSSING, LAMP_GLOW } from '../config.js';
 
 // --- Player ---------------------------------------------------------------
 // Every character is Naylor in a different outfit. A look = head rows (0–6)
@@ -1182,6 +1182,21 @@ function makeAwning(scene) {
 }
 
 // A streak of rain, 2×6.
+// Soft warm glow round a lit lamp's lantern (night levels): banded rings so
+// it stays pixel-looking rather than a smooth gradient.
+function makeLampGlow(scene) {
+  const r = LAMP_GLOW.radius;
+  makeImage(scene, TEX.LAMP_GLOW, r * 2, r * 2, (ctx) => {
+    const bands = [[1, 0.18], [0.72, 0.32], [0.46, 0.55]];
+    for (const [f, a] of bands) {
+      ctx.fillStyle = `rgba(255, 214, 120, ${a})`;
+      ctx.beginPath();
+      ctx.arc(r, r, r * f, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  });
+}
+
 function makeRaindrop(scene) {
   makeImage(scene, TEX.RAINDROP, 2, 6, (ctx) => {
     rect(ctx, '#d8e4ff', 1, 0, 1, 2);
@@ -1449,6 +1464,7 @@ const BUILDERS = {
   [TEX.GULL]: makeGull,
   [TEX.AWNING]: makeAwning,
   [TEX.RAINDROP]: makeRaindrop,
+  [TEX.LAMP_GLOW]: makeLampGlow,
   [TEX.YACHT]: makeYacht,
   [TEX.BEERMAT]: makeBeerMat,
   [TEX.CHECKPOINT]: makeCheckpoint,

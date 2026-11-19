@@ -13,8 +13,8 @@ import Lobber from './Lobber.js';
 // walls close on both sides, and he begins after a short intro. Tickets
 // land where their floor markers show. Dying resets the whole encounter (he's
 // back to full health, the walls open, the camera follows again) and the
-// player walks back in from the checkpoint beside the track. Three stomps
-// while he's dizzy beat him; the walls open, the camera follows again, and
+// player walks back in from the checkpoint beside the track. `tuning.hits`
+// stomps while he's dizzy beat him (3 in the first fight, 5 in the final); the walls open, the camera follows again, and
 // the player hops off and goes on to the (now unlocked) pub door.
 export default class BossArena {
   /**
@@ -107,7 +107,7 @@ export default class BossArena {
 
     this.boss.begin();
     this.status = 'fighting';
-    this.scene.events.emit('boss-start', { hits: this.tuning.hits });
+    this.scene.events.emit('boss-start', { hits: this.tuning.hits, introText: this.tuning.introText });
   }
 
   reset() {

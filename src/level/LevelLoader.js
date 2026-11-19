@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { MAX_GAME_WIDTH, GAME_HEIGHT, PARALLAX, THEMES, DEFAULT_THEME } from '../config.js';
+import { MAX_GAME_WIDTH, GAME_HEIGHT, PARALLAX, THEMES, DEFAULT_THEME, LAMP_GLOW } from '../config.js';
 import { TEX, TILESET, pubTextureKey, houseTextureKey } from '../assets.js';
 import { ensureSignTexture, ensureShopTexture } from '../art/placeholders.js';
 
@@ -80,7 +80,13 @@ export function loadLevel(scene, levelDef) {
   const DECOR = {
     house: standing((d) => houseTextureKey(prop(d, 'house'))),
     shop: standing((d) => ensureShopTexture(scene, prop(d, 'text'))),
-    lamp: standing(() => TEX.LAMP, DEPTH.decor + 1),
+    lamp: (d) => {
+      standing(() => TEX.LAMP, DEPTH.decor + 1)(d);
+      if (!theme.lampsLit) return;
+      // Lit at night: a glow round the lantern (5 px below the lamp's top), flickering a little.
+      const glow = scene.add.image(d.x, d.y - 35, TEX.LAMP_GLOW).setDepth(DEPTH.decor + 2).setBlendMode(Phaser.BlendModes.ADD).setAlpha(LAMP_GLOW.alpha);
+      scene.tweens.add({ targets: glow, alpha: LAMP_GLOW.alpha - LAMP_GLOW.flickerAlpha, duration: LAMP_GLOW.flickerMs, yoyo: true, repeat: -1, ease: 'Sine.InOut', delay: (d.x * 7) % LAMP_GLOW.flickerMs });
+    },
     stall: standing(() => TEX.STALL, DEPTH.decor + 1),
     cow: (d) => standing(() => TEX.COW, DEPTH.decor + 1)(d).setFlipX(!!prop(d, 'flip')),
   };
