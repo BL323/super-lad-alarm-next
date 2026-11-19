@@ -7,12 +7,13 @@
 //
 //   Dorchester South (0–25) → the train, with crumbling crates (27–63)
 //   → lineside, cows by the line (66–77) → the train again (79–103)
-//   → Moreton station (105–132) → the lane and the crossing (133–181)
-//   → the Frampton door (col 174)
+//   → the signal box (105–113) → a third train, glass and a 3-tile gap
+//   (115–151) → Moreton station (154–181) → the lane, the crossing and
+//   the cowpats (182–239) → the Frampton door (col 231)
 
 export const meta = {
   id: 'level-02',
-  cols: 182, // ~9.1 screens of 20 tiles
+  cols: 239, // ~12 screens of 20 tiles
   properties: { title: 'Dorchester South to Moreton', theme: 'day' }, // theme: THEMES in src/config.js
 };
 
@@ -72,55 +73,91 @@ export default function build(L) {
   pint(95, 7);
   pint(98, 7);
   // Gap 101–104: 1-tile gap, crumbling crates at 102–103, then the drop to
-  // the platform.
+  // the embankment.
   [102, 103].forEach((c) => crumble(c, ROOF));
   pint(102, 7);
   pint(103, 7);
 
-  // Moreton station (cols 105–132): the first crate stair, under a canopy.
-  platform(105, 132);
-  checkpoint(107, 'Moreton');
-  sign(111, 'MORETON');
-  canopy(114, 128, 4, [115, 128]);
-  crates(119, 9);
-  crates(120, 8);
-  crates(121, 7);
-  crates(122, 8);
-  crates(123, 9);
-  pint(119, 8);
-  pint(120, 7);
-  pint(121, 6);
-  pint(122, 7);
-  pint(123, 8);
-  // The martini: on a crate ledge hidden in the canopy, up and to the LEFT of
-  // the top crate (col 121, two tiles below). Turn back and jump up-left; the
-  // canopy fades while you're up there.
-  set('ground', 118, 5, T.crate);
-  espresso(118, 4);
-  secret(114, 128, 2, 9);
-  pint(127, 9);
-  pint(130, 9);
+  // The signal box (cols 105–113): a breather on the embankment.
+  embankment(105, 113);
+  checkpoint(108, 'Signal box');
+  cow(112, true);
+  pint(110, 9);
 
-  // Moreton's lane (cols 133–181): cottages, cowpats, then the level crossing.
-  pavement(133, 181);
-  house(136, 'cottage');
-  lamp(139);
-  cowpat(140);
-  pint(140, 7);
-  house(143, 'terrace-cream');
-  cowpat(145);
-  pint(145, 7);
-  // The crossing (cols 150–153). Wait at the barrier while the train goes
-  // through; cols 148–149 are the safe waiting spot.
-  crossing(150, 153);
-  pint(156, 9);
-  house(158, 'terrace-red');
-  shop(163, 'POST OFFICE');
-  lamp(167);
-  pint(161, 9);
-  pint(166, 9);
+  // A third train (cols 115–151): glass on every roof, a 3-tile gap and
+  // another crumbling bridge.
+  carriage(115, 10); // 1-tile gap at 114, step up onto the roof
+  glass(119, ROOF);
+  pint(117, 7);
+  pint(119, 5);
+  pint(122, 7);
+  [125, 126, 127].forEach((c) => pint(c, 6)); // over the 3-tile gap at 125–127
+  carriage(128, 10);
+  glass(133, ROOF);
+  pint(133, 5);
+  // Gap 138–141: 1-tile gap, crumbling crates at 139–140, 1-tile gap.
+  [139, 140].forEach((c) => {
+    crumble(c, ROOF);
+    pint(c, 7);
+  });
+  carriage(142, 10);
+  glass(147, ROOF);
+  pint(144, 7);
+  pint(147, 5);
+  pint(150, 7);
+
+  // Moreton station (cols 154–181): the first crate stair, under a canopy.
+  platform(154, 181); // 2-tile gap at 152–153, down off the roof
+  checkpoint(156, 'Moreton');
+  sign(160, 'MORETON');
+  canopy(163, 177, 4, [164, 177]);
+  crates(168, 9);
+  crates(169, 8);
+  crates(170, 7);
+  crates(171, 8);
+  crates(172, 9);
+  pint(168, 8);
+  pint(169, 7);
+  pint(170, 6);
+  pint(171, 7);
+  pint(172, 8);
+  // The martini: on a crate ledge hidden in the canopy, up and to the LEFT of
+  // the top crate (col 170, two tiles below). Turn back and jump up-left; the
+  // canopy fades while you're up there.
+  set('ground', 167, 5, T.crate);
+  espresso(167, 4);
+  secret(163, 177, 2, 9);
+  pint(176, 9);
+  pint(179, 9);
+
+  // Moreton's lane (cols 182–238): cottages, cowpats, the level crossing,
+  // then more cowpats and a crate to climb.
+  pavement(182, 238);
+  house(185, 'cottage');
+  lamp(188);
+  cowpat(189);
+  pint(189, 7);
+  house(192, 'terrace-cream');
+  cowpat(194);
+  pint(194, 7);
+  // The crossing (cols 199–202). Wait at the barrier while the train goes
+  // through; cols 197–198 are the safe waiting spot.
+  crossing(199, 202);
+  pint(205, 9);
+  house(207, 'terrace-red');
+  shop(212, 'POST OFFICE');
+  lamp(216);
+  pint(210, 9);
+  pint(215, 9);
+  cowpat(219);
+  pint(219, 7);
+  crates(222, 9);
+  pint(222, 7);
+  cowpat(225);
+  pint(225, 7);
+  house(236, 'cottage');
 
   // The Frampton. The finish is its door (same column), 8 tiles from the end.
-  pub(174, 'frampton');
-  finish(174);
+  pub(231, 'frampton');
+  finish(231);
 }

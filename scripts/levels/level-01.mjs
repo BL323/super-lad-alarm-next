@@ -3,15 +3,18 @@
 //
 // Tutorial pace and the longest train ride of the crawl. No hazards until the
 // village. Teaches: hopping between carriages, a full jump across a 2-tile
-// gap, and short hops under a low bridge (a full jump bumps your head).
+// gap, short hops under a low bridge (a full jump bumps your head), then a
+// last train with the first 3-tile gap.
 //
 //   Poole station (0–27) → the train (28–60) → lineside signal (63–70)
-//   → the train under the low bridge (71–102) → Dorchester South (105–124)
-//   → the high street (125–166) → the Brewhouse door (col 159)
+//   → the train under the low bridge (71–102) → the signal box (105–112)
+//   → the last train, a 3-tile gap and another bridge (114–147)
+//   → Dorchester South (150–169) → the high street (170–225)
+//   → the Brewhouse door (col 218)
 
 export const meta = {
   id: 'level-01',
-  cols: 167, // ~8.4 screens of 20 tiles
+  cols: 226, // ~11.3 screens of 20 tiles
   properties: { title: 'Poole to Dorchester South', theme: 'morning' }, // theme: THEMES in src/config.js
 };
 
@@ -63,47 +66,72 @@ export default function build(L) {
   pint(96, 7);
   pint(99, 7);
 
-  // Dorchester South (cols 105–124): off the train onto the platform.
-  platform(105, 124); // 2-tile gap at 103–104 (a drop from the roof)
-  checkpoint(107, 'Dorchester South');
-  canopy(108, 120, 4, [109, 120]);
-  sign(114, 'DORCHESTER SOUTH');
+  // The signal box (cols 103–112): drop off onto the embankment again.
+  embankment(105, 112); // 2-tile gap at 103–104 (a drop from the roof)
+  checkpoint(109, 'Signal box');
   pint(104, 8);
-  pint(112, 9);
-  pint(118, 9);
+  pint(107, 9);
+  pint(111, 9);
 
-  // The high street (cols 125–166): houses, a bakery, a market stall whose
-  // crates are the steps, a dropped kebab, then the Brewhouse.
-  pavement(125, 166);
-  lamp(126);
-  house(129, 'terrace-red');
-  house(133, 'terrace-cream');
-  house(137, 'terrace-blue');
-  shop(142, 'BAKERY');
-  pint(130, 9);
-  pint(136, 9);
+  // The last train (cols 114–147): the first 3-tile gap (a full running
+  // jump), a suitcase on the roof, then short hops under another bridge.
+  carriage(114, 10); // 1-tile gap at 113 and a step up onto the roof
+  pint(117, 7);
+  pint(120, 7);
+  [124, 125, 126].forEach((c) => pint(c, 6)); // over the 3-tile gap at 124–126
+  carriage(127, 10);
+  set('ground', 131, ROOF - 1, T.crate); // a suitcase: hop it
+  pint(131, 6);
+  pint(134, 7);
+  carriage(138, 10); // 1-tile gap at 137
+  bridge(140, 145, 5);
+  [140, 142, 144].forEach((c) => pint(c, 7)); // under the bridge
 
-  stall(147);
-  crates(146, 9);
-  crates(147, 8);
-  crates(148, 9);
-  pint(146, 8);
-  pint(147, 7);
-  pint(148, 8);
+  // Dorchester South (cols 150–169): off the train onto the platform.
+  platform(150, 169); // 2-tile gap at 148–149 (a drop from the roof)
+  checkpoint(152, 'Dorchester South');
+  canopy(153, 165, 4, [154, 165]);
+  sign(159, 'DORCHESTER SOUTH');
+  pint(149, 8);
+  pint(157, 9);
+  pint(163, 9);
+
+  // The high street (cols 170–225): houses, a bakery, a market stall whose
+  // crates are the steps, two dropped kebabs, then the Brewhouse.
+  pavement(170, 225);
+  lamp(171);
+  house(174, 'terrace-red');
+  house(178, 'terrace-cream');
+  house(182, 'terrace-blue');
+  shop(187, 'BAKERY');
+  pint(175, 9);
+  pint(181, 9);
+
+  stall(192);
+  crates(191, 9);
+  crates(192, 8);
+  crates(193, 9);
+  pint(191, 8);
+  pint(192, 7);
+  pint(193, 8);
   // The martini: on a crate ledge up and to the LEFT of the stall, over the
   // bakery doorway. The only way up is to turn back from the top crate (col
-  // 147, two tiles below it) and jump up-left, so a straight run never gets it.
-  set('ground', 144, 6, T.crate);
-  espresso(144, 5);
+  // 192, two tiles below it) and jump up-left, so a straight run never gets it.
+  set('ground', 189, 6, T.crate);
+  espresso(189, 5);
 
   // Five tiles past the bottom crate, so never under a landing.
-  kebab(154);
-  pint(154, 7);
-  lamp(156);
-  house(165, 'cottage');
+  kebab(199);
+  pint(199, 7);
+  lamp(201);
+  shop(205, 'GREENGROCER');
+  kebab(208);
+  pint(208, 7);
+  lamp(211);
+  house(224, 'cottage');
 
-  // The Brewhouse. The finish is its door (same column). Col 159 is 8 tiles
+  // The Brewhouse. The finish is its door (same column). Col 218 is 8 tiles
   // from the end, clear of the jump button when the camera stops.
-  pub(159, 'brewhouse');
-  finish(159);
+  pub(218, 'brewhouse');
+  finish(218);
 }

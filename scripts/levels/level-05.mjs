@@ -9,14 +9,14 @@
 // are bouncy, the way up onto the rooftops; on the quay the seagulls swoop;
 // the chain ferry takes you over the harbour to The Rising Sun.
 //
-//   Wareham (0–21) → the departing train (23–95, auto-scroll 24–104)
-//   → Holton Heath (98–109) → one carriage (113–122) → Poole station (125–144)
-//   → the high street, awnings and rooftops (145–180) → the quay (181–192)
-//   → the harbour and the ferry (193–206) → The Rising Sun (col 222)
+//   Wareham (0–21) → the departing train (23–121, auto-scroll 24–130)
+//   → Holton Heath (124–135) → one carriage (139–148) → Poole station (151–170)
+//   → the high street, awnings and rooftops (171–206) → the quay (207–218)
+//   → the harbour and the ferry (219–232) → The Rising Sun (col 248)
 
 export const meta = {
   id: 'level-05',
-  cols: 231, // ~11.6 screens of 20 tiles
+  cols: 257, // ~12.9 screens of 20 tiles
   properties: { title: 'Wareham to Poole', theme: 'stormy', weather: 'rain' }, // THEMES in src/config.js; weather: src/systems/Weather.js
 };
 
@@ -37,9 +37,9 @@ export default function build(L) {
   spawn(7);
   [9, 11, 13].forEach((c) => pint(c, 9));
 
-  // The departing train (cols 23–95). From col 24 the camera scrolls on by
-  // itself until its right edge reaches col 104 (AUTOSCROLL): keep up.
-  autoscroll(24, 104);
+  // The departing train (cols 23–121). From col 24 the camera scrolls on by
+  // itself until its right edge reaches col 130 (AUTOSCROLL): keep up.
+  autoscroll(24, 130);
   carriage(23, 10); // 1-tile gap at 22, step up onto the roof
   [26, 29].forEach((c) => pint(c, 7));
   carriage(36, 10); // 3-tile gap at 33–35
@@ -67,66 +67,81 @@ export default function build(L) {
   pint(90, 5);
   pint(93, 7);
 
-  // Holton Heath (cols 98–109): drop off onto the embankment.
-  embankment(98, 109); // 2-tile gap at 96–97
-  checkpoint(106, 'Holton Heath');
-  [100, 102].forEach((c) => pint(c, 9));
+  // Two more carriages, still scrolling (cols 96–121): another 3-tile gap,
+  // glass before the luggage, a single crumbling crate, then a low bridge.
+  [96, 97, 98].forEach((c) => pint(c, 6)); // over the 3-tile gap at 96–98
+  carriage(99, 10);
+  glass(102, ROOF);
+  pint(102, 5);
+  luggage(105, 6);
+  pint(105, 4);
+  // Gap 109–111: one crumbling crate in the middle.
+  crumble(110, ROOF);
+  pint(110, 6);
+  carriage(112, 10);
+  bridge(114, 119, 5);
+  [114, 116, 118].forEach((c) => pint(c, 7)); // short hops under the bridge
 
-  // One more carriage (cols 113–122): a 3-tile gap and a step up onto it.
-  carriage(113, 10);
-  [110, 111, 112].forEach((c) => pint(c, 7));
-  luggage(117, 6);
-  luggage(118, 7);
-  pint(117, 4);
+  // Holton Heath (cols 124–135): drop off onto the embankment.
+  embankment(124, 135); // 2-tile gap at 122–123
+  checkpoint(132, 'Holton Heath');
+  [126, 128].forEach((c) => pint(c, 9));
 
-  // Poole station (cols 125–144).
-  platform(125, 144); // 2-tile gap at 123–124, down off the roof
-  checkpoint(128, 'Poole');
-  sign(133, 'POOLE');
-  canopy(130, 141, 4, [131, 141]);
-  [136, 139].forEach((c) => pint(c, 9));
+  // One more carriage (cols 139–148): a 3-tile gap and a step up onto it.
+  carriage(139, 10);
+  [136, 137, 138].forEach((c) => pint(c, 7));
+  luggage(143, 6);
+  luggage(144, 7);
+  pint(143, 4);
 
-  // Poole high street (cols 145–180). Each striped awning is bouncy: land on
+  // Poole station (cols 151–170).
+  platform(151, 170); // 2-tile gap at 149–150, down off the roof
+  checkpoint(154, 'Poole');
+  sign(159, 'POOLE');
+  canopy(156, 167, 4, [157, 167]);
+  [162, 165].forEach((c) => pint(c, 9));
+
+  // Poole high street (cols 171–206). Each striped awning is bouncy: land on
   // it and it throws you up onto the rooftops (the high road, with the pints).
-  pavement(145, 192);
-  lamp(146);
-  shop(150, 'GIFTS');
-  awning(148, 152, 8);
-  house(155, 'terrace-blue');
-  house(159, 'terrace-cream');
-  L.roof(154, 161, 5);
-  [154, 156, 158, 160, 161].forEach((c) => pint(c, 4));
-  lamp(163); // in the alley
-  shop(166, 'CHANDLERY');
-  awning(164, 168, 8);
+  pavement(171, 218);
+  lamp(172);
+  shop(176, 'GIFTS');
+  awning(174, 178, 8);
+  house(181, 'terrace-blue');
+  house(185, 'terrace-cream');
+  L.roof(180, 187, 5);
+  [180, 182, 184, 186, 187].forEach((c) => pint(c, 4));
+  lamp(189); // in the alley
+  shop(192, 'CHANDLERY');
+  awning(190, 194, 8);
   // The martini: high over the alley, only reached by a bounce off the
   // chandlery's awning, drifting back to the left at the top.
-  espresso(163, 1);
-  house(171, 'terrace-red');
-  shop(175, 'ICE CREAM');
-  L.roof(170, 177, 5);
-  [170, 172, 174, 176].forEach((c) => pint(c, 4));
-  pint(162, 9); // the low road
-  pint(178, 9);
-  house(180, 'cottage');
+  espresso(189, 1);
+  house(197, 'terrace-red');
+  shop(201, 'ICE CREAM');
+  L.roof(196, 203, 5);
+  [196, 198, 200, 202].forEach((c) => pint(c, 4));
+  pint(188, 9); // the low road
+  pint(204, 9);
+  house(206, 'cottage');
 
-  // The quay (cols 181–192): a gull swoops along it.
-  gull(183, 190);
-  pint(181, 9);
+  // The quay (cols 207–218): a gull swoops along it.
+  gull(209, 216);
+  pint(207, 9);
 
-  // The harbour (cols 193–206): the chain ferry across.
-  river(193, 206);
-  yacht(199);
-  mover('ferry', 194, 205, SURFACE);
-  [197, 200, 203].forEach((c) => pint(c, 9)); // ride through them
+  // The harbour (cols 219–232): the chain ferry across.
+  river(219, 232);
+  yacht(225);
+  mover('ferry', 220, 231, SURFACE);
+  [223, 226, 229].forEach((c) => pint(c, 9)); // ride through them
 
-  // The far quay (cols 207–230): another gull, then The Rising Sun.
-  pavement(207, 230);
-  gull(210, 216, SURFACE, 1800);
-  lamp(218);
-  pint(219, 9);
-  pub(222, 'rising-sun');
+  // The far quay (cols 233–256): another gull, then The Rising Sun.
+  pavement(233, 256);
+  gull(236, 242, SURFACE, 1800);
+  lamp(244);
+  pint(245, 9);
+  pub(248, 'rising-sun');
 
   // The finish is the pub door (same column), 8 tiles from the end.
-  finish(222);
+  finish(248);
 }

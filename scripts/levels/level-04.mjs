@@ -7,13 +7,13 @@
 // the Kings Arms (scenery only) to the quay, where you cross the Frome on
 // rowing boats, by way of a jetty, while swans guard both banks.
 //
-//   Wool (0–21) → the heath and the tank trench (23–57) → the train (59–104)
-//   → Wareham station (107–128) → the town (129–152) → the quay and the river
-//   (153–213) → The Old Granary (col 205)
+//   Wool (0–21) → the heath and the tank trench (23–57) → the train (59–129)
+//   → Wareham station (132–153) → the town (154–177) → the quay and the river
+//   (178–238) → The Old Granary (col 230)
 
 export const meta = {
   id: 'level-04',
-  cols: 214, // ~10.7 screens of 20 tiles
+  cols: 239, // ~12 screens of 20 tiles
   properties: { title: 'Wool to Wareham', theme: 'golden' }, // theme: THEMES in src/config.js
 };
 
@@ -69,50 +69,63 @@ export default function build(L) {
   pint(99, 5);
   pint(102, 7);
 
-  // Wareham station (cols 107–128).
-  platform(107, 128); // 2-tile gap at 105–106, down off the roof
-  checkpoint(110, 'Wareham');
-  sign(115, 'WAREHAM');
-  canopy(113, 124, 4, [114, 124]);
-  pint(112, 9);
-  pint(118, 9);
-  pint(122, 9);
+  // The last two carriages (cols 105–129): a 3-tile gap, glass, a 2-tile
+  // gap and a low bridge.
+  [105, 106, 107].forEach((c) => pint(c, 6)); // over the 3-tile gap at 105–107
+  carriage(108, 10);
+  glass(112, ROOF);
+  pint(110, 7);
+  pint(112, 5);
+  pint(115, 7);
+  carriage(120, 10); // 2-tile gap at 118–119
+  [118, 119].forEach((c) => pint(c, 6));
+  bridge(122, 127, 5);
+  [122, 124, 126].forEach((c) => pint(c, 7)); // short hops under the bridge
 
-  // The town (cols 129–152): the Kings Arms across the street (scenery).
-  pavement(129, 162);
-  lamp(130);
-  pub(136, 'kings-arms', { scenery: true });
-  house(142, 'terrace-red');
-  glass(144);
-  lamp(147);
-  shop(150, 'GALLERY');
-  pint(133, 9);
-  pint(139, 9);
-  pint(144, 7); // over the glass
+  // Wareham station (cols 132–153).
+  platform(132, 153); // 2-tile gap at 130–131, down off the roof
+  checkpoint(135, 'Wareham');
+  sign(140, 'WAREHAM');
+  canopy(138, 149, 4, [139, 149]);
+  pint(137, 9);
+  pint(143, 9);
+  pint(147, 9);
 
-  // The quay (cols 153–162), with a swan on the bank.
-  swan(154, 159);
-  pint(156, 7); // jump the swan for it
+  // The town (cols 154–177): the Kings Arms across the street (scenery).
+  pavement(154, 187);
+  lamp(155);
+  pub(161, 'kings-arms', { scenery: true });
+  house(167, 'terrace-red');
+  glass(169);
+  lamp(172);
+  shop(175, 'GALLERY');
+  pint(158, 9);
+  pint(164, 9);
+  pint(169, 7); // over the glass
 
-  // The Frome (cols 163–187): a boat, the jetty, another boat.
-  river(163, 172);
-  mover('boat', 164, 171, SURFACE, 0);
-  [166, 169].forEach((c) => pint(c, 9)); // ride through them
-  jetty(173, 175);
-  pint(174, 9);
-  river(176, 187);
-  mover('boat', 177, 186, SURFACE, 1800);
-  [179, 182, 185].forEach((c) => pint(c, 9));
-  easel(183); // the easel, still floating in the Frome
+  // The quay (cols 178–187), with a swan on the bank.
+  swan(179, 184);
+  pint(181, 7); // jump the swan for it
 
-  // The far bank (cols 188–213): another swan, then The Old Granary.
-  pavement(188, 213);
-  swan(192, 199);
-  pint(195, 7);
-  house(190, 'cottage');
-  pint(201, 9);
-  pub(205, 'old-granary');
+  // The Frome (cols 188–212): a boat, the jetty, another boat.
+  river(188, 197);
+  mover('boat', 189, 196, SURFACE, 0);
+  [191, 194].forEach((c) => pint(c, 9)); // ride through them
+  jetty(198, 200);
+  pint(199, 9);
+  river(201, 212);
+  mover('boat', 202, 211, SURFACE, 1800);
+  [204, 207, 210].forEach((c) => pint(c, 9));
+  easel(208); // the easel, still floating in the Frome
+
+  // The far bank (cols 213–238): another swan, then The Old Granary.
+  pavement(213, 238);
+  swan(217, 224);
+  pint(220, 7);
+  house(215, 'cottage');
+  pint(226, 9);
+  pub(230, 'old-granary');
 
   // The finish is the pub door (same column), 8 tiles from the end.
-  finish(205);
+  finish(230);
 }
