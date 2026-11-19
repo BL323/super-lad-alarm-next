@@ -159,9 +159,11 @@ export const CRUMBLE = { shakeMs: 450, fallMs: 350, returnMs: 3000, shakePx: 1 }
 
 // Angry locals throwing beer mats from pub windows (src/systems/Throwers.js).
 // Each one throws every `everyMs` while the player is on the street within
-// `rangeTiles` of the window; a mat lands where its floor marker shows,
-// `flightMs` after the throw. Up on the rooftops you're out of reach.
-export const THROWERS = { everyMs: 1500, flightMs: 950, rangeTiles: 12, firstDelayMs: 600, staggerMs: 750 };
+// `rangeTiles` of the window, aimed where the player is now; a mat lands
+// where its floor marker shows, `flightMs` later. Keep moving and they land
+// behind you; hesitate (or stop to line up a jump) and you're hit. Up on the
+// rooftops you're out of reach. `lead` > 0 would aim ahead of a moving player.
+export const THROWERS = { everyMs: 1000, flightMs: 800, rangeTiles: 16, firstDelayMs: 300, staggerMs: 500, lead: 0 };
 
 // Level crossings (src/systems/LevelCrossing.js): open → warning (lights, bell,
 // barrier lowering) → closed while a train passes (deadly) → raising → open.
@@ -184,7 +186,7 @@ export const NEXT_STOP = { durationMs: 2400, minMs: 400 }; // moves on by itself
 
 // Sound. Effects are synthesised in src/audio/sfx.js (retro square/noise voices).
 export const AUDIO = {
-  volume: 0.6, // master volume 0..1
+  volume: 0.3, // master volume 0..1 (was 0.6, which was too loud)
 };
 
 // What the lad says when the Conductor is beaten, and how long the bubble stays.

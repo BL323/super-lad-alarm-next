@@ -5,7 +5,7 @@ import Lobber from './Lobber.js';
 import Audio from './Audio.js';
 
 // Angry locals at the windows of The Black Bear, throwing beer mats. Each
-// thrower lobs one at the player's feet every THROWERS.everyMs, but only while
+// thrower lobs one at the player every THROWERS.everyMs, but only while
 // the player is down on the street (within THROWERS.rangeTiles): up on the
 // rooftops you're out of reach. Mats land where their floor marker shows.
 export default class Throwers {
@@ -53,7 +53,8 @@ export default class Throwers {
       t.clock += delta;
       if (t.clock < THROWERS.everyMs) continue;
       t.clock = 0;
-      this.mats.throw(t.x, t.y, p.x, t.floorY);
+      const aim = p.x + p.body.velocity.x * (THROWERS.flightMs / 1000) * THROWERS.lead;
+      this.mats.throw(t.x, t.y, aim, t.floorY);
       Audio.play('ticket');
     }
   }
