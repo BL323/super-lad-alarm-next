@@ -174,5 +174,7 @@ export const SOUNDS = {
   select: () => seq([[N.A5, 0.04], [N.E6, 0.07]], { duty: 0.25, vol: 0.15 }),
   move: () => voice({ from: N.A4, dur: 0.04, duty: 0.25, vol: 0.12 }),
   crumble: () => voice({ wave: 'noise', from: 900, to: 200, dur: 0.25, vol: 0.18, release: 0.12, lowpass: 0.5 }), // crate giving way
+  squawk: () => voice({ from: 1700, to: 900, dur: 0.16, duty: 0.125, vol: 0.07, vib: 28, vibDepth: 0.06 }), // a gull starting its swoop
+  boing: () => voice({ wave: 'triangle', from: 160, to: 640, dur: 0.22, vol: 0.32, vib: 18, vibDepth: 0.08 }), // off a shop awning
   bell: () => seq([[N.E6, 0.07], [N.C6, 0.07]], { duty: 0.5, vol: 0.1, release: 0.04 }), // level-crossing warning
 };

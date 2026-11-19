@@ -12,6 +12,10 @@ import LevelCrossing from '../systems/LevelCrossing.js';
 import Throwers from '../systems/Throwers.js';
 import MovingPlatforms from '../systems/MovingPlatforms.js';
 import Swans from '../systems/Swans.js';
+import Gulls from '../systems/Gulls.js';
+import Awnings from '../systems/Awnings.js';
+import AutoScroll from '../systems/AutoScroll.js';
+import { addWeather } from '../systems/Weather.js';
 import BossArena from '../systems/BossArena.js';
 import { celebrate } from '../systems/Celebration.js';
 import SpeechBubble from '../ui/SpeechBubble.js';
@@ -46,6 +50,10 @@ export default class GameScene extends Phaser.Scene {
     this.throwers = this.level.throwers.length ? new Throwers(this, this.level.throwers, this.player) : null;
     this.movers = this.level.movers.length ? new MovingPlatforms(this, this.level.movers, this.player) : null;
     this.swans = this.level.swans.length ? new Swans(this, this.level.swans, this.player) : null;
+    this.gulls = this.level.gulls.length ? new Gulls(this, this.level.gulls, this.player) : null;
+    this.awnings = this.level.awnings.length ? new Awnings(this, this.level.awnings, this.player) : null;
+    this.autoScroll = this.level.autoscroll ? new AutoScroll(this, this.level.autoscroll, this.player) : null;
+    this.weather = addWeather(this, this.level.weather);
     this.spawnCollectibles();
 
     // Finish: The Avocet's front door, drawn over the pub's own door. Reaching
@@ -110,9 +118,10 @@ export default class GameScene extends Phaser.Scene {
     this.controls.update();
     this.player.update(time, delta);
     this.arena?.update(time, delta);
+    this.autoScroll?.update(delta);
 
-    // While the boss fight runs, the train is moving: the hills race past.
-    if (this.arena?.isActive) this.trainTravel += delta * PARALLAX.trainSpeed;
+    // While the boss fight runs or the train pulls out, the train is moving: the hills race past.
+    if (this.arena?.isActive || this.autoScroll?.isActive) this.trainTravel += delta * PARALLAX.trainSpeed;
     this.level.hills.tilePositionX = this.cameras.main.scrollX * PARALLAX.hillsFactor + this.trainTravel;
     this.updateSecrets();
 

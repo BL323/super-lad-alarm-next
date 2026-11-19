@@ -39,12 +39,15 @@ export default class Hud {
       this.bump([this.timer]);
       this.showToast('CHEERS!');
     };
+    const onToast = (text) => this.showToast(text); // any system can put up a message
     gameScene.events.on('pickup', onPickup);
     gameScene.events.on('level-complete', onComplete);
+    gameScene.events.on('toast', onToast);
     scene.scale.on(Phaser.Scale.Events.RESIZE, this.layout, this);
     scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       gameScene.events.off('pickup', onPickup);
       gameScene.events.off('level-complete', onComplete);
+      gameScene.events.off('toast', onToast);
       scene.scale.off(Phaser.Scale.Events.RESIZE, this.layout, this);
     });
   }

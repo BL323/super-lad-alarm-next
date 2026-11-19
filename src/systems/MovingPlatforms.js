@@ -3,8 +3,8 @@ import { MOVERS } from '../config.js';
 import { TEX } from '../assets.js';
 import { DEPTH } from '../level/LevelLoader.js';
 
-// Moving platforms you ride: the tank across the heath and the rowing boats on
-// the Frome. Each glides from one end of its track to the other (eased), waits
+// Moving platforms you ride: the tank across the heath, the rowing boats on
+// the Frome and the chain ferry across Poole harbour. Each glides from one end of its track to the other (eased), waits
 // MOVERS[kind].pauseMs, and comes back, forever. Decks are one-way (you can
 // only land on top), and Arcade physics carries a rider along with the deck.
 //
@@ -15,6 +15,7 @@ import { DEPTH } from '../level/LevelLoader.js';
 const LOOKS = {
   tank: { texture: TEX.TANK, deckX: 16, depth: DEPTH.ground - 1 }, // in the trench, in front of the mud
   boat: { texture: TEX.BOAT, deckX: 0, depth: DEPTH.background - 1 }, // behind the water, so it sits in it
+  ferry: { texture: TEX.FERRY, deckX: 0, deckY: 6, depth: DEPTH.background - 1 }, // wheelhouse above the deck
 };
 const DECK_THICKNESS = 6;
 
@@ -30,8 +31,9 @@ export default class MovingPlatforms {
       const tuning = MOVERS[d.kind];
       const look = LOOKS[d.kind];
       const legMs = (d.travel / tuning.speed) * 1000;
-      const sprite = this.group.create(d.x - look.deckX, d.y, look.texture).setOrigin(0, 0).setDepth(look.depth);
-      sprite.body.setSize(d.width, DECK_THICKNESS, false).setOffset(look.deckX, 0);
+      const deckY = look.deckY ?? 0;
+      const sprite = this.group.create(d.x - look.deckX, d.y - deckY, look.texture).setOrigin(0, 0).setDepth(look.depth);
+      sprite.body.setSize(d.width, DECK_THICKNESS, false).setOffset(look.deckX, deckY);
       Object.assign(sprite.body.checkCollision, { down: false, left: false, right: false });
       sprite.body.setFriction(1, 0); // carry riders sideways (physics groups default this to 0)
       const item = { def: d, look, sprite, legMs, pauseMs: tuning.pauseMs, cycleMs: 2 * (legMs + tuning.pauseMs), clock: 0 };

@@ -189,12 +189,41 @@ export const CROSSING = {
 export const MOVERS = {
   tank: { deck: 32, speed: 40, pauseMs: 700 },
   boat: { deck: 48, speed: 40, pauseMs: 400 },
+  ferry: { deck: 64, speed: 36, pauseMs: 600 }, // the chain ferry across Poole harbour
 };
 
 // Swans patrolling the riverbank at Wareham (src/systems/Swans.js). Touching
 // one is a death and they can't be stomped: jump over them. The validator
 // keeps their patrol on flat ground, away from checkpoints and gap edges.
 export const SWANS = { speed: 22, stepMs: 220 };
+
+// Seagulls over Poole quay (src/systems/Gulls.js). Each hovers out of reach
+// over one end of its stretch for `pauseMs`, squawks, then swoops across in a
+// dip (`passMs`) that comes down to head height in the middle, and hovers at
+// the other end. Deadly to touch. Follow one across as it swoops away and
+// you're past before it comes back. `hoverPx` / `lowPx` are the gull's height
+// above the quay at the ends and at the bottom of the dip. The validator
+// checks you can run the stretch (plus `clearTiles` either side) in the time
+// the gull spends going away and hovering, with `crossMargin` to spare.
+export const GULLS = { passMs: 2400, pauseMs: 1200, hoverPx: 88, lowPx: 9, flapMs: 160, clearTiles: 2, crossMargin: 1.3 };
+
+// Bouncy shop awnings on Poole high street (src/systems/Awnings.js): land on
+// one and it throws you up at `velocity` px/s, whatever you're pressing (a
+// jump is 300), about six tiles high: the way up onto the rooftops. The
+// validator works out how far up a bounce reaches from `velocity`. An awning
+// sits `dropPx` below the top of its tile row, on top of a shopfront's own
+// awning, so the shop's name stays readable.
+export const AWNINGS = { velocity: 420, squashMs: 140, dropPx: 4 };
+
+// The departing train out of Wareham (src/systems/AutoScroll.js): once you're
+// on the roof the camera scrolls on by itself at `speed` px/s until the end of
+// the stretch, faster if you run ahead. Drop off the left edge of the screen
+// and you've missed the train (a death). The validator keeps `speed` under
+// `maxPace` of your run speed and keeps anything you'd wait for out of it.
+export const AUTOSCROLL = { speed: 62, maxPace: 0.7, followLead: 0.4, startText: 'ALL ABOARD!', missedText: 'MISSED THE TRAIN!' };
+
+// Rain (src/systems/Weather.js), from a level's `weather` map property.
+export const RAIN = { dropsPerSecond: 140, speed: 330, drift: -40, alpha: 0.55, splashesPerSecond: 18 };
 
 // Level picker rows (game px) and the "next stop" screen shown before each level.
 export const LEVEL_SELECT = { top: 38, rowHeight: 16, rowWidth: 292 }; // six rows end above the buttons at y 140
@@ -262,5 +291,6 @@ export const THEMES = {
   morning: { sky: '#c4e8ff', hillsTint: 0xf4ffe8 }, // level 1: pale, fresh late-morning light
   afternoon: { sky: '#9cd6ff', hillsTint: 0xfff4dc }, // level 3: a warmer mid-afternoon
   golden: { sky: '#f7d58e', hillsTint: 0xffdc96 }, // level 4: golden late afternoon at Wareham
+  stormy: { sky: '#8a90ad', hillsTint: 0xa4abc4 }, // level 5: a rainy dusk on the way back to Poole
 };
 export const DEFAULT_THEME = 'day';

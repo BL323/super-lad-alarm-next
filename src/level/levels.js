@@ -46,6 +46,16 @@ export const LEVELS = [
     pub: 'old-granary',
     mapKey: 'level-04',
     file: 'assets/levels/level-04.json',
+    next: 'level-05',
+  },
+  {
+    id: 'level-05',
+    number: 5,
+    from: 'Wareham',
+    to: 'Poole',
+    pub: 'rising-sun',
+    mapKey: 'level-05',
+    file: 'assets/levels/level-05.json',
     next: null,
   },
 ];

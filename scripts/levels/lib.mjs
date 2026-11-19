@@ -192,8 +192,8 @@ export function createLevel({ cols, properties = {} }) {
   /** A Friesian grazing by the line; `flip` faces it left. */
   const cow = (col, flip = false) => addObject('cow', 'cow', ...feet(col), 0, 0, { flip }, decor);
   /**
-   * A moving platform (`kind` is a key of MOVERS in src/config.js: 'tank' or
-   * 'boat') whose deck sweeps cols c0–c1 with its top at `row`: at one end its
+   * A moving platform (`kind` is a key of MOVERS in src/config.js: 'tank',
+   * 'boat' or 'ferry') whose deck sweeps cols c0–c1 with its top at `row`: at one end its
    * left edge is at c0, at the other its right edge is at c1. `offsetMs`
    * shifts where in its cycle it starts.
    */
@@ -207,6 +207,25 @@ export function createLevel({ cols, properties = {} }) {
   /** A swan patrolling cols c0–c1 of the surface at `surfaceRow`. Deadly to touch; jump it. */
   const swan = (c0, c1, surfaceRow = SURFACE) =>
     addObject('swan', 'swan', c0 * TS, surfaceRow * TS, (c1 - c0 + 1) * TS, 0, { surfaceRow });
+  /**
+   * A seagull over cols c0–c1 of the surface at `surfaceRow`: it hovers out of
+   * reach over one end, then swoops across, down to head height in the middle
+   * (GULLS in src/config.js). `offsetMs` shifts where in its cycle it starts.
+   */
+  const gull = (c0, c1, surfaceRow = SURFACE, offsetMs = 0) =>
+    addObject('gull', 'gull', c0 * TS, surfaceRow * TS, (c1 - c0 + 1) * TS, 0, { surfaceRow, offsetMs });
+  /**
+   * A bouncy shop awning over cols c0–c1, its top at `row`: land on it and it
+   * throws you much higher than a jump (AWNINGS). One-way: you pass up through it.
+   */
+  const awning = (c0, c1, row) => addObject('awning', 'awning', c0 * TS, row * TS, (c1 - c0 + 1) * TS, 0);
+  /**
+   * The departing train: from col c0 to the end of col c1 the camera scrolls on
+   * by itself (AUTOSCROLL). Falling off the left of the screen is a death.
+   */
+  const autoscroll = (c0, c1) => addObject('autoscroll', 'autoscroll', c0 * TS, 0, (c1 - c0 + 1) * TS, ROWS * TS);
+  /** A yacht moored in the water at `col` (scenery). */
+  const yacht = (col) => addObject('yacht', 'yacht', col * TS + TS / 2, SURFACE * TS + 14, 0, 0, {}, decor); // hull at the waterline
   const easel = (col) => addObject('easel', 'easel', col * TS + TS / 2, (SURFACE + 1) * TS + 4, 0, 0, {}, decor);
 
   function toMap() {
@@ -297,6 +316,10 @@ export function createLevel({ cols, properties = {} }) {
     crossing,
     mover,
     swan,
+    gull,
+    awning,
+    autoscroll,
+    yacht,
     thrower,
     boss,
     zone,

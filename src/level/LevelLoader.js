@@ -93,6 +93,7 @@ export function loadLevel(scene, levelDef) {
       if (prop(d, 'scenery')) img.setTint(0xeee2cc).setDepth(DEPTH.decor - 1);
     }
     if (t === 'sign') scene.add.image(d.x, d.y, ensureSignTexture(scene, prop(d, 'text'))).setOrigin(0.5, 1).setDepth(DEPTH.decor);
+    if (t === 'yacht') scene.add.image(d.x, d.y, TEX.YACHT).setOrigin(0.5, 1).setTint(0xd8dcea).setDepth(DEPTH.background - 2);
     if (t === 'easel') {
       const easel = scene.add.image(d.x, d.y, TEX.EASEL).setOrigin(0.5, 1).setAngle(-24).setDepth(DEPTH.background - 1);
       scene.tweens.add({ targets: easel, y: d.y + 2, angle: -18, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
@@ -122,6 +123,7 @@ export function loadLevel(scene, levelDef) {
   return {
     map,
     theme,
+    weather: mapProp(map, 'weather') ?? null,
     layers: { background, ground, foreground },
     width,
     hills,
@@ -149,6 +151,9 @@ export function loadLevel(scene, levelDef) {
       offsetMs: prop(o, 'offsetMs') ?? 0,
     })),
     swans: ofType('swan').map((o) => ({ x0: o.x, x1: o.x + o.width, y: o.y })),
+    gulls: ofType('gull').map((o) => ({ x0: o.x + 8, x1: o.x + o.width - 8, y: o.y, offsetMs: prop(o, 'offsetMs') ?? 0 })),
+    awnings: ofType('awning').map((o) => ({ x: o.x, y: o.y, width: o.width })),
+    autoscroll: ofType('autoscroll').map((o) => ({ x0: o.x, x1: o.x + o.width }))[0] ?? null,
     crossings: ofType('crossing').map((o) => ({ x: o.x, y: o.y, width: o.width, offsetMs: prop(o, 'offsetMs') ?? 0 })),
   };
 }

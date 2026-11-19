@@ -21,6 +21,11 @@ export const TEX = {
   TANK: 'tank', // a tank from Bovington rumbling along the heath (moving platform: you ride its turret)
   BOAT: 'rowing-boat', // rowing boat on the Frome (moving platform)
   SWAN: 'swan', // swan on Wareham's riverbank: two walking frames, facing right
+  FERRY: 'chain-ferry', // the chain ferry across Poole harbour (moving platform)
+  GULL: 'seagull', // Poole's seagulls: two flapping frames, facing right
+  AWNING: 'awning', // one 16 px stretch of a bouncy striped shop awning (tiled across its width)
+  RAINDROP: 'raindrop',
+  YACHT: 'yacht', // moored in Poole harbour (scenery)
   LAMP: 'lamp', // Victorian street lamp (village scenery)
   STALL: 'market-stall', // striped market stall (village scenery; crates in front are the steps)
   CHECKPOINT: 'checkpoint', // railway signal: red → green
@@ -61,12 +66,14 @@ export const HOUSES = {
 };
 
 // Pubs drawn as background buildings. `id` is referenced by `pub` objects in level JSON.
+// `wall` is 'brick', 'render' or a colour (a painted render).
 export const PUBS = {
   brewhouse: { name: 'BREWHOUSE', wall: 'brick', roof: '#5f574f', chimney: true },
   'black-bear': { name: 'THE BLACK BEAR', wall: 'render', roof: '#1a1c2c', angryLocals: true },
   'old-granary': { name: 'THE OLD GRANARY', wall: 'brick', roof: '#7e2553' },
   frampton: { name: 'FRAMPTON', wall: 'render', roof: '#5f574f', chimney: true },
   'kings-arms': { name: 'KINGS ARMS', wall: 'render', roof: '#3a3a46', chimney: true }, // Wareham scenery only
+  'rising-sun': { name: 'THE RISING SUN', wall: '#f2c46b', roof: '#5f574f', chimney: true, sun: true }, // Poole, by the quay
   avocet: { name: 'THE AVOCET', wall: 'render', roof: '#29366f' },
 };
 
@@ -194,4 +201,5 @@ export const ANIM = {
   ESPRESSO_SHINE: 'espresso-shine',
   CONDUCTOR_WALK: 'conductor-walk',
   SWAN_WALK: 'swan-walk',
+  GULL_FLAP: 'gull-flap',
 };

@@ -12,9 +12,13 @@
 // Moving platforms (the tank, boats) bridge gaps too wide to jump: the jump
 // onto one is checked against its nearest position to the bank you leave, and
 // the jump off against its furthest, so it works whenever you wait for it.
+//
+// Bouncy awnings throw you higher than a jump: from one, the climb allowed is
+// what the bounce reaches (same margin). Seagulls and the departing train's
+// auto-scroll are checked against the run speed.
 
 import { TILESET } from '../assets.js';
-import { PLAYER, PHYSICS, CROSSING, THROWERS, MOVERS } from '../config.js';
+import { PLAYER, PHYSICS, CROSSING, THROWERS, MOVERS, GULLS, AWNINGS, AUTOSCROLL } from '../config.js';
 
 export const LEVEL_RULES = {
   maxGapTiles: 3, // 48 px
@@ -47,6 +51,7 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
 
   const { width: cols, height: rows } = ground;
   const tw = map.tilewidth;
+  const J0 = rules.jump;
 
   const girderGid = TILESET.tiles.girder + 1;
   const isCeiling = (c, r) => ground.data[r * cols + c] === girderGid;
@@ -110,9 +115,26 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     movers.push(m);
   }
 
+  // Bouncy awnings: one-way decks at `row` over cols c0–c1.
+  const awnings = objAll
+    .filter((o) => o.type === 'awning' || o.class === 'awning')
+    .map((o) => ({ c0: Math.floor(o.x / tw), c1: Math.floor((o.x + o.width - 1) / tw), row: Math.floor(o.y / tw) }));
+
+  // How high an awning bounce goes, and so how far up it can safely reach.
+  const bounceRise = (AWNINGS.velocity * AWNINGS.velocity) / (2 * J0.gravity);
+  const bounceStep = Math.floor((bounceRise * J0.margin) / tw);
+  for (const a of awnings) {
+    for (let c = a.c0; c <= a.c1; c++) {
+      if (surface[c] !== null && surface[c] - a.row < 2) errors.push(`awning at cols ${a.c0}–${a.c1} is too low over the ground at col ${c} (walk under it)`);
+      for (let r = a.row - 1; r >= Math.max(0, a.row - Math.ceil(bounceRise / tw)); r--) {
+        if (ground.data[r * cols + c]) errors.push(`awning at cols ${a.c0}–${a.c1}: tile at col ${c} row ${r} is in the way of the bounce`);
+      }
+    }
+  }
+
   // A jump from surface row `fromRow` with a ceiling at `ceilRow`: how high it
   // can rise (px) and the gap / step-up it can safely clear (tiles).
-  const J = rules.jump;
+  const J = J0;
   const apex = (J.velocity * J.velocity) / (2 * J.gravity);
   const underCeiling = (fromRow, ceilRow) => {
     const rise = Math.min(apex, (fromRow - ceilRow - 1) * tw - J.bodyHeight);
@@ -154,6 +176,8 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   for (const l of ledges) nodes.push({ ...l, ground: false });
   // A mover's deck is somewhere to jump from anywhere along its track.
   for (const m of movers) for (let c = m.c0; c <= m.c1; c++) nodes.push({ c, r: m.row, ground: false, mover: true });
+  // So is an awning, and it bounces you higher.
+  for (const a of awnings) for (let c = a.c0; c <= a.c1; c++) nodes.push({ c, r: a.row, ground: false, bounce: true });
   const spawnObj = objAll.find((o) => o.type === 'spawn' || o.class === 'spawn');
   const startCol = spawnObj ? Math.floor(spawnObj.x / tw) : 0;
   const reached = new Set();
@@ -165,13 +189,16 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     for (const to of nodes) {
       if (reached.has(key(to))) continue;
       if (Math.abs(to.c - from.c) > rules.maxGapTiles + 1) continue;
-      if (from.r - to.r > rules.maxStepUpTiles) continue; // rows grow downwards: this is the rise
+      if (from.r - to.r > (from.bounce ? bounceStep : rules.maxStepUpTiles)) continue; // rows grow downwards: this is the rise
       reached.add(key(to));
       queue.push(to);
     }
   }
   for (const m of movers) {
     if (!reached.has(key({ c: m.c0, r: m.row }))) errors.push(`mover at cols ${m.c0}–${m.c1} can't be reached from the spawn`);
+  }
+  for (const a of awnings) {
+    if (!reached.has(key({ c: a.c0, r: a.row })) && !reached.has(key({ c: a.c1, r: a.row }))) errors.push(`awning at cols ${a.c0}–${a.c1} can't be reached from the spawn`);
   }
   for (const l of ledges) {
     if (!reached.has(key(l))) errors.push(`ledge at col ${l.c} row ${l.r} can't be reached from the spawn by jumping`);
@@ -344,6 +371,49 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     }
   }
 
+  // Seagulls: like swans, over flat ground away from where you (re)start or
+  // finish, hovering out of reach, and slow enough that once one swoops away
+  // you can run its stretch before it comes back.
+  const gulls = ofType('gull');
+  for (const g of gulls) {
+    const c0 = colOf(g.x);
+    const c1 = colOf(g.x + g.width - 1);
+    const row = prop(g, 'surfaceRow');
+    const k = GULLS.clearTiles;
+    for (let c = c0 - k; c <= c1 + k; c++) {
+      if (surface[c] !== row) errors.push(`gull at cols ${c0}–${c1}: col ${c} is not flat ground at row ${row}`);
+      if (glassCols.has(c)) errors.push(`gull at cols ${c0}–${c1}: hazard at col ${c}`);
+    }
+    for (const o of [...spawns, ...checkpoints, ...finishes]) {
+      const c = colOf(o.x);
+      if (c >= c0 - k && c <= c1 + k) errors.push(`${o.type} "${o.name}" at col ${c} is under a gull`);
+    }
+    const need = (((c1 - c0 + 1 + 2 * k) * tw) / J.runSpeed) * 1000 * GULLS.crossMargin;
+    const window = GULLS.passMs / 2 + GULLS.pauseMs;
+    if (need > window) errors.push(`gull at cols ${c0}–${c1}: running under it takes ${Math.round(need)} ms with margin, it allows ${window}`);
+    if (GULLS.hoverPx - 6 <= apex + J.bodyHeight) errors.push(`gulls hover at ${GULLS.hoverPx} px, within reach of a jump`);
+  }
+
+  // The departing train: the camera scrolls on by itself, so the stretch must
+  // be passable without stopping: slower than a run, and nothing to wait for.
+  const autoscrolls = ofType('autoscroll');
+  if (AUTOSCROLL.speed > J.runSpeed * AUTOSCROLL.maxPace) {
+    errors.push(`auto-scroll speed ${AUTOSCROLL.speed} px/s is over ${AUTOSCROLL.maxPace} of the run speed`);
+  }
+  for (const a of autoscrolls) {
+    const c0 = colOf(a.x);
+    const c1 = colOf(a.x + a.width - 1);
+    const inside = (o) => colOf(o.x) >= c0 && colOf(o.x) <= c1;
+    const inRange = (o) => colOf(o.x + (o.width || 0) - 1) >= c0 && colOf(o.x) <= c1;
+    for (const t of ['mover', 'crossing', 'swan', 'gull', 'thrower', 'boss']) {
+      for (const o of ofType(t).filter(inRange)) errors.push(`${t} at col ${colOf(o.x)} is inside the auto-scroll at cols ${c0}–${c1}`);
+    }
+    for (const o of [...spawns, ...checkpoints, ...finishes].filter(inside)) {
+      errors.push(`${o.type} "${o.name}" at col ${colOf(o.x)} is inside the auto-scroll at cols ${c0}–${c1}`);
+    }
+    if (spawns[0] && colOf(spawns[0].x) > c0) errors.push(`auto-scroll at cols ${c0}–${c1} is before the spawn`);
+  }
+
   // Collectibles.
   const collectibles = ofType('collectible');
   const counts = {};
@@ -364,6 +434,9 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   info.throwers = throwers.length;
   info.movers = movers.length;
   info.swans = swans.length;
+  info.gulls = gulls.length;
+  info.awnings = awnings.length;
+  info.autoscrolls = autoscrolls.length;
   info.boss = bosses.length ? prop(bosses[0], 'kind') : null;
   return { errors, info };
 }

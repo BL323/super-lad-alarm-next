@@ -702,16 +702,29 @@ function makePub(scene, id, def) {
     // Walls
     if (def.wall === 'brick') bricks(ctx, 2, 21, W - 4, H - 21);
     else {
-      rect(ctx, '#eae6dc', 2, 21, W - 4, H - 21);
+      rect(ctx, def.wall === 'render' ? '#eae6dc' : def.wall, 2, 21, W - 4, H - 21); // render, or painted
       rect(ctx, '#cfc8b8', 2, H - 6, W - 4, 6); // plinth
     }
 
-    // Upper windows
-    for (const x of [12, 42, 72]) {
+    // Upper windows (the middle one is the painted sign on a pub that has one)
+    for (const x of def.sun ? [12, 72] : [12, 42, 72]) {
       rect(ctx, C.white, x - 1, 24, 14, 13);
       rect(ctx, C.glassBlue, x, 25, 12, 11);
       rect(ctx, C.white, x + 5, 25, 2, 11);
       rect(ctx, C.white, x, 30, 12, 1);
+    }
+    if (def.sun) {
+      // The Rising Sun: a half sun with its rays coming up over the sea.
+      rect(ctx, C.gold, 37, 23, 22, 15);
+      rect(ctx, '#29366f', 38, 24, 20, 13);
+      for (let y = 0; y < 6; y++) {
+        const half = Math.round(Math.sqrt(36 - (5.5 - y) ** 2));
+        rect(ctx, C.orange, 48 - half, 25 + 5 + y, half * 2, 1);
+      }
+      for (const [x, y] of [[40, 27], [43, 25], [48, 24], [53, 25], [56, 27]]) rect(ctx, C.gold, x, y, 1, 2);
+      rect(ctx, C.water, 38, 35, 20, 2); // the sea
+      rect(ctx, C.white, 41, 35, 3, 1);
+      rect(ctx, C.white, 51, 36, 3, 1);
     }
 
     // Fascia with the pub name
@@ -1101,6 +1114,97 @@ function makeSwan(scene) {
   });
 }
 
+// Poole's chain ferry, 64×28, side-on: a flat car deck (y 6, the surface you
+// ride on), a little wheelhouse above it at the back (scenery: you walk in
+// front of it), and a blue and white hull that sits low in the harbour.
+function makeFerry(scene) {
+  makeImage(scene, TEX.FERRY, 64, 28, (ctx) => {
+    // Wheelhouse and its funnel, behind the deck.
+    rect(ctx, C.white, 4, 0, 14, 6);
+    rect(ctx, C.glassBlue, 6, 1, 10, 2);
+    rect(ctx, '#29366f', 4, 0, 14, 1);
+    rect(ctx, C.ink, 20, 1, 3, 5);
+    rect(ctx, C.yellow, 20, 2, 3, 1);
+    // Deck rail and car deck.
+    rect(ctx, C.grey, 0, 6, 64, 2);
+    rect(ctx, C.white, 0, 6, 64, 1);
+    for (let x = 6; x < 60; x += 10) rect(ctx, C.yellow, x, 7, 4, 1); // lane markings
+    // Hull: blue band, white band, then below the waterline.
+    rect(ctx, '#29366f', 2, 8, 60, 6);
+    rect(ctx, C.white, 2, 14, 60, 3);
+    rect(ctx, C.redDim, 4, 17, 56, 11);
+    for (let i = 0; i < 4; i++) {
+      rect(ctx, C.ink, 0, 8 + i, 2 - Math.floor(i / 2), 1); // ramps at each end
+      rect(ctx, C.ink, 62 + Math.floor(i / 2), 8 + i, 2 - Math.floor(i / 2), 1);
+    }
+    for (const x of [12, 30, 48]) rect(ctx, C.waterLight, x, 10, 4, 2); // portholes
+    rect(ctx, C.white, 24, 15, 16, 1); // her name
+  });
+}
+
+// Herring gull, 16×12, facing right: wings up (0) and down (1).
+function makeGull(scene) {
+  makeSheet(scene, TEX.GULL, 16, 12, 2, (ctx, i) => {
+    rect(ctx, C.white, 3, 5, 9, 4); // body
+    rect(ctx, C.grey, 1, 6, 3, 2); // tail
+    rect(ctx, C.ink, 0, 6, 1, 1);
+    rect(ctx, C.white, 11, 3, 4, 4); // head
+    px(ctx, C.ink, 13, 4); // eye
+    rect(ctx, C.yellow, 15, 5, 1, 1); // beak
+    px(ctx, C.red, 15, 6);
+    if (i === 0) {
+      // Wings up.
+      rect(ctx, C.grey, 5, 1, 2, 4);
+      rect(ctx, C.grey, 6, 0, 4, 2);
+      rect(ctx, C.ink, 9, 0, 2, 1);
+    } else {
+      // Wings down.
+      rect(ctx, C.grey, 5, 8, 5, 2);
+      rect(ctx, C.grey, 6, 10, 3, 2);
+      rect(ctx, C.ink, 8, 11, 2, 1);
+    }
+    rect(ctx, C.orange, 6, 9, 1, 1); // feet tucked up
+  });
+}
+
+// One 16×8 stretch of a striped shop awning with a scalloped edge, tiled
+// across the awning's width. The top (y 0) is the bouncy surface.
+function makeAwning(scene) {
+  makeImage(scene, TEX.AWNING, 16, 8, (ctx) => {
+    for (let x = 0; x < 16; x++) {
+      const col = Math.floor(x / 4) % 2 ? C.white : '#e43b44';
+      rect(ctx, col, x, 0, 1, 5);
+      if (x % 4 !== 0 && x % 4 !== 3) rect(ctx, col, x, 5, 1, 2); // scallops
+    }
+    rect(ctx, '#ff8a94', 0, 0, 16, 1); // sheen along the top
+    rect(ctx, C.ink, 0, 0, 1, 1);
+  });
+}
+
+// A streak of rain, 2×6.
+function makeRaindrop(scene) {
+  makeImage(scene, TEX.RAINDROP, 2, 6, (ctx) => {
+    rect(ctx, '#d8e4ff', 1, 0, 1, 2);
+    rect(ctx, '#ffffff', 0, 2, 1, 4);
+  });
+}
+
+// A yacht moored in the harbour, 32×48: mast, furled sail, white hull.
+function makeYacht(scene) {
+  makeImage(scene, TEX.YACHT, 32, 48, (ctx) => {
+    rect(ctx, C.grey, 15, 0, 1, 38); // mast
+    rect(ctx, C.white, 16, 26, 10, 2); // boom with the furled sail
+    rect(ctx, '#29366f', 16, 25, 10, 1);
+    for (let i = 0; i < 12; i++) px(ctx, C.grey, 15 - Math.floor(i / 1.2), 2 + i * 3); // forestay
+    rect(ctx, C.white, 2, 38, 28, 4); // hull
+    rect(ctx, C.white, 4, 42, 24, 2);
+    rect(ctx, '#e43b44', 2, 41, 28, 1);
+    rect(ctx, C.glassBlue, 12, 36, 8, 2); // cabin
+    rect(ctx, C.white, 11, 35, 10, 1);
+    rect(ctx, C.waterDark, 4, 44, 24, 4);
+  });
+}
+
 // Beer mat, 10×10: a round card with a red ring, thrown frisbee-style.
 function makeBeerMat(scene) {
   makeImage(scene, TEX.BEERMAT, 10, 10, (ctx) => {
@@ -1341,6 +1445,11 @@ const BUILDERS = {
   [TEX.TANK]: makeTank,
   [TEX.BOAT]: makeBoat,
   [TEX.SWAN]: makeSwan,
+  [TEX.FERRY]: makeFerry,
+  [TEX.GULL]: makeGull,
+  [TEX.AWNING]: makeAwning,
+  [TEX.RAINDROP]: makeRaindrop,
+  [TEX.YACHT]: makeYacht,
   [TEX.BEERMAT]: makeBeerMat,
   [TEX.CHECKPOINT]: makeCheckpoint,
   [TEX.FINISH]: makeFinish,

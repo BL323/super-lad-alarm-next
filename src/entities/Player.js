@@ -142,12 +142,15 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     });
   }
 
-  /** Bounce upwards (e.g. off the Conductor's cap). Holding jump keeps the full bounce. */
-  bounce(velocityY) {
+  /**
+   * Bounce upwards (e.g. off the Conductor's cap). Holding jump keeps the full
+   * bounce; with `fixed` (an awning) it's the full bounce whatever you press.
+   */
+  bounce(velocityY, { fixed = false } = {}) {
     if (this.dead) return;
     this.body.setVelocityY(velocityY);
     this.isJumping = true;
-    this.jumpCut = false;
+    this.jumpCut = fixed;
     this.lastGroundedAt = -Infinity;
   }
 
