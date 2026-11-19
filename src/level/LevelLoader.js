@@ -87,7 +87,11 @@ export function loadLevel(scene, levelDef) {
   for (const d of decor) {
     const t = typeOf(d);
     DECOR[t]?.(d);
-    if (t === 'pub') scene.add.image(d.x, d.y, pubTextureKey(prop(d, 'pub'))).setOrigin(0.5, 1).setDepth(DEPTH.decor);
+    if (t === 'pub') {
+      const img = scene.add.image(d.x, d.y, pubTextureKey(prop(d, 'pub'))).setOrigin(0.5, 1).setDepth(DEPTH.decor);
+      // Scenery pubs stand across the street: a little hazier, behind the houses.
+      if (prop(d, 'scenery')) img.setTint(0xeee2cc).setDepth(DEPTH.decor - 1);
+    }
     if (t === 'sign') scene.add.image(d.x, d.y, ensureSignTexture(scene, prop(d, 'text'))).setOrigin(0.5, 1).setDepth(DEPTH.decor);
     if (t === 'easel') {
       const easel = scene.add.image(d.x, d.y, TEX.EASEL).setOrigin(0.5, 1).setAngle(-24).setDepth(DEPTH.background - 1);
@@ -136,6 +140,15 @@ export function loadLevel(scene, levelDef) {
       floorY: prop(o, 'floorRow') * map.tileHeight + offsetY,
       offsetMs: prop(o, 'offsetMs'),
     })),
+    movers: ofType('mover').map((o) => ({
+      kind: prop(o, 'kind'),
+      x: o.x,
+      y: o.y,
+      width: o.width,
+      travel: prop(o, 'travelPx'),
+      offsetMs: prop(o, 'offsetMs') ?? 0,
+    })),
+    swans: ofType('swan').map((o) => ({ x0: o.x, x1: o.x + o.width, y: o.y })),
     crossings: ofType('crossing').map((o) => ({ x: o.x, y: o.y, width: o.width, offsetMs: prop(o, 'offsetMs') ?? 0 })),
   };
 }

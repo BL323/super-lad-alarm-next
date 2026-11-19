@@ -18,6 +18,9 @@ export const TEX = {
   HEADLIGHT: 'headlight', // soft glow of an approaching train's headlight
   BEERMAT: 'beer-mat', // thrown by the Black Bear's locals
   HEDGE: 'hedge', // tall Dorset hedgerow either side of a level crossing (the train runs behind it)
+  TANK: 'tank', // a tank from Bovington rumbling along the heath (moving platform: you ride its turret)
+  BOAT: 'rowing-boat', // rowing boat on the Frome (moving platform)
+  SWAN: 'swan', // swan on Wareham's riverbank: two walking frames, facing right
   LAMP: 'lamp', // Victorian street lamp (village scenery)
   STALL: 'market-stall', // striped market stall (village scenery; crates in front are the steps)
   CHECKPOINT: 'checkpoint', // railway signal: red → green
@@ -63,6 +66,7 @@ export const PUBS = {
   'black-bear': { name: 'THE BLACK BEAR', wall: 'render', roof: '#1a1c2c', angryLocals: true },
   'old-granary': { name: 'THE OLD GRANARY', wall: 'brick', roof: '#7e2553' },
   frampton: { name: 'FRAMPTON', wall: 'render', roof: '#5f574f', chimney: true },
+  'kings-arms': { name: 'KINGS ARMS', wall: 'render', roof: '#3a3a46', chimney: true }, // Wareham scenery only
   avocet: { name: 'THE AVOCET', wall: 'render', roof: '#29366f' },
 };
 
@@ -175,8 +179,11 @@ export const TILESET = {
     road: 21, // tarmac under the pavement
     crossingDeck: 22, // level-crossing road surface with the rails set in it
     slate: 23, // slate rooftop (the high road over the village)
+    jetty: 24, // wooden jetty deck on posts (Wareham quay)
+    pile: 25, // jetty posts standing in the river, below the deck
+    waterHigh: 26, // river surface just below the bank (background): boats sit in it
   },
-  count: 24,
+  count: 27,
 };
 
 export const CROSSING_LIGHTS_FRAME = { width: 16, height: 40, off: 0, left: 1, right: 2 };
@@ -186,4 +193,5 @@ export const ANIM = {
   PINT_SHINE: 'pint-shine',
   ESPRESSO_SHINE: 'espresso-shine',
   CONDUCTOR_WALK: 'conductor-walk',
+  SWAN_WALK: 'swan-walk',
 };

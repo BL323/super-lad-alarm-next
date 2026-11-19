@@ -5,6 +5,7 @@
 // (Tiled map format) and validate it; `npm run build:levels -- <id>` builds one.
 
 import { TILESET } from '../../src/assets.js';
+import { MOVERS } from '../../src/config.js';
 
 const T = TILESET.tiles;
 const TS = TILESET.tileWidth;
@@ -95,9 +96,30 @@ export function createLevel({ cols, properties = {} }) {
     for (const c of posts) for (let r = row + 2; r < SURFACE; r++) set('background', c, r, T.canopyPost);
   }
 
+  /** A river filling a gap, its surface just below the banks. Falling in is a death. */
   function river(c0, c1) {
-    for (let c = c0; c <= c1; c++) set('background', c, SURFACE + 1, T.water);
-    addObject('hazard', 'river', c0 * TS, (SURFACE + 1) * TS + 6, (c1 - c0 + 1) * TS, TS - 6, { kind: 'water' });
+    for (let c = c0; c <= c1; c++) {
+      set('background', c, SURFACE, T.waterHigh);
+      set('background', c, SURFACE + 1, T.waterDeep);
+    }
+    addObject('hazard', 'river', c0 * TS, SURFACE * TS + 12, (c1 - c0 + 1) * TS, TS + 4, { kind: 'water' });
+  }
+
+  /**
+   * A sunken trench of mud between two banks (the tank's road across the
+   * heath): no ground, and the mud at the bottom is deadly. Pair with a `tank` mover.
+   */
+  function trench(c0, c1) {
+    for (let c = c0; c <= c1; c++) set('background', c, SURFACE + 1, T.earth);
+    addObject('hazard', 'mud', c0 * TS, (SURFACE + 1) * TS + 4, (c1 - c0 + 1) * TS, TS - 4, { kind: 'mud' });
+  }
+
+  /** A wooden jetty out in the river: a deck at the surface on posts in the water. */
+  function jetty(c0, c1) {
+    for (let c = c0; c <= c1; c++) {
+      set('ground', c, SURFACE, T.jetty);
+      set('ground', c, SURFACE + 1, T.pile);
+    }
   }
 
   // --- Objects -------------------------------------------------------------------
@@ -148,7 +170,9 @@ export function createLevel({ cols, properties = {} }) {
     addObject('boss', kind, ...feet(col, surfaceRow), 0, 0, { kind, tuning });
   const zone = (name, c0, c1) => addObject('zone', name, c0 * TS, 0, (c1 - c0 + 1) * TS, ROWS * TS);
   const secret = (c0, c1, r0, r1) => addObject('secret', 'secret', c0 * TS, r0 * TS, (c1 - c0 + 1) * TS, (r1 - r0 + 1) * TS);
-  const pub = (col, id) => addObject('pub', id, ...feet(col), 0, 0, { pub: id }, decor);
+  /** A pub front at `col`. `scenery` draws it across the street, hazier, with no way in (never a finish). */
+  const pub = (col, id, { scenery = false } = {}) =>
+    addObject('pub', id, ...feet(col), 0, 0, scenery ? { pub: id, scenery } : { pub: id }, decor);
   const sign = (col, text) => addObject('sign', text, ...feet(col), 0, 0, { text }, decor);
   /** Village scenery, standing on the surface at `col`. `id` is a key of HOUSES in src/assets.js. */
   const house = (col, id) => addObject('house', id, ...feet(col), 0, 0, { house: id }, decor);
@@ -167,6 +191,22 @@ export function createLevel({ cols, properties = {} }) {
     });
   /** A Friesian grazing by the line; `flip` faces it left. */
   const cow = (col, flip = false) => addObject('cow', 'cow', ...feet(col), 0, 0, { flip }, decor);
+  /**
+   * A moving platform (`kind` is a key of MOVERS in src/config.js: 'tank' or
+   * 'boat') whose deck sweeps cols c0–c1 with its top at `row`: at one end its
+   * left edge is at c0, at the other its right edge is at c1. `offsetMs`
+   * shifts where in its cycle it starts.
+   */
+  const mover = (kind, c0, c1, row, offsetMs = 0) => {
+    const deck = MOVERS[kind]?.deck;
+    if (!deck) throw new Error(`unknown mover kind "${kind}"`);
+    const travelPx = (c1 - c0 + 1) * TS - deck;
+    if (travelPx <= 0) throw new Error(`mover at cols ${c0}–${c1} has no room to move`);
+    return addObject('mover', kind, c0 * TS, row * TS, deck, 0, { kind, travelPx, offsetMs });
+  };
+  /** A swan patrolling cols c0–c1 of the surface at `surfaceRow`. Deadly to touch; jump it. */
+  const swan = (c0, c1, surfaceRow = SURFACE) =>
+    addObject('swan', 'swan', c0 * TS, surfaceRow * TS, (c1 - c0 + 1) * TS, 0, { surfaceRow });
   const easel = (col) => addObject('easel', 'easel', col * TS + TS / 2, (SURFACE + 1) * TS + 4, 0, 0, {}, decor);
 
   function toMap() {
@@ -240,6 +280,8 @@ export function createLevel({ cols, properties = {} }) {
     crates,
     canopy,
     river,
+    trench,
+    jetty,
     addObject,
     spawn,
     checkpoint,
@@ -253,6 +295,8 @@ export function createLevel({ cols, properties = {} }) {
     cowpat,
     crumble,
     crossing,
+    mover,
+    swan,
     thrower,
     boss,
     zone,

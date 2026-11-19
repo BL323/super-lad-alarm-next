@@ -614,6 +614,35 @@ function makeTiles(scene) {
           for (let x = (y % 8 === 5 ? 0 : 4); x < w; x += 8) rect(ctx, '#3a3a46', x, y - 3, 1, 3);
         }
         break;
+      case t.jetty:
+        // Weathered planks on a pair of posts, seen side-on, over the river.
+        rect(ctx, C.water, 0, 10, w, 6);
+        rect(ctx, C.waterLight, 5, 10, 5, 1);
+        rect(ctx, C.wood, 0, 0, w, 4);
+        rect(ctx, '#b07850', 0, 0, w, 1);
+        rect(ctx, C.woodDark, 0, 4, w, 1);
+        rect(ctx, C.woodDark, 7, 1, 1, 3); // plank joint
+        rect(ctx, C.woodDark, 2, 5, 3, 11); // posts
+        rect(ctx, C.woodDark, 11, 5, 3, 11);
+        rect(ctx, C.wood, 3, 5, 1, 11);
+        rect(ctx, C.wood, 12, 5, 1, 11);
+        rect(ctx, C.woodDark, 4, 7, 8, 1); // cross brace
+        break;
+      case t.pile:
+        // The posts going down into the deep water, weed growing on them.
+        rect(ctx, C.waterDark, 0, 0, w, h);
+        rect(ctx, C.water, 6, 4, 4, 1);
+        rect(ctx, '#2f5d4a', 2, 0, 3, 16);
+        rect(ctx, '#2f5d4a', 11, 0, 3, 16);
+        rect(ctx, '#2f6b3a', 2, 1, 3, 2); // weed
+        rect(ctx, '#2f6b3a', 11, 3, 3, 2);
+        break;
+      case t.waterHigh:
+        // The river's surface, 10 px down: just below the quay.
+        rect(ctx, C.water, 0, 10, w, 6);
+        rect(ctx, C.waterLight, 1, 10, 5, 1);
+        rect(ctx, C.waterLight, 10, 11, 4, 1);
+        break;
       case t.crossingDeck:
         // Rubber crossing panels with the two rail heads set flush, seen end-on.
         rect(ctx, '#2a2c3c', 0, 0, w, h);
@@ -983,6 +1012,95 @@ function makeHedge(scene) {
   });
 }
 
+// A tank from the Bovington Tank Museum, 64×48, facing right. You ride on
+// its turret: the flat turret roof (x 16–47, y 0) is the moving platform's
+// deck. The hull and tracks below sit down in the muddy trench.
+function makeTank(scene) {
+  const olive = '#56642f';
+  const oliveDark = '#3c4720';
+  const oliveLight = '#7a8a44';
+  makeImage(scene, TEX.TANK, 64, 48, (ctx) => {
+    // Turret, with the gun barrel pointing forward.
+    rect(ctx, olive, 16, 0, 32, 11);
+    rect(ctx, oliveLight, 16, 0, 32, 1);
+    rect(ctx, oliveDark, 16, 10, 32, 1);
+    rect(ctx, oliveDark, 22, 3, 6, 4); // camouflage
+    rect(ctx, oliveDark, 36, 5, 7, 3);
+    rect(ctx, oliveLight, 30, 2, 4, 2);
+    rect(ctx, oliveDark, 47, 4, 1, 4); // mantlet
+    rect(ctx, '#2e3618', 48, 5, 16, 3); // barrel
+    rect(ctx, oliveDark, 60, 4, 4, 5); // muzzle
+    // Hull, with a sloping glacis at the front.
+    rect(ctx, olive, 4, 11, 54, 12);
+    for (let i = 0; i < 6; i++) rect(ctx, olive, 58, 13 + i * 2, 4 - Math.floor(i / 2), 2);
+    rect(ctx, oliveLight, 4, 11, 54, 1);
+    rect(ctx, oliveDark, 12, 15, 8, 4);
+    rect(ctx, oliveDark, 40, 14, 9, 5);
+    rect(ctx, oliveLight, 26, 16, 6, 3);
+    rect(ctx, C.white, 8, 14, 3, 1); // a stencilled number
+    rect(ctx, C.white, 8, 16, 3, 1);
+    rect(ctx, '#2e3618', 2, 22, 60, 2); // track guard
+    // Tracks and road wheels.
+    rect(ctx, '#2a2a30', 1, 24, 62, 16);
+    rect(ctx, '#45454e', 3, 24, 58, 1);
+    for (let x = 4; x < 60; x += 4) rect(ctx, '#45454e', x, 38, 2, 2); // track links
+    for (const x of [8, 18, 28, 38, 48]) {
+      rect(ctx, '#5f574f', x, 27, 8, 8);
+      rect(ctx, '#83769c', x + 3, 30, 2, 2);
+    }
+    rect(ctx, '#5f574f', 2, 28, 4, 6); // idler and sprocket
+    rect(ctx, '#5f574f', 58, 28, 4, 6);
+    // Mud thrown up by the tracks.
+    rect(ctx, '#5d4420', 0, 40, 64, 8);
+    for (const [x, y] of [[3, 39], [14, 38], [27, 39], [41, 38], [55, 39], [60, 37]]) rect(ctx, '#7e6232', x, y, 3, 2);
+  });
+}
+
+// Wooden rowing boat, 48×24, side-on. The gunwale (y 0) is the deck you
+// stand on; the lower part sits below the waterline (drawn behind the river).
+function makeBoat(scene) {
+  makeImage(scene, TEX.BOAT, 48, 24, (ctx) => {
+    for (let y = 0; y < 18; y++) {
+      const inset = Math.max(0, Math.floor((y - 6) / 2)); // the hull curves in towards the keel
+      rect(ctx, y < 3 ? C.wood : y < 9 ? '#2f5d9a' : C.white, inset, y + 2, 48 - inset * 2, 1);
+    }
+    rect(ctx, C.woodDark, 0, 0, 48, 2); // gunwale rail
+    rect(ctx, '#b07850', 0, 0, 48, 1);
+    rect(ctx, C.woodDark, 0, 0, 2, 6); // stem and stern posts
+    rect(ctx, C.woodDark, 46, 0, 2, 6);
+    rect(ctx, C.ink, 8, 5, 1, 4); // planking
+    rect(ctx, C.ink, 23, 5, 1, 4);
+    rect(ctx, C.ink, 38, 5, 1, 4);
+    rect(ctx, C.white, 12, 6, 7, 1); // her name
+    // An oar resting across the gunwale.
+    for (let i = 0; i < 10; i++) px(ctx, '#d8c8a0', 30 + i, 2 + Math.floor(i / 2));
+    rect(ctx, '#d8c8a0', 39, 6, 3, 4);
+  });
+}
+
+// Mute swan, 16×16, facing right: two walking frames (head bob, feet).
+function makeSwan(scene) {
+  makeSheet(scene, TEX.SWAN, 16, 16, 2, (ctx, i) => {
+    const bob = i;
+    rect(ctx, C.white, 1, 8, 11, 5); // body
+    rect(ctx, C.white, 2, 7, 8, 1);
+    rect(ctx, C.grey, 2, 12, 9, 1);
+    rect(ctx, C.grey, 3, 9, 5, 1); // folded wing
+    rect(ctx, C.grey, 0, 7, 2, 2); // tail
+    rect(ctx, C.white, 10, 4 + bob, 2, 5 - bob); // neck
+    rect(ctx, C.white, 11, 2 + bob, 3, 3); // head
+    px(ctx, C.ink, 12, 3 + bob); // eye
+    rect(ctx, C.ink, 14, 3 + bob, 1, 1); // the black knob
+    rect(ctx, C.orange, 14, 4 + bob, 2, 1); // beak
+    px(ctx, C.orange, 15, 5 + bob);
+    // Feet.
+    rect(ctx, '#3a3a46', i ? 4 : 5, 13, 1, 2);
+    rect(ctx, '#3a3a46', i ? 8 : 7, 13, 1, 2);
+    rect(ctx, '#3a3a46', i ? 3 : 4, 15, 3, 1);
+    rect(ctx, '#3a3a46', i ? 8 : 7, 15, 3, 1);
+  });
+}
+
 // Beer mat, 10×10: a round card with a red ring, thrown frisbee-style.
 function makeBeerMat(scene) {
   makeImage(scene, TEX.BEERMAT, 10, 10, (ctx) => {
@@ -1220,6 +1338,9 @@ const BUILDERS = {
   [TEX.BARRIER]: makeBarrier,
   [TEX.HEADLIGHT]: makeHeadlight,
   [TEX.HEDGE]: makeHedge,
+  [TEX.TANK]: makeTank,
+  [TEX.BOAT]: makeBoat,
+  [TEX.SWAN]: makeSwan,
   [TEX.BEERMAT]: makeBeerMat,
   [TEX.CHECKPOINT]: makeCheckpoint,
   [TEX.FINISH]: makeFinish,

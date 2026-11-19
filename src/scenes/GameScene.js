@@ -10,6 +10,8 @@ import Checkpoints from '../systems/Checkpoints.js';
 import Crumbles from '../systems/Crumbles.js';
 import LevelCrossing from '../systems/LevelCrossing.js';
 import Throwers from '../systems/Throwers.js';
+import MovingPlatforms from '../systems/MovingPlatforms.js';
+import Swans from '../systems/Swans.js';
 import BossArena from '../systems/BossArena.js';
 import { celebrate } from '../systems/Celebration.js';
 import SpeechBubble from '../ui/SpeechBubble.js';
@@ -42,6 +44,8 @@ export default class GameScene extends Phaser.Scene {
     this.crumbles = new Crumbles(this, this.level.crumbles, this.player);
     this.crossings = this.level.crossings.map((def) => new LevelCrossing(this, def, this.player));
     this.throwers = this.level.throwers.length ? new Throwers(this, this.level.throwers, this.player) : null;
+    this.movers = this.level.movers.length ? new MovingPlatforms(this, this.level.movers, this.player) : null;
+    this.swans = this.level.swans.length ? new Swans(this, this.level.swans, this.player) : null;
     this.spawnCollectibles();
 
     // Finish: The Avocet's front door, drawn over the pub's own door. Reaching

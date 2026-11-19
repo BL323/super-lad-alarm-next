@@ -180,6 +180,22 @@ export const CROSSING = {
   crossMargin: 2.5,
 };
 
+// Moving platforms (src/systems/MovingPlatforms.js): the tank on the Bovington
+// heath and the rowing boats on the Frome at Wareham. Each glides (eased) from
+// one end of its track to the other, waits `pauseMs`, and comes back. `deck`
+// is the width (px) of the surface you stand on; `speed` is its average speed
+// in px/s (its top speed is about 1.6× that, still well under a walk). The
+// validator checks you can jump on at one end and off at the other.
+export const MOVERS = {
+  tank: { deck: 32, speed: 40, pauseMs: 700 },
+  boat: { deck: 48, speed: 40, pauseMs: 400 },
+};
+
+// Swans patrolling the riverbank at Wareham (src/systems/Swans.js). Touching
+// one is a death and they can't be stomped: jump over them. The validator
+// keeps their patrol on flat ground, away from checkpoints and gap edges.
+export const SWANS = { speed: 22, stepMs: 220 };
+
 // Level picker rows (game px) and the "next stop" screen shown before each level.
 export const LEVEL_SELECT = { top: 38, rowHeight: 16, rowWidth: 292 }; // six rows end above the buttons at y 140
 export const NEXT_STOP = { durationMs: 2400, minMs: 400 }; // moves on by itself; a tap skips after minMs
@@ -245,5 +261,6 @@ export const THEMES = {
   day: { sky: COLORS.sky, hillsTint: 0xffffff },
   morning: { sky: '#c4e8ff', hillsTint: 0xf4ffe8 }, // level 1: pale, fresh late-morning light
   afternoon: { sky: '#9cd6ff', hillsTint: 0xfff4dc }, // level 3: a warmer mid-afternoon
+  golden: { sky: '#f7d58e', hillsTint: 0xffdc96 }, // level 4: golden late afternoon at Wareham
 };
 export const DEFAULT_THEME = 'day';

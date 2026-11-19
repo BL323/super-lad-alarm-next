@@ -8,15 +8,20 @@
 // Low bridges (girder tiles) are ceilings: under one, a full jump bumps its
 // head and comes straight back down, so the allowed gap and step-up shrink to
 // what that shorter jump can manage (same one-third margin).
+//
+// Moving platforms (the tank, boats) bridge gaps too wide to jump: the jump
+// onto one is checked against its nearest position to the bank you leave, and
+// the jump off against its furthest, so it works whenever you wait for it.
 
 import { TILESET } from '../assets.js';
-import { PLAYER, PHYSICS, CROSSING, THROWERS } from '../config.js';
+import { PLAYER, PHYSICS, CROSSING, THROWERS, MOVERS } from '../config.js';
 
 export const LEVEL_RULES = {
   maxGapTiles: 3, // 48 px
   maxStepUpTiles: 2, // 32 px
   minHeadroomTiles: 2, // clear space between a surface and a low bridge above it
   maxCrumbleRun: 4, // crumbling crates in a row (they're stepping stones, never somewhere to stop)
+  swanClearTiles: 2, // flat ground beyond each end of a swan's patrol (room to land after jumping it)
   // The jump, for ceilings, straight from config.js.
   jump: {
     velocity: -PLAYER.jumpVelocity,
@@ -90,6 +95,21 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     if (clear < rules.minHeadroomTiles) errors.push(`low bridge at col ${c} leaves ${clear} tile(s) of headroom (min ${rules.minHeadroomTiles})`);
   }
 
+  // Moving platforms: each sweeps cols c0–c1 of one gap at deck row `row`.
+  const movers = [];
+  for (const o of objAll.filter((o) => o.type === 'mover' || o.class === 'mover')) {
+    const kind = prop(o, 'kind');
+    const travel = prop(o, 'travelPx') ?? 0;
+    const m = { kind, c0: Math.floor(o.x / tw), c1: Math.floor((o.x + travel + o.width - 1) / tw), row: Math.floor(o.y / tw) };
+    if (!MOVERS[kind]) errors.push(`mover "${kind}" at col ${m.c0} is not one of ${Object.keys(MOVERS).join(', ')}`);
+    if (travel <= 0) errors.push(`mover at col ${m.c0} has no travel`);
+    for (let c = m.c0; c <= m.c1; c++) {
+      if (surface[c] !== null) errors.push(`mover at cols ${m.c0}–${m.c1} runs into ground at col ${c}`);
+      if (ceiling[c] !== null) errors.push(`mover at cols ${m.c0}–${m.c1} runs under a low bridge at col ${c}`);
+    }
+    movers.push(m);
+  }
+
   // A jump from surface row `fromRow` with a ceiling at `ceilRow`: how high it
   // can rise (px) and the gap / step-up it can safely clear (tiles).
   const J = rules.jump;
@@ -132,6 +152,8 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   const nodes = [];
   for (let c = 0; c < cols; c++) if (surface[c] !== null) nodes.push({ c, r: surface[c], ground: true });
   for (const l of ledges) nodes.push({ ...l, ground: false });
+  // A mover's deck is somewhere to jump from anywhere along its track.
+  for (const m of movers) for (let c = m.c0; c <= m.c1; c++) nodes.push({ c, r: m.row, ground: false, mover: true });
   const spawnObj = objAll.find((o) => o.type === 'spawn' || o.class === 'spawn');
   const startCol = spawnObj ? Math.floor(spawnObj.x / tw) : 0;
   const reached = new Set();
@@ -148,6 +170,9 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
       queue.push(to);
     }
   }
+  for (const m of movers) {
+    if (!reached.has(key({ c: m.c0, r: m.row }))) errors.push(`mover at cols ${m.c0}–${m.c1} can't be reached from the spawn`);
+  }
   for (const l of ledges) {
     if (!reached.has(key(l))) errors.push(`ledge at col ${l.c} row ${l.r} can't be reached from the spawn by jumping`);
   }
@@ -161,6 +186,21 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     const gap = c - lastCol - 1;
     const limits = lastCol >= 0 ? limitsBetween(lastCol, c) : { gap: rules.maxGapTiles, step: rules.maxStepUpTiles };
     const low = limits.gap < rules.maxGapTiles || limits.step < rules.maxStepUpTiles ? ' under a low bridge' : '';
+    const riding = lastCol >= 0 && gap > 0 ? movers.filter((m) => m.c0 > lastCol && m.c1 < c) : [];
+    if (riding.length > 1) errors.push(`${riding.length} movers in the gap at cols ${lastCol + 1}–${c - 1} (max 1)`);
+    if (riding.length) {
+      // On at the near end, off at the far end.
+      const m = riding[0];
+      const on = m.c0 - lastCol - 1;
+      const off = c - m.c1 - 1;
+      if (on > rules.maxGapTiles) errors.push(`gap of ${on} tiles onto the ${m.kind} at col ${m.c0} (max ${rules.maxGapTiles})`);
+      if (off > rules.maxGapTiles) errors.push(`gap of ${off} tiles off the ${m.kind} into col ${c} (max ${rules.maxGapTiles})`);
+      if (lastSurface - m.row > rules.maxStepUpTiles) errors.push(`step-up of ${lastSurface - m.row} tiles onto the ${m.kind} at col ${m.c0}`);
+      if (m.row - surface[c] > rules.maxStepUpTiles) errors.push(`step-up of ${m.row - surface[c]} tiles off the ${m.kind} into col ${c}`);
+      lastSurface = surface[c];
+      lastCol = c;
+      continue;
+    }
     if (lastCol >= 0 && gap > limits.gap) {
       errors.push(`gap of ${gap} tiles at cols ${lastCol + 1}–${c - 1}${low} (max ${limits.gap})`);
     }
@@ -218,7 +258,8 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
 
   // The finish is the target pub's door, so it shares the pub's column.
   const decorLayer = map.layers.find((l) => l.name === 'decor');
-  const pubs = (decorLayer?.objects ?? []).filter((o) => o.type === 'pub' || o.class === 'pub');
+  // Scenery pubs (drawn further back, e.g. the Kings Arms at Wareham) are never a way in.
+  const pubs = (decorLayer?.objects ?? []).filter((o) => (o.type === 'pub' || o.class === 'pub') && !prop(o, 'scenery'));
   for (const f of finishes) {
     if (!pubs.some((p) => colOf(p.x) === colOf(f.x))) errors.push(`finish at col ${colOf(f.x)} is not at a pub door`);
   }
@@ -285,6 +326,24 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     }
   }
 
+  // Swans: patrol flat ground, with clear landing room beyond each end, no
+  // surface hazards, and nowhere near where you (re)start or finish.
+  const swans = ofType('swan');
+  for (const sw of swans) {
+    const c0 = colOf(sw.x);
+    const c1 = colOf(sw.x + sw.width - 1);
+    const row = prop(sw, 'surfaceRow');
+    const k = rules.swanClearTiles;
+    for (let c = c0 - k; c <= c1 + k; c++) {
+      if (surface[c] !== row) errors.push(`swan at cols ${c0}–${c1}: col ${c} is not flat ground at row ${row}`);
+      if (glassCols.has(c)) errors.push(`swan at cols ${c0}–${c1}: hazard at col ${c}`);
+    }
+    for (const o of [...spawns, ...checkpoints, ...finishes]) {
+      const c = colOf(o.x);
+      if (c >= c0 - k && c <= c1 + k) errors.push(`${o.type} "${o.name}" at col ${c} is on a swan's patrol`);
+    }
+  }
+
   // Collectibles.
   const collectibles = ofType('collectible');
   const counts = {};
@@ -303,6 +362,8 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   info.crumbles = crumbles.length;
   info.crossings = crossings.length;
   info.throwers = throwers.length;
+  info.movers = movers.length;
+  info.swans = swans.length;
   info.boss = bosses.length ? prop(bosses[0], 'kind') : null;
   return { errors, info };
 }

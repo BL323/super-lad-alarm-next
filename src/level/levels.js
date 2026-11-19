@@ -36,6 +36,16 @@ export const LEVELS = [
     pub: 'black-bear',
     mapKey: 'level-03',
     file: 'assets/levels/level-03.json',
+    next: 'level-04',
+  },
+  {
+    id: 'level-04',
+    number: 4,
+    from: 'Wool',
+    to: 'Wareham',
+    pub: 'old-granary',
+    mapKey: 'level-04',
+    file: 'assets/levels/level-04.json',
     next: null,
   },
 ];
