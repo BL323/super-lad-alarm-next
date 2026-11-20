@@ -53,6 +53,7 @@ export default class CompleteScene extends Phaser.Scene {
       addPixelText(this, cx, 89, r.missed ? `${formatSeconds(TIMING.missedPintPenaltyMs)} FOR EACH MISSED PINT` : 'NO PENALTY', { scale: 1 }).setOrigin(0.5, 0);
     }
     row(102, 'FINAL TIME', formatTime(r.finalMs), 0xffcd75);
+    if (r.newBest) addPixelText(this, cx, 119, 'NEW BEST: YOU BEAT YOUR GHOST!', { scale: 1, tint: 0x00e436 }).setOrigin(0.5, 0);
 
     // The lad celebrates on the platform, just left of the buttons.
     const lad = this.add.sprite(cx - 147, groundY, playerTextureKey(r.characterId)).setOrigin(0.5, 1);

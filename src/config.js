@@ -273,6 +273,12 @@ export const WAVES = { calmMs: 2600, warnMs: 900, waveMs: 900, crossMargin: 2, h
 export const PEACOCKS = { speed: 18 };
 export const SQUIRRELS = { speed: 40, chaseSpeed: 80 };
 
+// The ghost (src/systems/Ghost.js): your best finished run of each level,
+// replayed as a see-through lad on the same clock. Kept in memory only (the
+// game registry), never saved: it's gone when the page reloads. Positions are
+// sampled every `sampleMs` and blended between samples.
+export const GHOST = { sampleMs: 33, alpha: 0.4, tint: 0x9cc8ff };
+
 export const DOGS = { speed: 28, chaseSpeed: 64, chaseRange: 56, stompBounce: -220, stepMs: 160, clearTiles: 1 };
 
 // Delay between reaching the pub door and the Complete screen (the lad walks

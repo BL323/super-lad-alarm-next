@@ -4,7 +4,7 @@ import { CAMERA, DEBUG, GAME_HEIGHT, PARALLAX, SECRET_REVEAL_ALPHA, FINISH_DELAY
 import { TEX, FINISH_FRAME, getCharacter } from '../assets.js';
 import { addText } from '../ui/text.js';
 import VirtualInput from '../systems/Input.js';
-import { createGameState, addPickup, finalTime, CRAWL_KEY, createCrawl, recordResult } from '../systems/GameState.js';
+import { createGameState, addPickup, finalTime, formatTime, CRAWL_KEY, createCrawl, recordResult } from '../systems/GameState.js';
 import Audio from '../systems/Audio.js';
 import Checkpoints from '../systems/Checkpoints.js';
 import Crumbles from '../systems/Crumbles.js';
@@ -26,6 +26,7 @@ import Bins from '../systems/Bins.js';
 import Bouncers from '../systems/Bouncers.js';
 import Traffic from '../systems/Traffic.js';
 import Waves from '../systems/Waves.js';
+import { GhostRecorder, GhostPlayer, keepIfBest, getGhost } from '../systems/Ghost.js';
 import { celebrate } from '../systems/Celebration.js';
 import SpeechBubble from '../ui/SpeechBubble.js';
 import Player from '../entities/Player.js';
@@ -74,6 +75,13 @@ export default class GameScene extends Phaser.Scene {
     this.autoScroll = this.level.autoscroll ? new AutoScroll(this, this.level.autoscroll, this.player) : null;
     this.weather = addWeather(this, this.level.weather);
     this.spawnCollectibles();
+
+    // The ghost: this run is recorded; your best finished run so far (this
+    // session only) plays back alongside you.
+    this.ghostRecorder = new GhostRecorder(this.characterId);
+    const best = getGhost(this.registry, this.levelDef.id);
+    this.ghost = best ? new GhostPlayer(this, best) : null;
+    if (best) this.time.delayedCall(700, () => this.events.emit('toast', `BEAT YOUR GHOST: ${formatTime(best.finalMs)}`));
 
     // Finish: The Avocet's front door, drawn over the pub's own door. Reaching
     // it completes the level unless `finishLocked` is set (the boss holds it
@@ -151,6 +159,8 @@ export default class GameScene extends Phaser.Scene {
     if (!this.gameState.completed) this.gameState.elapsedMs += delta;
     this.controls.update();
     this.player.update(time, delta);
+    if (!this.gameState.completed) this.ghostRecorder.record(this.gameState.elapsedMs, this.player);
+    this.ghost?.update(this.gameState.elapsedMs);
     this.arena?.update(time, delta);
     this.autoScroll?.update(delta);
 
@@ -223,6 +233,9 @@ export default class GameScene extends Phaser.Scene {
     });
 
     const result = { ...s, ...finalTime(s), characterId: this.characterId };
+    // Keep this run as the level's ghost if it's your best so far.
+    const hadGhost = !!this.ghost;
+    result.newBest = keepIfBest(this.registry, s.levelId, this.ghostRecorder.toRun(result.finalMs)) && hadGhost;
     // Add this level to the crawl (started from the level picker; a level
     // reached any other way starts its own).
     const crawl = this.registry.get(CRAWL_KEY) ?? createCrawl(s.levelId);
