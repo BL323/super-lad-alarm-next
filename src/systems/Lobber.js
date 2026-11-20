@@ -24,8 +24,8 @@ export default class Lobber {
     });
   }
 
-  /** Lob from (x, y) to land on the floor at (targetX, floorY). */
-  throw(x, y, targetX, floorY) {
+  /** Lob from (x, y) to land on the floor at (targetX, floorY). `texture` overrides the lobber's own. */
+  throw(x, y, targetX, floorY, texture = this.texture) {
     const T = this.flightMs / 1000;
     const g = this.scene.physics.world.gravity.y;
     const vy = (floorY - 2 - y - 0.5 * g * T * T) / T;
@@ -38,7 +38,7 @@ export default class Lobber {
       .setDepth(DEPTH.props);
     this.scene.tweens.add({ targets: marker, alpha: 0.6, duration: 200, yoyo: true, repeat: -1 });
 
-    const item = this.group.create(x, y, this.texture).setDepth(DEPTH.player + 1);
+    const item = this.group.create(x, y, texture).setDepth(DEPTH.player + 1);
     item.body.setSize(...this.size).setVelocity(vx, vy);
     item.setAngularVelocity(vx > 0 ? this.spin : -this.spin);
     item.marker = marker;
@@ -56,9 +56,10 @@ export default class Lobber {
   land(item) {
     item.marker?.destroy();
     const { x, floorY } = item;
+    const texture = item.texture.key;
     item.destroy();
     const puff = this.scene.add
-      .image(x, floorY - 2, this.texture)
+      .image(x, floorY - 2, texture)
       .setDepth(DEPTH.props)
       .setAngle(Phaser.Math.Between(-20, 20));
     this.scene.tweens.add({ targets: puff, alpha: 0, y: puff.y - 4, duration: 300, onComplete: () => puff.destroy() });

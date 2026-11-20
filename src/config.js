@@ -160,6 +160,81 @@ export const BOSS = {
 };
 export const DEFAULT_BOSS_TUNING = 'first';
 
+// The landlord of The Avocet (level 7, src/systems/LandlordArena.js and
+// src/entities/Landlord.js). He can't be stomped: each phase is beaten a
+// different way. Phases 1–2: land on a beer pump (a one-way handle on the bar)
+// while he's within `pumpSprayRange` px of it and it soaks him; a pump runs
+// dry once it has. Phase 3: he rolls barrels; land on one to kick it back at
+// him. Phase 4: ring the last orders bell (jump into it) and he rushes to his
+// till on the cellar hatch, swamped by the crowd for `swampedMs`; pull the
+// lever (jump into it) then and he drops into the cellar. All the while he
+// walks at you, lobs pint glasses (they land on their floor marker) and
+// charges with his tray. Arrays are per phase, as for BOSS.
+export const LANDLORD = {
+  name: 'LANDLORD',
+  introText: 'LAST ORDERS!',
+  beatenText: 'TIME, GENTLEMEN!',
+  phaseHints: ['JUMP ON A PUMP!', 'ANOTHER PUMP!', 'KICK HIS BARREL BACK!', 'RING THE BELL!'],
+  leverHint: 'PULL THE LEVER!',
+  hits: 4,
+  introMs: 1200,
+  walkSpeed: [40, 48, 50, 56], // px/s
+  walkMs: [2200, 2000, 1500, 1700], // walking (and throwing) before each attack
+  throwEveryMs: [1300, 1100, 1600, 1000],
+  glassesPerVolley: [1, 2, 1, 2],
+  glassSpread: 30,
+  glassFlightMs: 1000,
+  windupMs: [600, 520, 450, 450], // before a charge or a barrel
+  chargeSpeed: [170, 190, 200, 215],
+  recoverMs: 700, // catching his breath after charging into a wall (not stompable)
+  hurtMs: 900,
+  pumpSprayRange: 30, // px between him and a pump for the spray to soak him
+  pumpCooldownMs: 600,
+  barrelSpeed: 80,
+  barrelKickSpeed: 150,
+  rushSpeed: 140, // to his till after the bell
+  swampedMs: 3400,
+  stompBounce: -230, // harmless bounce off his head
+  exitMs: 900,
+  body: { width: 12, height: 28, offsetX: 2, offsetY: 4 },
+};
+
+// Pub dogs (level 7, src/systems/Dogs.js): each trots up and down its stretch
+// of floor at `speed`, and runs at `chaseSpeed` towards a player on the floor
+// within `chaseRange` px. Touching one from the side is a death; land on it
+// and it yelps and runs off (back when you respawn). The validator keeps their
+// patrol on flat floor with `clearTiles` either side and away from (re)starts.
+// Level 8: Parkstone to the kebab shop.
+//
+// The megaphone (src/systems/Megaphone.js): pick it up and the shout button
+// (X, or the touch button above jump) sends a sound wave `rangePx` ahead of
+// you, `heightPx` tall, every `cooldownMs`. Foxes and wheelie bins in it are
+// blown away (back when you respawn); a bouncer in it is stunned and steps
+// aside for `stunMs`.
+export const MEGAPHONE = { cooldownMs: 1200, rangePx: 80, heightPx: 34, waveMs: 320, stunMs: 2600, hintKeys: 'PRESS X TO SHOUT!', hintTouch: 'TAP THE MEGAPHONE TO SHOUT!' };
+// Foxes (src/systems/Foxes.js): dart up and down their stretch of pavement,
+// pausing to sniff; deadly to touch and too quick to stomp. Shout them away.
+export const FOXES = { speed: 70, pauseMs: 700, runMs: 900, clearTiles: 1, stepMs: 110 };
+// Wheelie bins (src/systems/Bins.js): a spawner sends one rolling along the
+// pavement every `everyMs` until it drops off an edge or hits something.
+// Deadly from the side; land on one to bounce off it; shout it over.
+export const BINS = { speed: 60, bounce: -240 };
+// Bouncers (src/systems/Bouncers.js): stand across the pavement outside a
+// club, too tall to jump (`height` px) and solid. A cycling one steps out for
+// `outMs` and back in for `inMs`; a standing one never moves until shouted at.
+export const BOUNCERS = { height: 50, width: 14, outMs: 2200, inMs: 2000, stepMs: 250, crossMargin: 1.6 };
+// Side-road traffic (src/systems/Traffic.js): a junction across the pavement
+// with a pedestrian light. Green man (`walkMs`), flashing amber (`warnMs`),
+// then a car comes out of the side road (`carMs`, deadly), each time from the
+// other direction. The validator checks the green man is long enough.
+export const TRAFFIC = { walkMs: 2400, warnMs: 1000, carMs: 1200, crossMargin: 2.2 };
+// Closing time at the kebab shop: arrive before `closingMs` (on the level's
+// clock) and the time comes off; after, the shutters are down and it costs
+// you `lateMs` (you still get your kebab).
+export const CLOSING = { earlyBonusMs: 5000, lateMs: 10000, warnAtMs: 15000 };
+
+export const DOGS = { speed: 28, chaseSpeed: 64, chaseRange: 56, stompBounce: -220, stepMs: 160, clearTiles: 1 };
+
 // Delay between reaching the pub door and the Complete screen (the lad walks
 // in, confetti falls, "CHEERS!").
 export const FINISH_DELAY_MS = 2600;
@@ -238,7 +313,7 @@ export const AUTOSCROLL = { speed: 70, maxPace: 0.7, followLead: 0.4, startText:
 export const RAIN = { dropsPerSecond: 140, speed: 330, drift: -40, alpha: 0.55, splashesPerSecond: 18 };
 
 // Level picker rows (game px) and the "next stop" screen shown before each level.
-export const LEVEL_SELECT = { top: 38, rowHeight: 16, rowWidth: 292 }; // six rows end above the buttons at y 140
+export const LEVEL_SELECT = { top: 38, rowHeight: 16, rowWidth: 292, bottom: 138 }; // rows shrink (from rowHeight) to end above the buttons at y 140
 export const NEXT_STOP = { durationMs: 2400, minMs: 400 }; // moves on by itself; a tap skips after minMs
 
 // Sound. Effects are synthesised in src/audio/sfx.js (retro square/noise voices).
@@ -306,6 +381,9 @@ export const THEMES = {
   stormy: { sky: '#8a90ad', hillsTint: 0xa4abc4 }, // level 5: a rainy dusk on the way back to Poole
   // Level 6: night at Parkstone. `lampsLit` puts a warm glow round every street lamp.
   night: { sky: '#2b3166', hillsTint: 0x5a6196, lampsLit: true },
+  // Level 7: inside The Avocet. `interior` swaps the sky and hills for the
+  // pub's back wall (wallpaper over oak panelling); wall lights glow.
+  pub: { sky: '#3a1f24', hillsTint: 0xffffff, interior: true, lampsLit: true, crumble: 'stool' },
 };
 export const DEFAULT_THEME = 'day';
 

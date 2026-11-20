@@ -107,7 +107,7 @@ export default class BossArena {
 
     this.boss.begin();
     this.status = 'fighting';
-    this.scene.events.emit('boss-start', { hits: this.tuning.hits, introText: this.tuning.introText });
+    this.scene.events.emit('boss-start', { hits: this.tuning.hits, introText: this.tuning.introText, name: 'CONDUCTOR', beatenText: 'CONDUCTOR BEATEN!' });
   }
 
   reset() {
@@ -140,6 +140,8 @@ export default class BossArena {
     const p = this.player;
     const boss = this.boss;
     if (p.dead || !this.isActive) return;
+    // Just bounced off his head: still overlapping him on the way up isn't a hit.
+    if (this.scene.time.now < (this.headBounceUntil ?? 0)) return;
 
     // From above = the player's feet were above his cap last step and falling.
     const prevBottom = p.body.prev.y + p.body.height;
@@ -147,6 +149,7 @@ export default class BossArena {
 
     if (fromAbove) {
       p.standOn(); // his cap is something to jump off, like the ground
+      this.headBounceUntil = this.scene.time.now + 250;
       if (boss.isVulnerable) {
         p.bounce(this.tuning.stompBounce);
         this.scene.events.emit('boss-hit', { hp: boss.hp - 1 });

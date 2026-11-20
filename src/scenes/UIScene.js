@@ -16,8 +16,13 @@ export default class UIScene extends Phaser.Scene {
     this.touchControls = data?.controls && isTouchDevice() ? new TouchControls(this, data.controls) : null;
 
     const onComplete = () => this.touchControls?.setVisible(false);
+    const onMegaphone = () => this.touchControls?.enableShout();
     game.events.on('level-complete', onComplete);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => game.events.off('level-complete', onComplete));
+    game.events.on('megaphone-got', onMegaphone);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      game.events.off('level-complete', onComplete);
+      game.events.off('megaphone-got', onMegaphone);
+    });
   }
 
   update() {

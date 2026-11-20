@@ -27,6 +27,8 @@ export default class LevelSelectScene extends Phaser.Scene {
   create() {
     // Phaser reuses this scene object on every visit: clear last visit's flag.
     this.going = false;
+    // Rows shrink to fit every level between the title and the buttons.
+    this.rowHeight = Math.min(LEVEL_SELECT.rowHeight, Math.floor((LEVEL_SELECT.bottom - LEVEL_SELECT.top) / LEVELS.length));
     addBackdrop(this);
     const width = this.scale.width;
     const cx = width / 2;
@@ -37,12 +39,14 @@ export default class LevelSelectScene extends Phaser.Scene {
       scale: 1,
     }).setOrigin(0.5, 0);
 
-    const { top, rowHeight, rowWidth } = LEVEL_SELECT;
+    const { top, rowWidth } = LEVEL_SELECT;
+    const rowHeight = this.rowHeight;
+    const numScale = rowHeight >= 14 ? 2 : 1;
     const left = Math.round(cx - rowWidth / 2);
     this.rows = LEVELS.map((level, i) => {
       const y = top + i * rowHeight;
       const bg = this.add.graphics();
-      const num = addPixelText(this, left + 8, y + rowHeight / 2, String(level.number), { scale: 2 }).setOrigin(0, 0.5);
+      const num = addPixelText(this, left + 8, y + rowHeight / 2, String(level.number), { scale: numScale }).setOrigin(0, 0.5);
       const route = addPixelText(this, left + 26, y + rowHeight / 2, `${level.from} - ${level.to}`, { scale: 1 }).setOrigin(
         0,
         0.5,
@@ -80,7 +84,8 @@ export default class LevelSelectScene extends Phaser.Scene {
     const next = Phaser.Math.Wrap(i, 0, this.rows.length);
     if (this.ready && next !== this.index) Audio.play('move');
     this.index = next;
-    const { rowHeight, rowWidth } = LEVEL_SELECT;
+    const { rowWidth } = LEVEL_SELECT;
+    const rowHeight = this.rowHeight;
     this.rows.forEach((row, j) => {
       const on = j === this.index;
       row.bg

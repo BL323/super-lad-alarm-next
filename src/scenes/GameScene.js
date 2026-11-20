@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { SCENE } from './keys.js';
-import { CAMERA, DEBUG, GAME_HEIGHT, PARALLAX, SECRET_REVEAL_ALPHA, FINISH_DELAY_MS, SPEECH } from '../config.js';
+import { CAMERA, DEBUG, GAME_HEIGHT, PARALLAX, SECRET_REVEAL_ALPHA, FINISH_DELAY_MS, SPEECH, CLOSING } from '../config.js';
 import { TEX, FINISH_FRAME, getCharacter } from '../assets.js';
 import { addText } from '../ui/text.js';
 import VirtualInput from '../systems/Input.js';
@@ -17,6 +17,13 @@ import Awnings from '../systems/Awnings.js';
 import AutoScroll from '../systems/AutoScroll.js';
 import { addWeather } from '../systems/Weather.js';
 import BossArena from '../systems/BossArena.js';
+import LandlordArena from '../systems/LandlordArena.js';
+import Dogs from '../systems/Dogs.js';
+import Megaphone from '../systems/Megaphone.js';
+import Foxes from '../systems/Foxes.js';
+import Bins from '../systems/Bins.js';
+import Bouncers from '../systems/Bouncers.js';
+import Traffic from '../systems/Traffic.js';
 import { celebrate } from '../systems/Celebration.js';
 import SpeechBubble from '../ui/SpeechBubble.js';
 import Player from '../entities/Player.js';
@@ -51,6 +58,15 @@ export default class GameScene extends Phaser.Scene {
     this.movers = this.level.movers.length ? new MovingPlatforms(this, this.level.movers, this.player) : null;
     this.swans = this.level.swans.length ? new Swans(this, this.level.swans, this.player) : null;
     this.gulls = this.level.gulls.length ? new Gulls(this, this.level.gulls, this.player) : null;
+    this.dogs = this.level.dogs.length ? new Dogs(this, this.level.dogs, this.player) : null;
+    // Level 8: the streets to the kebab shop, and the megaphone.
+    this.foxes = this.level.foxes.length ? new Foxes(this, this.level.foxes, this.player) : null;
+    this.bins = this.level.bins.length ? new Bins(this, this.level.bins, this.player, this.level.layers.ground) : null;
+    this.bouncers = this.level.bouncers.length ? new Bouncers(this, this.level.bouncers, this.player) : null;
+    this.traffic = this.level.traffic.map((def) => new Traffic(this, def, this.player));
+    this.megaphone = this.level.megaphone
+      ? new Megaphone(this, this.level.megaphone, this.player, this.controls, [this.foxes, this.bins, this.bouncers])
+      : null;
     this.awnings = this.level.awnings.length ? new Awnings(this, this.level.awnings, this.player) : null;
     this.autoScroll = this.level.autoscroll ? new AutoScroll(this, this.level.autoscroll, this.player) : null;
     this.weather = addWeather(this, this.level.weather);
@@ -62,8 +78,9 @@ export default class GameScene extends Phaser.Scene {
     this.finishLocked = false;
     if (this.level.finish) {
       const f = this.level.finish;
+      // Outside it's the pub door; inside The Avocet, the flap in the bar.
       this.finish = this.add
-        .sprite(f.x, f.y, TEX.FINISH, FINISH_FRAME.open)
+        .sprite(f.x, f.y, f.atBar ? TEX.BAR_HATCH : TEX.FINISH, FINISH_FRAME.open)
         .setOrigin(0.5, 1)
         .setDepth(DEPTH.decor + 1);
       const trigger = this.add.zone(f.x, GAME_HEIGHT / 2, 10, GAME_HEIGHT);
@@ -71,12 +88,25 @@ export default class GameScene extends Phaser.Scene {
       this.physics.add.overlap(this.player, trigger, () => this.completeLevel());
     }
 
-    // Boss: the Train Conductor guards the end zone and holds the finish.
+    // Closing time (level 8): the shop's shutters come down at `closingMs`.
+    this.gameState.closingMs = this.level.closingMs;
+    this.closingWarned = false;
+    this.shutters = null;
+    if (this.level.closingMs && this.level.finish) {
+      const f = this.level.finish;
+      // Over the shop's two windows (the pub front is 96 wide, windows at x 8 and 64, y 53–73 of 80).
+      this.shutters = [-40, 16].map((dx) => this.add.tileSprite(f.x + dx, f.y - 27, 26, 1, TEX.SHUTTER).setOrigin(0, 0).setDepth(DEPTH.decor + 1).setVisible(false));
+    }
+
+    // Boss: the Train Conductor (or, in The Avocet, the landlord) guards the
+    // end zone and holds the finish.
     this.arena = null;
     if (this.level.boss && this.level.endZone) {
-      this.arena = new BossArena(this, {
+      const Arena = this.level.boss.kind === 'landlord' ? LandlordArena : BossArena;
+      this.arena = new Arena(this, {
         zone: this.level.endZone,
         boss: this.level.boss,
+        fight: this.level.fight,
         player: this.player,
         ground: this.level.layers.ground,
         levelWidth: this.level.width,
@@ -124,6 +154,7 @@ export default class GameScene extends Phaser.Scene {
     if (this.arena?.isActive || this.autoScroll?.isActive) this.trainTravel += delta * PARALLAX.trainSpeed;
     this.level.hills.tilePositionX = this.cameras.main.scrollX * PARALLAX.hillsFactor + this.trainTravel;
     this.updateSecrets();
+    this.updateClosing();
 
     const { endZone } = this.level;
     // Fully inside (back edge past the zone edge), so the arena wall can close behind.
@@ -169,6 +200,11 @@ export default class GameScene extends Phaser.Scene {
     const s = this.gameState;
     if (s.completed || this.finishLocked || this.player.dead) return;
     s.completed = true; // stops the clock
+    // Closing time (level 8): in before it and the time comes off; after, it costs you.
+    if (s.closingMs) {
+      if (s.elapsedMs <= s.closingMs) s.closingBonusMs = CLOSING.earlyBonusMs;
+      else s.lateMs = CLOSING.lateMs;
+    }
     this.controls.enabled = false;
     Audio.play('finish');
     this.events.emit('level-complete', s);
@@ -187,6 +223,24 @@ export default class GameScene extends Phaser.Scene {
     recordResult(crawl, result);
     this.registry.set(CRAWL_KEY, crawl);
     this.time.delayedCall(FINISH_DELAY_MS, () => this.scene.start(SCENE.COMPLETE, result));
+  }
+
+  /** Level 8: warn as closing time nears, and bring the shutters down when it comes. */
+  updateClosing() {
+    const closing = this.gameState.closingMs;
+    if (!closing || this.gameState.completed) return;
+    const left = closing - this.gameState.elapsedMs;
+    if (!this.closingWarned && left <= CLOSING.warnAtMs) {
+      this.closingWarned = true;
+      this.events.emit('toast', 'KEBAB SHOP SHUTTING SOON!');
+    }
+    if (left <= 0 && this.shutters && !this.shuttersDown) {
+      this.shuttersDown = true;
+      Audio.play('shutter');
+      this.events.emit('toast', 'TOO LATE: SHUTTERS DOWN!');
+      this.shutters.forEach((sh) => sh.setVisible(true));
+      this.tweens.add({ targets: this.shutters, height: 21, duration: 900, ease: 'Bounce.Out' });
+    }
   }
 
   /** Fade the foreground (station canopy) while the player is in a secret area. */

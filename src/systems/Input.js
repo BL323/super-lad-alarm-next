@@ -8,6 +8,7 @@ const { KeyCodes } = Phaser.Input.Keyboard;
 //   state.left / state.right   direction held
 //   state.jumpHeld             jump held (for variable jump height)
 //   state.jumpPressed          jump went down since the last update (one frame)
+//   state.shoutPressed         shout (the megaphone, level 8) went down since the last update
 //
 // Touch: the on-screen buttons register hit zones (game-pixel rectangles) with
 // setTouchZones(). Every active pointer is tested against them each frame, so
@@ -16,10 +17,11 @@ export default class VirtualInput {
   constructor(scene) {
     this.scene = scene;
     this.enabled = true;
-    this.state = { left: false, right: false, jumpHeld: false, jumpPressed: false };
-    this.touch = { left: false, right: false, jump: false }; // raw touch state, for button feedback
+    this.state = { left: false, right: false, jumpHeld: false, jumpPressed: false, shoutPressed: false };
+    this.touch = { left: false, right: false, jump: false, shout: false }; // raw touch state, for button feedback
     this.zones = null;
     this._jumpQueued = false;
+    this._shoutQueued = false;
 
     this.keys = scene.input.keyboard.addKeys({
       left: KeyCodes.LEFT,
@@ -28,6 +30,7 @@ export default class VirtualInput {
       d: KeyCodes.D,
       space: KeyCodes.SPACE,
       up: KeyCodes.UP,
+      x: KeyCodes.X,
     });
 
     // Latch jump presses from events so a tap shorter than a frame is never lost.
@@ -36,8 +39,12 @@ export default class VirtualInput {
     };
     this.keys.space.on('down', queueJump);
     this.keys.up.on('down', queueJump);
+    this.keys.x.on('down', () => {
+      this._shoutQueued = true;
+    });
     scene.input.on('pointerdown', (pointer) => {
       if (this.zones?.jump.contains(pointer.x, pointer.y)) queueJump();
+      if (this.zones?.shout?.contains(pointer.x, pointer.y)) this._shoutQueued = true;
     });
   }
 
@@ -48,21 +55,22 @@ export default class VirtualInput {
 
   /** Call once per frame before anything reads `state`. */
   update() {
-    const touch = { left: false, right: false, jump: false };
+    const touch = { left: false, right: false, jump: false, shout: false };
     if (this.zones) {
       for (const p of this.scene.input.manager.pointers) {
         if (!p.isDown) continue;
         if (this.zones.left.contains(p.x, p.y)) touch.left = true;
         else if (this.zones.right.contains(p.x, p.y)) touch.right = true;
         else if (this.zones.jump.contains(p.x, p.y)) touch.jump = true;
+        else if (this.zones.shout?.contains(p.x, p.y)) touch.shout = true;
       }
     }
     this.touch = touch;
 
     const s = this.state;
     if (!this.enabled) {
-      s.left = s.right = s.jumpHeld = s.jumpPressed = false;
-      this._jumpQueued = false;
+      s.left = s.right = s.jumpHeld = s.jumpPressed = s.shoutPressed = false;
+      this._jumpQueued = this._shoutQueued = false;
       return;
     }
 
@@ -72,5 +80,7 @@ export default class VirtualInput {
     s.jumpHeld = k.space.isDown || k.up.isDown || touch.jump;
     s.jumpPressed = this._jumpQueued;
     this._jumpQueued = false;
+    s.shoutPressed = this._shoutQueued;
+    this._shoutQueued = false;
   }
 }

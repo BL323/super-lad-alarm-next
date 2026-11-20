@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { HUD } from '../config.js';
+import { HUD, CLOSING } from '../config.js';
 import { TEX } from '../assets.js';
 import { addPixelText } from './text.js';
 import { formatTime, formatSeconds } from '../systems/GameState.js';
@@ -23,6 +23,12 @@ export default class Hud {
       .setAlpha(0);
 
     this.bossBar = new BossBar(scene, gameScene, (text) => this.showToast(text));
+
+    // Level 8: time left before the kebab shop shuts, and the megaphone's charge.
+    this.gameScene = gameScene;
+    this.closing = addPixelText(scene, 0, 0, '', { scale: 1, tint: 0xffcd75 }).setOrigin(1, 0).setVisible(!!gameState.closingMs);
+    this.megaIcon = scene.add.image(0, 0, TEX.MEGAPHONE).setOrigin(0, 0.5).setVisible(false);
+    this.megaBar = scene.add.graphics().setVisible(false);
 
     this.layout();
     this.refresh();
@@ -64,6 +70,9 @@ export default class Hud {
     const midY = top + 8; // centre of the 16 px icon
     this.coins.setPosition(left + 18, midY);
     this.timer.setPosition(right, midY);
+    this.closing.setPosition(right, top + 18);
+    this.megaIcon.setPosition(left + 2, top + 24);
+    this.megaBar.setPosition(left + 16, top + 22);
   }
 
   refresh() {
@@ -78,6 +87,23 @@ export default class Hud {
     if (text !== this.shownTime) {
       this.shownTime = text;
       this.timer.setText(text);
+    }
+    const s = this.gameState;
+    if (s.closingMs) {
+      const left = Math.max(0, s.closingMs - s.elapsedMs);
+      const shown = left > 0 ? `KEBAB SHOP SHUTS ${formatTime(left).slice(0, -2)}` : 'KEBAB SHOP SHUT';
+      if (shown !== this.shownClosing) {
+        this.shownClosing = shown;
+        this.closing.setText(shown).setTint(left > CLOSING.warnAtMs ? 0xffcd75 : 0xff004d);
+      }
+    }
+    const mega = this.gameScene.megaphone;
+    if (mega?.got) {
+      this.megaIcon.setVisible(true);
+      const charge = mega.charge;
+      const g = this.megaBar.setVisible(true).clear();
+      g.fillStyle(0x1a1c2c, 0.8).fillRect(0, 0, 22, 4);
+      g.fillStyle(charge >= 1 ? 0x00e436 : 0xffcd75, 1).fillRect(1, 1, Math.round(20 * charge), 2);
     }
   }
 

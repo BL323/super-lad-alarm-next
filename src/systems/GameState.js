@@ -12,6 +12,9 @@ export function createGameState(levelId) {
     bonusesTotal: 0,
     timeBonusMs: 0, // time taken off by bonus items
     checkpoint: null, // { name, x, y } feet position of the last activated checkpoint
+    closingMs: null, // level 8: when the kebab shop shuts (on the level clock)
+    closingBonusMs: 0, // in before closing: time off
+    lateMs: 0, // after closing: time on
     completed: false,
   };
 }
@@ -23,12 +26,16 @@ export function addPickup(state, def) {
   state.timeBonusMs += def.timeBonusMs ?? 0;
 }
 
-/** Final time: clock + 2 s per missed pint − bonuses, never below zero. */
+/**
+ * Final time: clock + 2 s per missed pint − bonuses, and (level 8) − the
+ * closing-time bonus or + the late penalty. Never below zero.
+ */
 export function finalTime(state) {
   const missed = state.coinsTotal - state.coins;
   const penaltyMs = missed * TIMING.missedPintPenaltyMs;
-  const finalMs = Math.max(0, state.elapsedMs + penaltyMs - state.timeBonusMs);
-  return { elapsedMs: state.elapsedMs, missed, penaltyMs, bonusMs: state.timeBonusMs, finalMs };
+  const closingMs = (state.lateMs ?? 0) - (state.closingBonusMs ?? 0);
+  const finalMs = Math.max(0, state.elapsedMs + penaltyMs - state.timeBonusMs + closingMs);
+  return { elapsedMs: state.elapsedMs, missed, penaltyMs, bonusMs: state.timeBonusMs, closingMs, finalMs };
 }
 
 // --- The crawl: a run of levels -------------------------------------------

@@ -8,8 +8,9 @@ import {
   PINT_FRAME,
   ESPRESSO_FRAME,
   CONDUCTOR_FRAME,
+  LANDLORD_FRAME,
 } from '../assets.js';
-import { SWANS, GULLS } from '../config.js';
+import { SWANS, GULLS, DOGS, FOXES } from '../config.js';
 
 // Player movement animations, created for every character.
 const PLAYER_ANIMS = {
@@ -40,6 +41,10 @@ const DEFS = [
   { key: ANIM.CONDUCTOR_WALK, texture: TEX.CONDUCTOR, frames: CONDUCTOR_FRAME.walk, frameRate: 6, repeat: -1 },
   { key: ANIM.SWAN_WALK, texture: TEX.SWAN, frames: [0, 1], frameRate: 1000 / SWANS.stepMs, repeat: -1 },
   { key: ANIM.GULL_FLAP, texture: TEX.GULL, frames: [0, 1], frameRate: 1000 / GULLS.flapMs, repeat: -1 },
+  { key: ANIM.DOG_TROT, texture: TEX.DOG, frames: [0, 1], frameRate: 1000 / DOGS.stepMs, repeat: -1 },
+  { key: ANIM.FOX_RUN, texture: TEX.FOX, frames: [0, 1], frameRate: 1000 / FOXES.stepMs, repeat: -1 },
+  { key: ANIM.BIN_ROLL, texture: TEX.BIN, frames: [0, 1], frameRate: 8, repeat: -1 },
+  { key: ANIM.LANDLORD_WALK, texture: TEX.LANDLORD, frames: LANDLORD_FRAME.walk, frameRate: 6, repeat: -1 },
 ];
 
 export function registerAnimations(scene) {

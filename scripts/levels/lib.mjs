@@ -122,6 +122,56 @@ export function createLevel({ cols, properties = {} }) {
     }
   }
 
+  // --- Inside the pub (level 7) ---------------------------------------------------
+
+  /** The pub floor: boards at the surface, the cellar below. */
+  function floor(c0, c1) {
+    for (let c = c0; c <= c1; c++) {
+      set('ground', c, SURFACE, T.floorboards);
+      set('ground', c, SURFACE + 1, T.cellar);
+    }
+  }
+
+  /** An open cellar hatch: a gap in the floor (falling in is a death), drawn as a drop with a ladder. */
+  function hole(c0, c1) {
+    for (let c = c0; c <= c1; c++) {
+      set('background', c, SURFACE, T.cellarHole);
+      set('background', c, SURFACE + 1, T.cellarHole);
+    }
+  }
+
+  /**
+   * A table (or the pool table) with its top at `row`: a floating ledge you
+   * can walk under, legs drawn behind at each end.
+   */
+  function table(c0, c1, row = ROOF, kind = 'table') {
+    for (let c = c0; c <= c1; c++) set('ground', c, row, kind === 'pool' ? T.poolTable : T.tableTop);
+    for (let r = row + 1; r < SURFACE; r++) {
+      set('background', c0, r, T.tableLegs);
+      if (c1 !== c0) set('background', c1, r, T.tableLegs);
+    }
+  }
+
+  /** A solid bar stool on the floor at `col`: a one-tile step up. */
+  function stool(col) {
+    set('ground', col, SURFACE - 1, T.stool);
+  }
+
+  /** Kegs stacked at `col` from the floor up to `topRow`. */
+  function kegs(col, topRow) {
+    for (let r = topRow; r < SURFACE; r++) set('ground', col, r, T.keg);
+  }
+
+  /** A low oak beam at `row` over cols c0–c1: a ceiling only, like a low bridge. */
+  function beam(c0, c1, row) {
+    for (let c = c0; c <= c1; c++) set('ground', c, row, T.beam);
+  }
+
+  /** A high shelf on the wall at `row` (a floating ledge). */
+  function shelf(c0, c1, row) {
+    for (let c = c0; c <= c1; c++) set('ground', c, row, T.shelf);
+  }
+
   // --- Objects -------------------------------------------------------------------
 
   function props(p) {
@@ -226,6 +276,56 @@ export function createLevel({ cols, properties = {} }) {
   const autoscroll = (c0, c1) => addObject('autoscroll', 'autoscroll', c0 * TS, 0, (c1 - c0 + 1) * TS, ROWS * TS);
   /** A yacht moored in the water at `col` (scenery). */
   const yacht = (col) => addObject('yacht', 'yacht', col * TS + TS / 2, SURFACE * TS + 14, 0, 0, {}, decor); // hull at the waterline
+  /**
+   * A regular at a back table at `col` who throws `item` ('glass', 'crisps' or
+   * 'darts') at you while you're on the floor in range (THROWERS), like the
+   * Black Bear's locals. Up on the tables you're out of reach.
+   */
+  const local = (col, item = 'glass', offsetMs = undefined) => {
+    addObject('local', 'local', ...feet(col), 0, 0, { angry: true }, decor);
+    return addObject('thrower', 'thrower', col * TS + TS / 2, SURFACE * TS - 18, 0, 0, {
+      floorRow: SURFACE,
+      item,
+      ...(offsetMs === undefined ? {} : { offsetMs }),
+    });
+  };
+  /** A pub dog trotting up and down cols c0–c1 of the floor at `surfaceRow` (DOGS). Stomp it or jump it. */
+  const dog = (c0, c1, surfaceRow = SURFACE) =>
+    addObject('dog', 'dog', c0 * TS, surfaceRow * TS, (c1 - c0 + 1) * TS, 0, { surfaceRow });
+  /** Pub decor standing on the floor or hung on the wall (`kind`: sconce, picture, fireplace, dartboard, calm local). */
+  const pubDecor = (kind, col, props = {}) => addObject(kind, kind, ...feet(col), 0, 0, props, decor);
+  /** The bar counter along cols c0–c1 (decor at the back), with shelves behind it. */
+  const bar = (c0, c1) => addObject('bar', 'bar', c0 * TS, SURFACE * TS, (c1 - c0 + 1) * TS, 0, {}, decor);
+  /** The flap in the bar at `col` of pub `pubId`: the level 7 finish goes in the same column. */
+  const barHatch = (col, pubId) => addObject('bar-hatch', 'bar-hatch', ...feet(col), 0, 0, { pub: pubId }, decor);
+  // The landlord fight's props (src/systems/LandlordArena.js), all inside the end-zone.
+  /** A beer pump on the bar at `col`: its handle is a one-way perch 2 tiles up. */
+  const pump = (col) => addObject('pump', 'pump', ...feet(col));
+  /** The last orders bell hung at `row` over `col`: jump into it. */
+  const bell = (col, row) => addObject('bell', 'bell', col * TS + TS / 2, row * TS + TS / 2);
+  /** The cellar lever on the wall at `row`, `col`: jump into it. */
+  const lever = (col, row) => addObject('lever', 'lever', col * TS + TS / 2, row * TS + TS / 2);
+  /** The cellar trapdoor in the floor over cols c0–c1, in front of the till. */
+  const hatch = (c0, c1) => addObject('hatch', 'hatch', c0 * TS, SURFACE * TS, (c1 - c0 + 1) * TS, 0);
+  // --- Level 8: Parkstone to the kebab shop ---
+  /** The megaphone pickup at `col` (MEGAPHONE in config.js). */
+  const megaphone = (col, surfaceRow = SURFACE) => addObject('megaphone', 'megaphone', ...feet(col, surfaceRow));
+  /** A fox darting along cols c0–c1 of the pavement at `surfaceRow` (FOXES). Shout it away. */
+  const fox = (c0, c1, offsetMs = 0, surfaceRow = SURFACE) =>
+    addObject('fox', 'fox', c0 * TS, surfaceRow * TS, (c1 - c0 + 1) * TS, 0, { surfaceRow, offsetMs });
+  /** A bin store at `col`: sends a wheelie bin rolling `dir` (-1 / 1) every `everyMs` (BINS). */
+  const bins = (col, dir, everyMs, offsetMs = 0, surfaceRow = SURFACE) =>
+    addObject('bins', 'bins', ...feet(col, surfaceRow), 0, 0, { dir, everyMs, offsetMs, surfaceRow });
+  /** A bouncer outside a club at `col`: `mode` 'cycle' (steps in and out) or 'stand' (only a shout moves him). */
+  const bouncer = (col, mode = 'cycle', offsetMs = 0) => addObject('bouncer', 'bouncer', ...feet(col), 0, 0, { mode, offsetMs });
+  /**
+   * A side road across the pavement at cols c0–c1 (TRAFFIC): road surface, a
+   * pedestrian light each side, cars out of it on a cycle.
+   */
+  const traffic = (c0, c1, offsetMs = 0, surfaceRow = SURFACE) => {
+    for (let c = c0; c <= c1; c++) set('ground', c, surfaceRow, T.road);
+    return addObject('traffic', 'traffic', c0 * TS, surfaceRow * TS, (c1 - c0 + 1) * TS, 0, { offsetMs });
+  };
   const easel = (col) => addObject('easel', 'easel', col * TS + TS / 2, (SURFACE + 1) * TS + 4, 0, 0, {}, decor);
 
   function toMap() {
@@ -301,6 +401,27 @@ export function createLevel({ cols, properties = {} }) {
     river,
     trench,
     jetty,
+    floor,
+    hole,
+    table,
+    stool,
+    kegs,
+    beam,
+    shelf,
+    local,
+    dog,
+    pubDecor,
+    bar,
+    barHatch,
+    pump,
+    bell,
+    lever,
+    hatch,
+    megaphone,
+    fox,
+    bins,
+    bouncer,
+    traffic,
     addObject,
     spawn,
     checkpoint,

@@ -18,7 +18,7 @@
 // auto-scroll are checked against the run speed.
 
 import { TILESET } from '../assets.js';
-import { PLAYER, PHYSICS, CROSSING, THROWERS, MOVERS, GULLS, AWNINGS, AUTOSCROLL } from '../config.js';
+import { PLAYER, PHYSICS, CROSSING, THROWERS, MOVERS, GULLS, AWNINGS, AUTOSCROLL, DOGS, FOXES, BOUNCERS, TRAFFIC } from '../config.js';
 
 export const LEVEL_RULES = {
   maxGapTiles: 3, // 48 px
@@ -34,7 +34,7 @@ export const LEVEL_RULES = {
     bodyHeight: PLAYER.body.height,
     margin: 2 / 3,
   },
-  bossTunings: ['first', 'final'], // keys of BOSS in config.js
+  bossTunings: ['first', 'final', 'landlord'], // keys of BOSS in config.js, or 'landlord' (LANDLORD)
   layer: 'ground',
   objectLayer: 'objects',
 };
@@ -53,8 +53,9 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   const tw = map.tilewidth;
   const J0 = rules.jump;
 
-  const girderGid = TILESET.tiles.girder + 1;
-  const isCeiling = (c, r) => ground.data[r * cols + c] === girderGid;
+  // Low bridges' girders and the pub's oak beams are ceilings only.
+  const ceilingGids = new Set([TILESET.tiles.girder + 1, TILESET.tiles.beam + 1]);
+  const isCeiling = (c, r) => ceilingGids.has(ground.data[r * cols + c]);
   // Ceiling tiles never count as ground, walls or ledges.
   const solid = (c, r) => !!ground.data[r * cols + c] && !isCeiling(c, r);
 
@@ -303,10 +304,15 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   const decorLayer = map.layers.find((l) => l.name === 'decor');
   // Scenery pubs (drawn further back, e.g. the Kings Arms at Wareham) are never a way in.
   const pubs = (decorLayer?.objects ?? []).filter((o) => (o.type === 'pub' || o.class === 'pub') && !prop(o, 'scenery'));
+  // Inside The Avocet the finish is the flap in the bar instead.
+  const barHatches = (decorLayer?.objects ?? []).filter((o) => o.type === 'bar-hatch' || o.class === 'bar-hatch');
   for (const f of finishes) {
-    if (!pubs.some((p) => colOf(p.x) === colOf(f.x))) errors.push(`finish at col ${colOf(f.x)} is not at a pub door`);
+    const atPub = pubs.some((p) => colOf(p.x) === colOf(f.x));
+    const atBar = barHatches.some((b) => colOf(b.x) === colOf(f.x));
+    if (!atPub && !atBar) errors.push(`finish at col ${colOf(f.x)} is not at a pub door or the bar hatch`);
   }
-  info.finishPub = finishes[0] ? (prop(pubs.find((p) => colOf(p.x) === colOf(finishes[0].x)) ?? {}, 'pub') ?? null) : null;
+  const finishAt = finishes[0] && [...pubs, ...barHatches].find((p) => colOf(p.x) === colOf(finishes[0].x));
+  info.finishPub = finishAt ? (prop(finishAt, 'pub') ?? null) : null;
 
   for (const o of [...spawns, ...checkpoints, ...finishes, ...bosses]) {
     if (crumbleCols.has(colOf(o.x))) errors.push(`${o.type} "${o.name}" at col ${colOf(o.x)} is on a crumbling crate`);
@@ -387,6 +393,108 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     }
   }
 
+  // Pub dogs: like swans (flat floor with room either side, nowhere near
+  // where you (re)start or finish), but they can be stomped.
+  const dogs = ofType('dog');
+  for (const d of dogs) {
+    const c0 = colOf(d.x);
+    const c1 = colOf(d.x + d.width - 1);
+    const row = prop(d, 'surfaceRow');
+    const k = DOGS.clearTiles;
+    for (let c = c0 - k; c <= c1 + k; c++) {
+      if (surface[c] !== row) errors.push(`dog at cols ${c0}–${c1}: col ${c} is not flat floor at row ${row}`);
+    }
+    for (const o of [...spawns, ...checkpoints, ...finishes]) {
+      const c = colOf(o.x);
+      if (c >= c0 - k && c <= c1 + k) errors.push(`${o.type} "${o.name}" at col ${c} is on a dog's patrol`);
+    }
+  }
+
+  // Level 8. Foxes: like dogs, on flat pavement away from (re)starts.
+  for (const f of ofType('fox')) {
+    const c0 = colOf(f.x);
+    const c1 = colOf(f.x + f.width - 1);
+    const row = prop(f, 'surfaceRow');
+    const k = FOXES.clearTiles;
+    for (let c = c0 - k; c <= c1 + k; c++) {
+      if (surface[c] !== row) errors.push(`fox at cols ${c0}–${c1}: col ${c} is not flat pavement at row ${row}`);
+    }
+    for (const o of [...spawns, ...checkpoints, ...finishes]) {
+      const c = colOf(o.x);
+      if (c >= c0 - k && c <= c1 + k) errors.push(`${o.type} "${o.name}" at col ${c} is on a fox's run`);
+    }
+  }
+  // Bin stores: the lane a bin rolls along (until an edge or a step) must
+  // have nowhere you (re)start or finish on it.
+  for (const b of ofType('bins')) {
+    const dir = prop(b, 'dir');
+    const row = surface[colOf(b.x)];
+    if (dir !== 1 && dir !== -1) errors.push(`bins at col ${colOf(b.x)}: dir must be 1 or -1`);
+    if (!(prop(b, 'everyMs') > 0)) errors.push(`bins at col ${colOf(b.x)}: everyMs must be positive`);
+    let end = colOf(b.x);
+    while (surface[end + dir] === row && end + dir >= 0 && end + dir < cols) end += dir;
+    const [lo, hi] = dir > 0 ? [colOf(b.x), end] : [end, colOf(b.x)];
+    for (const o of [...spawns, ...checkpoints, ...finishes]) {
+      const c = colOf(o.x);
+      if (c >= lo && c <= hi) errors.push(`${o.type} "${o.name}" at col ${c} is in the lane of the bins at col ${colOf(b.x)}`);
+    }
+  }
+  // The megaphone: at most one; a standing bouncer needs it before him.
+  const megaphones = ofType('megaphone');
+  if (megaphones.length > 1) errors.push(`expected at most 1 megaphone, found ${megaphones.length}`);
+  for (const b of ofType('bouncer')) {
+    const c = colOf(b.x);
+    if (surface[c - 1] !== surface[c] || surface[c + 1] !== surface[c]) errors.push(`bouncer at col ${c} is not on flat pavement`);
+    const mode = prop(b, 'mode');
+    if (mode === 'stand' && !megaphones.some((m) => colOf(m.x) < c)) errors.push(`standing bouncer at col ${c} needs the megaphone before him`);
+    if (mode === 'cycle') {
+      const need = (((BOUNCERS.width + 2 * tw) / J.runSpeed) * 1000) * BOUNCERS.crossMargin;
+      if (BOUNCERS.inMs < need) errors.push(`bouncers step in for ${BOUNCERS.inMs} ms; getting past needs ${Math.round(need)} ms with margin`);
+    }
+    for (const o of [...spawns, ...checkpoints, ...finishes]) {
+      if (Math.abs(colOf(o.x) - c) <= 1) errors.push(`${o.type} "${o.name}" is in a bouncer's way at col ${c}`);
+    }
+  }
+  // Side-road traffic: flat road with a tile to wait on, nothing in the way,
+  // and a green man long enough to cross comfortably.
+  for (const x of ofType('traffic')) {
+    const c0 = colOf(x.x);
+    const c1 = colOf(x.x + x.width - 1);
+    const s0 = surface[c0];
+    for (let c = c0 - 2; c <= c1 + 1; c++) {
+      if (surface[c] !== s0) errors.push(`traffic at cols ${c0}–${c1}: col ${c} is not flat`);
+      if (glassCols.has(c)) errors.push(`traffic at cols ${c0}–${c1}: hazard at col ${c}`);
+    }
+    for (const o of [...spawns, ...checkpoints, ...finishes]) {
+      const c = colOf(o.x);
+      if (c >= c0 - 1 && c <= c1 + 1) errors.push(`${o.type} "${o.name}" is on the road at col ${c}`);
+    }
+    const need = (((x.width + 3 * tw) / J.runSpeed) * 1000) * TRAFFIC.crossMargin;
+    if (TRAFFIC.walkMs < need) errors.push(`traffic at cols ${c0}–${c1}: the green man shows for ${TRAFFIC.walkMs} ms; crossing needs ${Math.round(need)} ms with margin`);
+  }
+
+  // The landlord fight: its props inside the arena; at least two pumps (two
+  // phases need a fresh one each); the bell and lever where a jump from the
+  // floor reaches them but walking doesn't.
+  const landlord = bosses.find((b) => prop(b, 'kind') === 'landlord');
+  if (landlord) {
+    const inArena = (o) => endZone && o.x >= endZone.x && o.x <= endZone.x + endZone.width;
+    const floorRow = surface[colOf(landlord.x)];
+    const pumps = ofType('pump');
+    if (pumps.length < 2) errors.push(`the landlord fight needs at least 2 pumps, found ${pumps.length}`);
+    for (const t of ['pump', 'bell', 'lever', 'hatch']) {
+      const list = ofType(t);
+      if (!list.length) errors.push(`the landlord fight has no ${t}`);
+      for (const o of list) if (!inArena(o)) errors.push(`${t} at col ${colOf(o.x)} is outside the landlord's arena`);
+    }
+    for (const t of ['bell', 'lever']) {
+      for (const o of ofType(t)) {
+        const up = floorRow - Math.floor(o.y / tw); // tiles above the floor
+        if (up < 3 || up > 4) errors.push(`${t} at col ${colOf(o.x)} is ${up} tiles up (3–4: a jump reaches it, walking doesn't)`);
+      }
+    }
+  }
+
   // Seagulls: like swans, over flat ground away from where you (re)start or
   // finish, hovering out of reach, and slow enough that once one swoops away
   // you can run its stretch before it comes back.
@@ -421,7 +529,7 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     const c1 = colOf(a.x + a.width - 1);
     const inside = (o) => colOf(o.x) >= c0 && colOf(o.x) <= c1;
     const inRange = (o) => colOf(o.x + (o.width || 0) - 1) >= c0 && colOf(o.x) <= c1;
-    for (const t of ['mover', 'crossing', 'swan', 'gull', 'thrower', 'boss']) {
+    for (const t of ['mover', 'crossing', 'swan', 'gull', 'thrower', 'boss', 'dog', 'fox', 'bins', 'bouncer', 'traffic']) {
       for (const o of ofType(t).filter(inRange)) errors.push(`${t} at col ${colOf(o.x)} is inside the auto-scroll at cols ${c0}–${c1}`);
     }
     for (const o of [...spawns, ...checkpoints, ...finishes].filter(inside)) {
@@ -450,6 +558,7 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   info.throwers = throwers.length;
   info.movers = movers.length;
   info.swans = swans.length;
+  info.dogs = dogs.length;
   info.gulls = gulls.length;
   info.awnings = awnings.length;
   info.autoscrolls = autoscrolls.length;

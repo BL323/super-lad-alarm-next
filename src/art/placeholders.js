@@ -22,6 +22,11 @@ import {
   CONFETTI_FRAME,
   CROSSING_LIGHTS_FRAME,
   TILESET,
+  LANDLORD_FRAME,
+  PUMP_FRAME,
+  LEVER_FRAME,
+  HATCH_FRAME,
+  PED_LIGHT_FRAME,
 } from '../assets.js';
 import { drawPixelText, measurePixelText } from './pixelFont.js';
 import { CROSSING, LAMP_GLOW } from '../config.js';
@@ -652,6 +657,86 @@ function makeTiles(scene) {
         rect(ctx, '#5f574f', 1, 4, 14, 2); // sleeper below
         rect(ctx, '#ffec27', 0, 12, w, 1); // yellow box marking
         break;
+      // --- Level 7: inside The Avocet ---
+      case t.floorboards:
+        // Worn oak boards, seen side-on: the top edge you walk on, plank ends below.
+        rect(ctx, '#6b4226', 0, 0, w, h);
+        rect(ctx, '#a0663c', 0, 0, w, 2);
+        rect(ctx, '#3d2414', 0, 2, w, 1);
+        rect(ctx, '#3d2414', 0, 9, w, 1);
+        rect(ctx, '#3d2414', 5, 3, 1, 6);
+        rect(ctx, '#3d2414', 12, 10, 1, 6);
+        px(ctx, '#2a180c', 9, 5); // nail heads
+        px(ctx, '#2a180c', 3, 12);
+        break;
+      case t.cellar:
+        rect(ctx, '#24140c', 0, 0, w, h);
+        rect(ctx, '#3d2414', 0, 0, w, 1);
+        rect(ctx, '#1a0e08', 7, 2, 1, 14);
+        break;
+      case t.tableTop:
+      case t.poolTable: {
+        const pool = i === t.poolTable;
+        rect(ctx, pool ? '#1f6b3a' : '#8f563b', 0, 0, w, 3); // top (baize or polished oak)
+        rect(ctx, pool ? '#3fa34d' : '#b07850', 0, 0, w, 1);
+        rect(ctx, '#5d3a1a', 0, 3, w, 3); // apron
+        rect(ctx, '#3d2414', 0, 6, w, 1);
+        if (pool) {
+          px(ctx, C.white, 6, 1);
+          px(ctx, C.red, 10, 1);
+        }
+        break;
+      }
+      case t.tableLegs:
+        rect(ctx, '#5d3a1a', 2, 0, 3, h);
+        rect(ctx, '#5d3a1a', 11, 0, 3, h);
+        rect(ctx, '#8f563b', 3, 0, 1, h);
+        rect(ctx, '#8f563b', 12, 0, 1, h);
+        rect(ctx, '#3d2414', 2, 6, 12, 1); // stretcher
+        break;
+      case t.stool:
+        // A sturdy bar stool: round seat, four legs, a foot rail.
+        rect(ctx, '#7e2553', 1, 0, 14, 4); // red leather seat
+        rect(ctx, '#ff77a8', 2, 0, 11, 1);
+        rect(ctx, '#3d2414', 1, 4, 14, 1);
+        rect(ctx, '#5d3a1a', 2, 5, 2, 11);
+        rect(ctx, '#5d3a1a', 12, 5, 2, 11);
+        rect(ctx, '#5d3a1a', 6, 5, 2, 11);
+        rect(ctx, C.gold, 2, 11, 12, 1); // brass foot rail
+        break;
+      case t.keg:
+        // A steel keg, end-on, in a stack.
+        rect(ctx, '#9e9ea6', 1, 0, 14, h);
+        rect(ctx, '#c2c3c7', 2, 0, 3, h);
+        rect(ctx, '#5f574f', 1, 0, 14, 2);
+        rect(ctx, '#5f574f', 1, 14, 14, 2);
+        rect(ctx, '#5f574f', 1, 7, 14, 1);
+        rect(ctx, '#7a7a82', 13, 2, 2, 12);
+        break;
+      case t.beam:
+        // A low oak beam: mind your head.
+        rect(ctx, '#3d2414', 0, 0, w, h);
+        rect(ctx, '#5d3a1a', 0, 1, w, 12);
+        rect(ctx, '#6b4226', 0, 2, w, 2);
+        rect(ctx, '#3d2414', 0, 8, w, 1);
+        px(ctx, '#2a180c', 4, 5);
+        px(ctx, '#2a180c', 11, 10);
+        rect(ctx, '#2a180c', 0, 13, w, 3);
+        break;
+      case t.cellarHole:
+        // An open cellar hatch: the boards stop and there's a dark drop with a ladder.
+        rect(ctx, '#0d0806', 0, 0, w, h);
+        rect(ctx, '#3d2414', 0, 0, w, 2); // the frame's edge
+        rect(ctx, '#5d3a1a', 4, 3, 1, 13); // ladder
+        rect(ctx, '#5d3a1a', 11, 3, 1, 13);
+        for (let y = 5; y < h; y += 4) rect(ctx, '#5d3a1a', 4, y, 8, 1);
+        break;
+      case t.shelf:
+        rect(ctx, '#5d3a1a', 0, 0, w, 3);
+        rect(ctx, '#8f563b', 0, 0, w, 1);
+        rect(ctx, '#3d2414', 2, 3, 2, 4); // bracket
+        rect(ctx, '#3d2414', 12, 3, 2, 4);
+        break;
     }
   });
 }
@@ -753,6 +838,14 @@ function makePub(scene, id, def) {
           rect(ctx, C.ink, fx + 1, 61, 3, 1); // scowl
         }
       }
+    }
+    if (def.kebab) {
+      // A doner turning in the left window, a lit menu board in the right.
+      rect(ctx, '#8f563b', 15, 56, 10, 14);
+      rect(ctx, '#b07850', 16, 57, 3, 12);
+      rect(ctx, C.grey, 19, 54, 2, 18); // the spit
+      rect(ctx, C.white, 66, 56, 20, 14);
+      for (let y = 58; y < 69; y += 3) rect(ctx, C.ink, 68, y, 16, 1);
     }
     rect(ctx, C.woodDark, 41, 54, 14, H - 54); // door
     rect(ctx, C.gold, 43, 56, 10, 4); // fanlight
@@ -1442,6 +1535,559 @@ export function ensureSignTexture(scene, text) {
   return key;
 }
 
+
+// --- Level 7: inside The Avocet -------------------------------------------
+
+// The pub's back wall, 64×180, tiled along the level at world scroll: a dark
+// beam at the ceiling, red flock wallpaper, a dado rail, oak panelling, and the
+// skirting meeting the floor (screen y 148).
+function makePubWall(scene) {
+  makeImage(scene, TEX.PUB_WALL, 64, 180, (ctx) => {
+    rect(ctx, '#6b2232', 0, 0, 64, 104); // wallpaper
+    for (let y = 14; y < 100; y += 16) {
+      for (let x = (y / 16) % 2 ? 8 : 0; x < 64; x += 16) {
+        px(ctx, '#8a3242', x + 3, y); // a little fleur
+        rect(ctx, '#8a3242', x + 2, y + 1, 3, 1);
+        px(ctx, '#8a3242', x + 3, y + 2);
+      }
+    }
+    rect(ctx, '#2a180c', 0, 0, 64, 9); // ceiling beam
+    rect(ctx, '#3d2414', 0, 7, 64, 2);
+    rect(ctx, '#5d3a1a', 0, 104, 64, 4); // dado rail
+    rect(ctx, '#a0663c', 0, 104, 64, 1);
+    rect(ctx, '#5d3a1a', 0, 108, 64, 40); // panelling
+    for (const x of [2, 34]) {
+      rect(ctx, '#4a2e16', x, 112, 28, 32);
+      rect(ctx, '#6b4226', x + 1, 113, 26, 30);
+      rect(ctx, '#4a2e16', x + 3, 115, 22, 26);
+    }
+    rect(ctx, '#2a180c', 0, 144, 64, 4); // skirting
+    rect(ctx, '#24140c', 0, 148, 64, 32); // below the floor line (hidden by the floor tiles)
+  });
+}
+
+// A scruffy pub terrier, 16×12, two trotting frames facing right.
+function makeDog(scene) {
+  makeSheet(scene, TEX.DOG, 16, 12, 2, (ctx, i) => {
+    rect(ctx, '#c2a070', 2, 4, 10, 4); // body
+    rect(ctx, '#e8d0a0', 3, 7, 8, 1);
+    rect(ctx, '#c2a070', 11, 1, 4, 4); // head
+    rect(ctx, '#8f6a40', 11, 0, 2, 2); // ear
+    px(ctx, C.ink, 13, 2); // eye
+    px(ctx, C.ink, 15, 3); // nose
+    rect(ctx, '#8f6a40', 0, 3 - i, 2, 2); // wagging tail
+    const legs = i ? [3, 5, 8, 10] : [2, 6, 7, 11];
+    for (const x of legs) rect(ctx, '#8f6a40', x, 8, 1, 4);
+    rect(ctx, C.red, 10, 4, 2, 1); // collar
+  });
+}
+
+// A regular at a back table, 16×20 (head and shoulders over the table edge):
+// calm, or angry and throwing.
+function makeLocal(scene) {
+  makeSheet(scene, TEX.LOCAL, 16, 20, 2, (ctx, i) => {
+    const angry = i === 1;
+    rect(ctx, '#5f574f', 4, 0, 8, 3); // flat cap
+    rect(ctx, '#5f574f', 3, 2, 10, 1);
+    rect(ctx, angry ? '#f7907a' : C.skin, 5, 3, 6, 6); // face
+    px(ctx, C.ink, 6, 5);
+    px(ctx, C.ink, 9, 5);
+    if (angry) {
+      px(ctx, C.ink, 6, 4); // brows \ /
+      px(ctx, C.ink, 9, 4);
+      rect(ctx, C.ink, 7, 7, 2, 1);
+      rect(ctx, angry ? C.skin : '#3b5dc9', 12, 2, 2, 6); // arm up, about to throw
+    } else rect(ctx, '#c2c3c7', 6, 7, 4, 1);
+    rect(ctx, '#3b5dc9', 3, 9, 10, 7); // jumper
+    rect(ctx, '#8f563b', 0, 15, 16, 2); // table edge
+    rect(ctx, '#5d3a1a', 0, 17, 16, 1);
+    rect(ctx, '#fff1e8', 1, 11, 3, 4); // his pint
+    rect(ctx, C.stout, 1, 12, 3, 3);
+  });
+}
+
+function makePintGlass(scene) {
+  makeImage(scene, TEX.PINT_GLASS, 6, 8, (ctx) => {
+    rect(ctx, '#a0e4ff', 0, 0, 6, 8);
+    rect(ctx, '#5b6ee1', 1, 1, 4, 6);
+    rect(ctx, C.white, 1, 0, 1, 7);
+  });
+}
+
+function makeCrisps(scene) {
+  makeImage(scene, TEX.CRISPS, 6, 7, (ctx) => {
+    rect(ctx, C.red, 0, 1, 6, 6);
+    rect(ctx, '#be3a34', 0, 0, 6, 1);
+    rect(ctx, '#be3a34', 0, 6, 6, 1);
+    rect(ctx, C.yellow, 2, 3, 2, 2);
+  });
+}
+
+function makeDart(scene) {
+  makeImage(scene, TEX.DART, 8, 3, (ctx) => {
+    rect(ctx, C.grey, 0, 1, 3, 1); // point
+    rect(ctx, C.gold, 3, 1, 3, 1);
+    rect(ctx, C.red, 5, 0, 3, 3); // flight
+  });
+}
+
+// A wobbly bar stool over a cellar hatch: the pub's crumbling crate.
+function makeStoolCrumble(scene) {
+  makeImage(scene, TEX.STOOL, 16, 16, (ctx) => {
+    rect(ctx, '#7e2553', 1, 0, 14, 4);
+    rect(ctx, '#ff77a8', 2, 0, 11, 1);
+    rect(ctx, '#3d2414', 1, 4, 14, 1);
+    rect(ctx, '#5d3a1a', 2, 5, 2, 11);
+    rect(ctx, '#5d3a1a', 7, 5, 2, 6); // a short, wonky leg
+    rect(ctx, '#5d3a1a', 12, 5, 2, 9);
+    px(ctx, C.ink, 10, 2); // split in the seat
+    px(ctx, C.ink, 11, 3);
+  });
+}
+
+function makeSconce(scene) {
+  makeImage(scene, TEX.SCONCE, 8, 10, (ctx) => {
+    rect(ctx, C.gold, 3, 5, 2, 5); // bracket
+    rect(ctx, C.gold, 1, 9, 6, 1);
+    rect(ctx, '#fff4b0', 1, 0, 6, 5); // shade
+    rect(ctx, C.yellow, 2, 1, 4, 3);
+  });
+}
+
+function makePicture(scene) {
+  makeSheet(scene, TEX.PICTURE, 18, 14, 3, (ctx, i) => {
+    rect(ctx, C.gold, 0, 0, 18, 14);
+    rect(ctx, '#8a6a20', 1, 1, 16, 12);
+    if (i === 0) {
+      // A steam train.
+      rect(ctx, '#c4e8ff', 2, 2, 14, 10);
+      rect(ctx, C.green, 4, 6, 8, 4);
+      rect(ctx, C.ink, 10, 4, 2, 2);
+      rect(ctx, C.ink, 5, 10, 2, 1);
+      rect(ctx, C.ink, 9, 10, 2, 1);
+    } else if (i === 1) {
+      // Old Harry Rocks.
+      rect(ctx, '#29adff', 2, 2, 14, 10);
+      rect(ctx, C.white, 3, 5, 4, 7);
+      rect(ctx, C.white, 9, 7, 2, 5);
+      rect(ctx, C.grass, 3, 4, 4, 1);
+    } else {
+      // A stern portrait.
+      rect(ctx, '#3a3a46', 2, 2, 14, 10);
+      rect(ctx, C.skin, 7, 3, 4, 4);
+      rect(ctx, C.ink, 6, 7, 6, 5);
+      px(ctx, C.ink, 8, 5);
+      px(ctx, C.ink, 9, 5);
+    }
+  });
+}
+
+function makeFireplace(scene) {
+  makeImage(scene, TEX.FIREPLACE, 48, 40, (ctx) => {
+    bricks(ctx, 0, 6, 48, 34);
+    rect(ctx, '#5d3a1a', 0, 0, 48, 6); // mantel
+    rect(ctx, '#a0663c', 0, 0, 48, 1);
+    rect(ctx, C.ink, 12, 16, 24, 24); // hearth
+    rect(ctx, C.orange, 16, 30, 16, 8);
+    rect(ctx, C.yellow, 19, 26, 4, 10);
+    rect(ctx, C.yellow, 26, 28, 3, 8);
+    rect(ctx, '#ff004d', 22, 32, 4, 4);
+    rect(ctx, '#5d3a1a', 14, 37, 20, 3); // logs
+    rect(ctx, C.gold, 6, 2, 3, 4); // candlesticks on the mantel
+    rect(ctx, C.gold, 39, 2, 3, 4);
+  });
+}
+
+function makeDartboard(scene) {
+  makeImage(scene, TEX.DARTBOARD, 14, 14, (ctx) => {
+    ctx.fillStyle = C.ink;
+    ctx.beginPath();
+    ctx.arc(7, 7, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = C.cream;
+    ctx.beginPath();
+    ctx.arc(7, 7, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = C.green;
+    ctx.beginPath();
+    ctx.arc(7, 7, 3, 0, Math.PI * 2);
+    ctx.fill();
+    rect(ctx, C.red, 6, 6, 2, 2);
+  });
+}
+
+// One 16 px stretch of the bar counter, 16×20: polished top, panelled front,
+// brass foot rail. Tiled along the arena's back wall.
+function makeBar(scene) {
+  makeImage(scene, TEX.BAR, 16, 20, (ctx) => {
+    rect(ctx, '#3d2414', 0, 0, 16, 20);
+    rect(ctx, '#a0663c', 0, 0, 16, 2); // top
+    rect(ctx, '#5d3a1a', 0, 2, 16, 1);
+    rect(ctx, '#5d3a1a', 2, 5, 12, 10); // panel
+    rect(ctx, '#6b4226', 3, 6, 10, 8);
+    rect(ctx, C.gold, 0, 16, 16, 1); // foot rail
+  });
+}
+
+// The shelves behind the bar, 16×56: bottles, optics, a mirror strip.
+function makeBarBack(scene) {
+  makeImage(scene, TEX.BAR_BACK, 16, 56, (ctx) => {
+    rect(ctx, '#2a180c', 0, 0, 16, 56);
+    rect(ctx, '#8aa0b0', 0, 4, 16, 10); // mirror
+    rect(ctx, '#b8c8d4', 2, 5, 3, 1);
+    for (const y of [24, 40]) {
+      rect(ctx, '#5d3a1a', 0, y, 16, 2); // shelf
+      const colors = ['#2f6b3a', '#ffa300', '#7e2553', '#c2c3c7'];
+      for (let k = 0; k < 4; k++) {
+        const x = 1 + k * 4;
+        rect(ctx, colors[(k + y) % 4], x, y - 9, 3, 9); // bottle
+        rect(ctx, colors[(k + y) % 4], x + 1, y - 11, 1, 2);
+      }
+    }
+    rect(ctx, C.gold, 0, 18, 16, 1); // optics rail
+    for (const x of [2, 7, 12]) rect(ctx, '#fff4b0', x, 19, 2, 3);
+  });
+}
+
+// The flap in the bar, 14×26 like the pub doors: shut with a CLOSED sign, or
+// lifted, with a pint waiting.
+function makeBarHatch(scene) {
+  const { width, height } = FINISH_FRAME;
+  makeSheet(scene, TEX.BAR_HATCH, width, height, 2, (ctx, i) => {
+    rect(ctx, '#3d2414', 0, 6, width, height - 6);
+    if (i === 0) {
+      rect(ctx, '#6b4226', 1, 7, width - 2, height - 8); // the flap, down
+      rect(ctx, C.white, 2, 10, 10, 5); // CLOSED sign
+      rect(ctx, C.red, 3, 12, 8, 1);
+      rect(ctx, C.gold, 6, 18, 2, 3); // padlock
+    } else {
+      rect(ctx, '#1a0e08', 1, 7, width - 2, height - 8); // open: behind the bar
+      rect(ctx, '#6b4226', 0, 0, width, 6); // the flap, lifted
+      rect(ctx, C.white, 5, 12, 4, 6); // a pint waiting
+      rect(ctx, C.stout, 5, 13, 4, 5);
+    }
+  });
+}
+
+const LANDLORD_PALETTE = {
+  S: '#f4c49a', // skin
+  s: '#d89878',
+  K: '#1a1c2c',
+  H: '#5f574f', // what's left of his hair, and the moustache
+  W: '#fff1e8', // shirt
+  A: '#29366f', // apron
+  a: '#1d2b53',
+  r: '#e43b44', // cheeks
+  T: '#c2c3c7', // tray / bar towel
+  B: '#ffa300', // beer
+};
+const LANDLORD_RED = { ...LANDLORD_PALETTE, S: '#f7907a', s: '#e07060' };
+const LANDLORD_WET = { ...LANDLORD_PALETTE, W: '#ffcd75', A: '#5d4a2a', H: '#ffa300' };
+const L_HEAD = [
+  '................',
+  '................',
+  '.....SSSSSS.....',
+  '....SSSSSSSS....',
+  '....HSSSSSSH....',
+  '....SKSSSSKS....',
+  '....rSSSSSSr....',
+  '....SHHHHHHS....', // big moustache
+  '....SHSSSSHS....',
+  '.....SSSSSS.....',
+  '......ssss......',
+];
+const L_TORSO = [
+  '...WWWWWWWWWW...',
+  '..WWWWWWWWWWWW..',
+  '..WWAAAAAAAAWW..',
+  '.SWWAAAAAAAAWWS.',
+  '.SWAAAAAAAAAAWS.',
+  '.SWAAAAaaAAAAWS.',
+  '..WAAAAAAAAAAW..',
+  '...AAAAAAAAAA...',
+  '...AAAAAAAAAA...',
+  '...AAAAAAAAAA...',
+  '...KKKK..KKKK...',
+];
+const L_LEGS = {
+  stand: ['...KKK....KKK...', '...KKK....KKK...', '...KKK....KKK...', '...KKK....KKK...', '...KKK....KKK...', '..KKKK....KKKK..', '................', '................', '................', '................', '................'],
+  stride: ['...KKK....KKK...', '..KKK......KKK..', '..KKK......KKK..', '.KKK........KKK.', '.KKK........KKK.', 'KKKK........KKKK', '................', '................', '................', '................', '................'],
+  pass: ['....KKK..KKK....', '....KKK..KKK....', '.....KKKKKK.....', '.....KKK.KK.....', '.....KKK.KK.....', '....KKKK.KKK....', '................', '................', '................', '................', '................'],
+};
+const lWith = (rows, changes) => rows.map((r, i) => changes[i] ?? r);
+const lShift = (row) => '.' + row.slice(0, 15);
+
+// Frame order must match LANDLORD_FRAME in src/assets.js.
+const LANDLORD_ART = [
+  { rows: [...L_HEAD, ...L_TORSO, ...L_LEGS.stand] }, // 0 idle
+  { rows: [...L_HEAD, ...L_TORSO, ...L_LEGS.stride] }, // 1–2 walk
+  { rows: [...L_HEAD, ...L_TORSO, ...L_LEGS.pass] },
+  {
+    // 3 wind-up: red-faced, tray raised over his head
+    palette: LANDLORD_RED,
+    rows: [
+      ...lWith(L_HEAD, { 0: '...TTTTTTTTTT...', 1: '....S......S....', 7: '....SKKKKKKS....' }),
+      ...lWith(L_TORSO, { 0: '..SWWWWWWWWWWS..', 3: '..WWAAAAAAAAWW..', 4: '..WAAAAAAAAAAW..', 5: '..WAAAAaaAAAAW..' }),
+      ...L_LEGS.stand,
+    ],
+  },
+  {
+    // 4 charge: leaning in, tray out front
+    palette: LANDLORD_RED,
+    rows: [...L_HEAD.map(lShift), ...lWith(L_TORSO.map((r, i) => (i < 4 ? lShift(r) : r)), { 3: '..SWWAAAAAAAAWTT', 4: '..SWAAAAAAAAAATT' }), ...L_LEGS.stride],
+  },
+  {
+    // 5 throw: arm up with a glass
+    rows: [...lWith(L_HEAD, { 2: '.....SSSSSS..T..', 3: '....SSSSSSSS.T..', 4: '....HSSSSSSH.S..' }), ...lWith(L_TORSO, { 0: '...WWWWWWWWWWS..', 3: '.SWWAAAAAAAAWW..' }), ...L_LEGS.stand],
+  },
+  {
+    // 6 soaked: dripping beer, eyes shut
+    palette: LANDLORD_WET,
+    rows: [...lWith(L_HEAD, { 0: '...B....B...B...', 5: '....SKKSSKKS....' }), ...L_TORSO, ...L_LEGS.stand],
+  },
+  {
+    // 7 swamped: dazed, arms out, mouth open
+    palette: LANDLORD_RED,
+    rows: [...lWith(L_HEAD, { 5: '....SWSSSSWS....', 8: '....SHSKKSHS....' }), ...lWith(L_TORSO, { 3: 'SSWWAAAAAAAAWWSS', 4: '..WAAAAAAAAAAW..' }), ...L_LEGS.stand],
+  },
+];
+
+function makeLandlord(scene) {
+  const { width, height, count } = LANDLORD_FRAME;
+  makeSheet(scene, TEX.LANDLORD, width, height, count, (ctx, i) => {
+    const f = LANDLORD_ART[i];
+    drawRows(ctx, f.rows, 0, 0, f.palette ?? LANDLORD_PALETTE);
+  });
+}
+
+// A beer pump on the bar, 10×12: the handle's top is the one-way platform.
+function makePump(scene) {
+  const { width, height } = PUMP_FRAME;
+  makeSheet(scene, TEX.PUMP, width, height, 3, (ctx, i) => {
+    const dry = i === 2;
+    const pulled = i === 1;
+    rect(ctx, C.gold, 3, 6, 4, 6); // brass column
+    rect(ctx, '#fff4b0', 4, 6, 1, 6);
+    rect(ctx, C.gold, 1, 10, 8, 2); // base on the bar
+    const hx = pulled ? 4 : 2;
+    rect(ctx, C.ink, hx, pulled ? 2 : 0, 6, 3); // black handle knob
+    rect(ctx, dry ? C.grey : C.cream, hx + 1, pulled ? 3 : 1, 4, 1); // pump clip
+    rect(ctx, '#3d2414', 4, pulled ? 5 : 3, 2, pulled ? 1 : 3);
+    if (!dry) rect(ctx, C.orange, 7, 8, 2, 1); // the spout
+  });
+}
+
+function makeBeerSpray(scene) {
+  makeImage(scene, TEX.BEER_SPRAY, 3, 3, (ctx) => {
+    rect(ctx, C.orange, 0, 0, 3, 3);
+    px(ctx, C.white, 0, 0);
+  });
+}
+
+// A wooden barrel, 14×14, two rolling frames (the hoops turn).
+function makeBarrel(scene) {
+  makeSheet(scene, TEX.BARREL, 14, 14, 2, (ctx, i) => {
+    ctx.fillStyle = '#8f563b';
+    ctx.beginPath();
+    ctx.arc(7, 7, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#5d3a1a';
+    ctx.beginPath();
+    ctx.arc(7, 7, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#8f563b';
+    ctx.beginPath();
+    ctx.arc(7, 7, 3, 0, Math.PI * 2);
+    ctx.fill();
+    // Staves, turned between frames.
+    if (i === 0) {
+      rect(ctx, '#3d2414', 6, 1, 2, 12);
+      rect(ctx, '#3d2414', 1, 6, 12, 2);
+    } else {
+      for (let k = 0; k < 9; k++) {
+        px(ctx, '#3d2414', 3 + k, 3 + k);
+        px(ctx, '#3d2414', 11 - k, 3 + k);
+      }
+    }
+    rect(ctx, C.grey, 6, 6, 2, 2); // bung
+  });
+}
+
+// The last orders bell, 10×12, on a bracket.
+function makeBell(scene) {
+  makeImage(scene, TEX.BELL, 10, 12, (ctx) => {
+    rect(ctx, '#3d2414', 4, 0, 2, 2); // bracket
+    rect(ctx, C.gold, 3, 2, 4, 2);
+    rect(ctx, C.gold, 2, 4, 6, 4);
+    rect(ctx, C.gold, 1, 8, 8, 2);
+    rect(ctx, '#fff4b0', 3, 3, 1, 5);
+    rect(ctx, '#8a6a20', 4, 10, 2, 2); // clapper
+  });
+}
+
+// The cellar lever on the wall, 12×16: up, or pulled down.
+function makeLever(scene) {
+  const { width, height } = LEVER_FRAME;
+  makeSheet(scene, TEX.LEVER, width, height, 2, (ctx, i) => {
+    rect(ctx, '#5f574f', 2, 6, 8, 8); // wall plate
+    rect(ctx, '#7a7a82', 3, 7, 6, 6);
+    rect(ctx, C.ink, 5, 9, 2, 2); // pivot
+    if (i === 0) {
+      rect(ctx, '#be3a34', 5, 1, 2, 9); // handle up
+      rect(ctx, C.red, 4, 0, 4, 3);
+    } else {
+      rect(ctx, '#be3a34', 5, 9, 2, 6); // handle down
+      rect(ctx, C.red, 4, 13, 4, 3);
+    }
+  });
+}
+
+// The cellar trapdoor in the floor in front of the till, 48×6: shut, or open.
+function makeHatch(scene) {
+  const { width, height } = HATCH_FRAME;
+  makeSheet(scene, TEX.HATCH, width, height, 2, (ctx, i) => {
+    if (i === 0) {
+      rect(ctx, '#7a4a2a', 0, 0, width, 2);
+      rect(ctx, '#3d2414', 0, 2, width, 1);
+      rect(ctx, '#3d2414', 15, 0, 1, 2);
+      rect(ctx, '#3d2414', 31, 0, 1, 2);
+      rect(ctx, '#7a7a82', 22, 0, 4, 1); // iron ring
+    } else {
+      rect(ctx, '#0d0806', 0, 0, width, height); // the drop
+    }
+  });
+}
+
+
+// --- Level 8: Parkstone to the kebab shop -----------------------------------
+
+// The megaphone, 12×9: a white cone with a red band and a handle.
+function makeMegaphone(scene) {
+  makeImage(scene, TEX.MEGAPHONE, 12, 9, (ctx) => {
+    rect(ctx, C.white, 2, 3, 3, 3); // mouthpiece end
+    rect(ctx, C.white, 5, 2, 3, 5);
+    rect(ctx, C.white, 8, 0, 4, 9); // the bell
+    rect(ctx, C.red, 6, 2, 1, 5);
+    rect(ctx, C.grey, 11, 1, 1, 7);
+    rect(ctx, C.ink, 4, 6, 2, 3); // handle
+  });
+}
+
+// One ring of the shout, 10×34: a bright arc, facing right.
+function makeShoutWave(scene) {
+  makeImage(scene, TEX.SHOUT_WAVE, 10, 34, (ctx) => {
+    ctx.strokeStyle = '#fff1e8';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(-10, 17, 17, -0.95, 0.95);
+    ctx.stroke();
+    ctx.strokeStyle = '#ffec27';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(-12, 17, 17, -0.9, 0.9);
+    ctx.stroke();
+  });
+}
+
+// An urban fox, 16×10, two running frames facing right.
+function makeFox(scene) {
+  makeSheet(scene, TEX.FOX, 16, 10, 2, (ctx, i) => {
+    rect(ctx, '#e07028', 3, 3, 9, 4); // body
+    rect(ctx, C.white, 4, 6, 6, 1);
+    rect(ctx, '#e07028', 11, 1, 4, 3); // head
+    rect(ctx, '#e07028', 11, 0, 1, 1); // ears
+    rect(ctx, '#e07028', 13, 0, 1, 1);
+    rect(ctx, C.white, 13, 3, 2, 1); // muzzle
+    px(ctx, C.ink, 15, 2);
+    px(ctx, C.ink, 12, 2); // eye
+    rect(ctx, '#e07028', 0, 2 + i, 3, 2); // brush
+    px(ctx, C.white, 0, 2 + i);
+    const legs = i ? [4, 6, 9, 11] : [3, 7, 8, 12];
+    for (const x of legs) rect(ctx, C.ink, x, 7, 1, 3);
+  });
+}
+
+// A wheelie bin, 12×16, two rolling frames (the wheel turns).
+function makeBin(scene) {
+  makeSheet(scene, TEX.BIN, 12, 16, 2, (ctx, i) => {
+    rect(ctx, '#2f6b3a', 1, 2, 10, 11); // body
+    rect(ctx, '#3fa34d', 2, 3, 2, 9);
+    rect(ctx, '#1e4a27', 0, 0, 12, 3); // lid
+    rect(ctx, C.ink, 1, 13, 10, 1);
+    rect(ctx, C.ink, 7, 12, 4, 4); // wheel
+    px(ctx, C.grey, i ? 8 : 9, i ? 13 : 14);
+    rect(ctx, C.white, 3, 6, 4, 2); // a house number
+  });
+}
+
+// A bouncer, 16×52: black suit, earpiece, arms folded. Standing / stunned.
+function makeBouncer(scene) {
+  makeSheet(scene, TEX.BOUNCER, 16, 52, 2, (ctx, i) => {
+    const stunned = i === 1;
+    rect(ctx, '#f4c49a', 4, 2, 8, 8); // head (shaved)
+    rect(ctx, '#d89878', 4, 2, 8, 2);
+    if (stunned) {
+      px(ctx, C.ink, 6, 5); // dazed
+      px(ctx, C.ink, 9, 5);
+      rect(ctx, C.ink, 6, 7, 4, 2); // mouth open
+    } else {
+      rect(ctx, C.ink, 5, 5, 6, 1); // sunglasses, at night
+      rect(ctx, C.ink, 6, 8, 4, 1);
+    }
+    rect(ctx, C.ink, 12, 4, 1, 4); // earpiece wire
+    rect(ctx, '#1a1c2c', 1, 10, 14, 22); // suit
+    rect(ctx, C.white, 6, 10, 4, 4); // shirt
+    rect(ctx, C.ink, 7, 11, 2, 6); // tie
+    if (!stunned) rect(ctx, '#3a3a46', 2, 18, 12, 4); // folded arms
+    else rect(ctx, '#3a3a46', 0, 14, 2, 10); // arms down
+    rect(ctx, '#1a1c2c', 3, 32, 4, 18); // legs
+    rect(ctx, '#1a1c2c', 9, 32, 4, 18);
+    rect(ctx, C.ink, 2, 50, 5, 2);
+    rect(ctx, C.ink, 9, 50, 5, 2);
+  });
+}
+
+// A car out of the side road, 48×22, side-on facing right, headlights on.
+function makeCar(scene) {
+  makeImage(scene, TEX.CAR, 48, 22, (ctx) => {
+    rect(ctx, '#3b5dc9', 2, 9, 44, 8); // body
+    rect(ctx, '#3b5dc9', 12, 2, 22, 8); // cabin
+    rect(ctx, '#a0e4ff', 14, 4, 8, 5); // windows
+    rect(ctx, '#a0e4ff', 24, 4, 8, 5);
+    rect(ctx, C.yellow, 44, 10, 3, 3); // headlight
+    rect(ctx, C.red, 1, 10, 2, 3); // tail light
+    rect(ctx, C.ink, 7, 15, 8, 7); // wheels
+    rect(ctx, C.ink, 33, 15, 8, 7);
+    rect(ctx, C.grey, 10, 18, 2, 2);
+    rect(ctx, C.grey, 36, 18, 2, 2);
+  });
+}
+
+// A pedestrian crossing light on a pole, 8×36: green man / amber / red man.
+function makePedLight(scene) {
+  const { width, height } = PED_LIGHT_FRAME;
+  makeSheet(scene, TEX.PED_LIGHT, width, height, 3, (ctx, i) => {
+    rect(ctx, '#3a3a46', 3, 12, 2, height - 12); // pole
+    rect(ctx, C.ink, 0, 0, 8, 13); // box
+    rect(ctx, i === 2 ? C.red : C.redDim, 2, 1, 4, 5); // red man
+    rect(ctx, i === 0 ? C.greenLit : C.greenDim, 2, 7, 4, 5); // green man
+    if (i === 1) {
+      rect(ctx, C.orange, 2, 1, 4, 5);
+      rect(ctx, C.orange, 2, 7, 4, 5);
+    }
+  });
+}
+
+// The kebab shop's roller shutter, 16×8 (tiled down over the shop front).
+function makeShutter(scene) {
+  makeImage(scene, TEX.SHUTTER, 16, 8, (ctx) => {
+    rect(ctx, '#9e9ea6', 0, 0, 16, 8);
+    rect(ctx, '#7a7a82', 0, 3, 16, 1);
+    rect(ctx, '#7a7a82', 0, 7, 16, 1);
+    rect(ctx, '#c2c3c7', 0, 0, 16, 1);
+  });
+}
+
 const BUILDERS = {
   [TEX.PINT]: makePint,
   [TEX.ESPRESSO]: makeEspresso,
@@ -1477,6 +2123,35 @@ const BUILDERS = {
   [TEX.TICKET]: makeTicket,
   [TEX.TICKET_MARKER]: makeTicketMarker,
   [TEX.DIZZY_STARS]: makeDizzyStars,
+  [TEX.PUB_WALL]: makePubWall,
+  [TEX.DOG]: makeDog,
+  [TEX.LOCAL]: makeLocal,
+  [TEX.PINT_GLASS]: makePintGlass,
+  [TEX.CRISPS]: makeCrisps,
+  [TEX.DART]: makeDart,
+  [TEX.STOOL]: makeStoolCrumble,
+  [TEX.SCONCE]: makeSconce,
+  [TEX.PICTURE]: makePicture,
+  [TEX.FIREPLACE]: makeFireplace,
+  [TEX.DARTBOARD]: makeDartboard,
+  [TEX.BAR]: makeBar,
+  [TEX.BAR_BACK]: makeBarBack,
+  [TEX.BAR_HATCH]: makeBarHatch,
+  [TEX.LANDLORD]: makeLandlord,
+  [TEX.PUMP]: makePump,
+  [TEX.BEER_SPRAY]: makeBeerSpray,
+  [TEX.BARREL]: makeBarrel,
+  [TEX.BELL]: makeBell,
+  [TEX.LEVER]: makeLever,
+  [TEX.HATCH]: makeHatch,
+  [TEX.MEGAPHONE]: makeMegaphone,
+  [TEX.SHOUT_WAVE]: makeShoutWave,
+  [TEX.FOX]: makeFox,
+  [TEX.BIN]: makeBin,
+  [TEX.BOUNCER]: makeBouncer,
+  [TEX.CAR]: makeCar,
+  [TEX.PED_LIGHT]: makePedLight,
+  [TEX.SHUTTER]: makeShutter,
 };
 
 /** Generate every placeholder texture that has not already been loaded as real art. */

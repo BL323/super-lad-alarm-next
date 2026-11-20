@@ -177,4 +177,31 @@ export const SOUNDS = {
   squawk: () => voice({ from: 1700, to: 900, dur: 0.16, duty: 0.125, vol: 0.07, vib: 28, vibDepth: 0.06 }), // a gull starting its swoop
   boing: () => voice({ wave: 'triangle', from: 160, to: 640, dur: 0.22, vol: 0.32, vib: 18, vibDepth: 0.08 }), // off a shop awning
   bell: () => seq([[N.E6, 0.07], [N.C6, 0.07]], { duty: 0.5, vol: 0.1, release: 0.04 }), // level-crossing warning
+
+  // Inside The Avocet (level 7)
+  yelp: () => voice({ from: 1400, to: 2200, dur: 0.12, duty: 0.25, vol: 0.12, vib: 30, vibDepth: 0.08 }), // a stomped dog
+  grunt: () => voice({ from: 160, to: 110, dur: 0.22, duty: 0.25, vol: 0.2, vib: 14, vibDepth: 0.1 }), // the landlord winding up
+  spray: () => voice({ wave: 'noise', from: 6000, to: 1500, dur: 0.4, vol: 0.18, attack: 0.01, release: 0.2, lowpass: 0.3 }), // a pump gushing
+  'pump-dry': () => voice({ wave: 'noise', from: 2000, to: 800, dur: 0.08, vol: 0.08, decay: true }), // nothing left
+  barrel: () => voice({ wave: 'triangle', from: 90, to: 70, dur: 0.4, vol: 0.3, vib: 10, vibDepth: 0.2 }), // a barrel rumbling off
+  'last-orders': () =>
+    mix(
+      { data: voice({ wave: 'triangle', from: N.A5, dur: 0.6, vol: 0.3, decay: true }) },
+      { at: 0.2, data: voice({ wave: 'triangle', from: N.A5, dur: 0.6, vol: 0.3, decay: true }) },
+      { at: 0.4, data: voice({ wave: 'triangle', from: N.A5, dur: 0.8, vol: 0.3, decay: true }) },
+    ), // the bell, rung three times
+  clunk: () =>
+    mix(
+      { data: voice({ from: 140, to: 60, dur: 0.15, vol: 0.3 }) },
+      { data: voice({ wave: 'noise', from: 1500, dur: 0.08, vol: 0.15, decay: true }) },
+    ), // the cellar lever
+
+  // Parkstone to the kebab shop (level 8)
+  shout: () =>
+    mix(
+      { data: voice({ from: 330, to: 260, dur: 0.32, duty: 0.25, vol: 0.26, vib: 22, vibDepth: 0.12 }) },
+      { data: voice({ wave: 'noise', from: 3000, dur: 0.3, vol: 0.1, decay: true, lowpass: 0.4 }) },
+    ), // "OI!" through the megaphone
+  car: () => voice({ wave: 'noise', from: 600, to: 300, dur: 0.9, vol: 0.14, attack: 0.15, release: 0.3, lowpass: 0.7 }), // a car pulling out
+  shutter: () => voice({ wave: 'noise', from: 2500, to: 700, dur: 0.8, vol: 0.18, attack: 0.02, release: 0.1, vib: 30, vibDepth: 0.3 }), // a roller shutter rattling down
 };

@@ -40,6 +40,37 @@ export const TEX = {
   TICKET_MARKER: 'ticket-marker', // where a ticket will land
   DIZZY_STARS: 'dizzy-stars',
   CONFETTI: 'confetti',
+  // Level 7: inside The Avocet.
+  PUB_WALL: 'pub-wall', // the pub's back wall (wallpaper over oak panelling), tiled along the level
+  DOG: 'pub-dog', // two trotting frames, facing right
+  LOCAL: 'pub-local', // a regular sat at a back table: calm / angry (throwing)
+  PINT_GLASS: 'thrown-glass', // an empty pint glass, thrown by the locals and the landlord
+  CRISPS: 'crisps', // a packet of crisps, thrown
+  DART: 'dart', // thrown from the dartboard corner
+  STOOL: 'wobbly-stool', // a wobbly bar stool over a cellar hatch (the pub's crumbling crate)
+  SCONCE: 'wall-light', // a brass wall light (lit, with a glow)
+  PICTURE: 'picture', // framed pictures on the wall: three designs
+  FIREPLACE: 'fireplace',
+  DARTBOARD: 'dartboard',
+  BAR: 'bar-counter', // one 16 px stretch of the bar counter (tiled along the arena's back)
+  BAR_BACK: 'bar-back', // bottles and optics on the shelves behind the bar (tiled)
+  BAR_HATCH: 'bar-hatch', // the flap in the bar: the level 7 finish (closed / open)
+  LANDLORD: 'landlord', // the landlord boss
+  PUMP: 'beer-pump', // a beer pump on the bar: full / pulled / dry
+  BEER_SPRAY: 'beer-spray', // a fleck of beer from a pump
+  BARREL: 'barrel', // rolled along the floor by the landlord
+  BELL: 'last-orders-bell',
+  LEVER: 'cellar-lever', // up / pulled
+  HATCH: 'cellar-hatch', // the trapdoor in front of the till: shut / open
+  // Level 8: Parkstone to the kebab shop.
+  MEGAPHONE: 'megaphone', // the pickup (and what Naylor holds up)
+  SHOUT_WAVE: 'shout-wave', // one ring of the sound wave
+  FOX: 'fox', // two running frames, facing right
+  BIN: 'wheelie-bin', // two rolling frames
+  BOUNCER: 'bouncer', // standing / stunned (stepped aside)
+  CAR: 'car', // a car out of the side road, facing right
+  PED_LIGHT: 'ped-light', // pedestrian crossing light: green man / amber / red man
+  SHUTTER: 'shutter', // the kebab shop's roller shutter (tiled down over the windows)
 };
 
 // Bitmap font key for crisp HUD text (built from src/art/pixelFont.js at boot).
@@ -76,6 +107,8 @@ export const PUBS = {
   'kings-arms': { name: 'KINGS ARMS', wall: 'render', roof: '#3a3a46', chimney: true, angryLocals: true }, // Wareham scenery only
   'rising-sun': { name: 'THE RISING SUN', wall: '#f2c46b', roof: '#5f574f', chimney: true, sun: true }, // Poole, by the quay
   avocet: { name: 'THE AVOCET', wall: 'render', roof: '#29366f', angryLocals: true },
+  // Level 8's finish: not a pub, but the door works the same. `kebab` draws a doner in the window.
+  'kebab-shop': { name: 'PARKSTONE KEBABS', wall: '#e43b44', roof: '#1a1c2c', kebab: true },
 };
 
 // Playable characters, in select-screen order (left to right): all Naylor (red hair, same skin tone) in different
@@ -148,6 +181,32 @@ export const CONDUCTOR_FRAME = {
   count: 7,
 };
 
+// The landlord: 16×32 frames, facing right.
+export const LANDLORD_FRAME = {
+  width: 16,
+  height: 32,
+  idle: 0,
+  walk: [1, 2],
+  windup: 3, // red in the face, tray raised
+  charge: 4,
+  throw: 5,
+  soaked: 6, // dripping with beer (hurt)
+  swamped: 7, // dazed by the crowd at the bell
+  count: 8,
+};
+export const DOG_FRAME = { width: 16, height: 12 };
+export const PUMP_FRAME = { width: 10, height: 12, full: 0, pulled: 1, dry: 2 };
+export const LEVER_FRAME = { width: 12, height: 16, up: 0, pulled: 1 };
+export const HATCH_FRAME = { width: 48, height: 6, shut: 0, open: 1 };
+export const LOCAL_FRAME = { width: 16, height: 20, calm: 0, angry: 1 };
+export const PICTURE_FRAME = { width: 18, height: 14, count: 3 };
+export const BARREL_FRAME = { width: 14, height: 14, count: 2 };
+export const FOX_FRAME = { width: 16, height: 10 };
+export const BIN_FRAME = { width: 12, height: 16 };
+export const BOUNCER_FRAME = { width: 16, height: 52, standing: 0, stunned: 1 };
+export const CAR_FRAME = { width: 48, height: 22 };
+export const PED_LIGHT_FRAME = { width: 8, height: 36, walk: 0, amber: 1, stop: 2 };
+
 // The finish door is drawn over the pub texture's own door (14×26 at x 41,
 // y 54 of the 96×80 pub front), so a finish placed at a pub's x lines up.
 export const FINISH_FRAME = { width: 14, height: 26, closed: 0, open: 1 };
@@ -190,8 +249,19 @@ export const TILESET = {
     jetty: 24, // wooden jetty deck on posts (Wareham quay)
     pile: 25, // jetty posts standing in the river, below the deck
     waterHigh: 26, // river surface just below the bank (background): boats sit in it
+    // Level 7: inside The Avocet.
+    floorboards: 27, // the pub floor (surface)
+    cellar: 28, // under the floor
+    tableTop: 29, // a pub table (a floating ledge you can walk under)
+    poolTable: 30, // green baize, same as a table
+    tableLegs: 31, // table legs (background)
+    stool: 32, // a solid bar stool standing on the floor: a step up
+    keg: 33, // stacked kegs (solid)
+    beam: 34, // an oak ceiling beam: a ceiling only, like a low bridge's girder
+    cellarHole: 35, // an open cellar hatch in the floor (background): falling in is a death
+    shelf: 36, // a high shelf on the wall (a floating ledge)
   },
-  count: 27,
+  count: 37,
 };
 
 export const CROSSING_LIGHTS_FRAME = { width: 16, height: 40, off: 0, left: 1, right: 2 };
@@ -203,4 +273,8 @@ export const ANIM = {
   CONDUCTOR_WALK: 'conductor-walk',
   SWAN_WALK: 'swan-walk',
   GULL_FLAP: 'gull-flap',
+  DOG_TROT: 'dog-trot',
+  LANDLORD_WALK: 'landlord-walk',
+  FOX_RUN: 'fox-run',
+  BIN_ROLL: 'bin-roll',
 };

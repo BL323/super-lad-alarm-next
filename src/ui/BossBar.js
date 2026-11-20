@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { addPixelText } from './text.js';
 
-// "CONDUCTOR" with one pip per remaining hit, top centre, shown during the
+// The boss's name ("CONDUCTOR", "LANDLORD") with one pip per remaining hit, top centre, shown during the
 // fight. Driven by the GameScene's boss-* events.
 export default class BossBar {
   constructor(scene, gameScene, showToast) {
@@ -13,8 +13,10 @@ export default class BossBar {
     this.container.add([this.label, this.pips]);
 
     const handlers = {
-      'boss-start': ({ hits, introText }) => {
+      'boss-start': ({ hits, introText, name, beatenText }) => {
         this.total = hits;
+        this.beatenText = beatenText ?? 'CONDUCTOR BEATEN!';
+        this.label.setText(name ?? 'CONDUCTOR');
         this.draw(hits);
         this.container.setVisible(true);
         showToast(introText ?? 'TICKETS PLEASE!');
@@ -26,7 +28,7 @@ export default class BossBar {
       'boss-reset': () => this.container.setVisible(false),
       'boss-defeated': () => {
         this.draw(0);
-        showToast('CONDUCTOR BEATEN!');
+        showToast(this.beatenText ?? 'CONDUCTOR BEATEN!');
         scene.time.delayedCall(1200, () => this.container.setVisible(false));
       },
     };

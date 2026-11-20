@@ -3,7 +3,8 @@ import { GAME_HEIGHT, TOUCH } from '../config.js';
 import { safeAreaInGame, cssPerGamePixel } from './safeArea.js';
 
 // On-screen buttons: left and right together at bottom left, jump at bottom
-// right. They only draw and report hit zones; VirtualInput does the reading.
+// right, and (once Naylor has the megaphone, level 8) shout above jump. They
+// only draw and report hit zones; VirtualInput does the reading.
 export default class TouchControls {
   constructor(scene, controls) {
     this.scene = scene;
@@ -12,12 +13,15 @@ export default class TouchControls {
       left: new Phaser.Geom.Rectangle(),
       right: new Phaser.Geom.Rectangle(),
       jump: new Phaser.Geom.Rectangle(),
+      shout: new Phaser.Geom.Rectangle(),
     };
     this.buttons = {
       left: scene.add.graphics(),
       right: scene.add.graphics(),
       jump: scene.add.graphics(),
+      shout: scene.add.graphics(),
     };
+    this.shoutEnabled = false;
     Object.values(this.buttons).forEach((g) => g.setScrollFactor(0).setDepth(100));
 
     this.layout();
@@ -52,6 +56,21 @@ export default class TouchControls {
     this.drawButton(this.buttons.left.setPosition(leftX, y), size, 'left');
     this.drawButton(this.buttons.right.setPosition(rightX, y), size, 'right');
     this.drawButton(this.buttons.jump.setPosition(jumpX, y), size, 'jump');
+
+    // Shout: a smaller button above jump, its zone stopping where jump's starts.
+    const shoutSize = Math.round(size * 0.8);
+    const shoutX = jumpX + Math.round((size - shoutSize) / 2);
+    const shoutY = y - shoutSize - TOUCH.gap * 3;
+    if (this.shoutEnabled) this.zones.shout.setTo(jumpX - pad, shoutY - pad / 2, width - (jumpX - pad), zoneTop - (shoutY - pad / 2));
+    else this.zones.shout.setTo(0, 0, 0, 0);
+    this.drawButton(this.buttons.shout.setPosition(shoutX, shoutY), shoutSize, 'shout');
+    this.buttons.shout.setVisible(this.shoutEnabled && this.visible !== false);
+  }
+
+  /** Naylor has picked up the megaphone: show the shout button. */
+  enableShout() {
+    this.shoutEnabled = true;
+    this.layout();
   }
 
   drawButton(g, size, kind) {
@@ -60,7 +79,7 @@ export default class TouchControls {
     g.clear();
     g.fillStyle(0x000000, 0.25);
     g.lineStyle(1, 0xffffff, 0.8);
-    if (kind === 'jump') {
+    if (kind === 'jump' || kind === 'shout') {
       g.fillCircle(c, c, c);
       g.strokeCircle(c, c, c - 0.5);
     } else {
@@ -71,15 +90,22 @@ export default class TouchControls {
     if (kind === 'left') g.fillTriangle(c - r, c, c + r * 0.8, c - r, c + r * 0.8, c + r);
     if (kind === 'right') g.fillTriangle(c + r, c, c - r * 0.8, c - r, c - r * 0.8, c + r);
     if (kind === 'jump') g.fillTriangle(c, c - r, c - r, c + r * 0.8, c + r, c + r * 0.8);
+    if (kind === 'shout') {
+      // A megaphone: a small mouthpiece and a flaring cone.
+      g.fillRect(c - r, c - r * 0.3, r * 0.6, r * 0.6);
+      g.fillTriangle(c - r * 0.4, c - r * 0.3, c + r, c - r, c + r, c + r);
+      g.fillTriangle(c - r * 0.4, c - r * 0.3, c - r * 0.4, c + r * 0.3, c + r, c + r);
+    }
   }
 
   setVisible(visible) {
-    Object.values(this.buttons).forEach((g) => g.setVisible(visible));
+    this.visible = visible;
+    Object.entries(this.buttons).forEach(([k, g]) => g.setVisible(visible && (k !== 'shout' || this.shoutEnabled)));
   }
 
   update() {
     const t = this.controls.touch;
-    for (const key of ['left', 'right', 'jump']) {
+    for (const key of ['left', 'right', 'jump', 'shout']) {
       this.buttons[key].setAlpha(t[key] ? TOUCH.pressedAlpha : TOUCH.idleAlpha);
     }
   }

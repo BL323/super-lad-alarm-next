@@ -21,6 +21,8 @@ export default class Throwers {
     this.startClock = (t, i) => THROWERS.everyMs - THROWERS.firstDelayMs - (t.offsetMs ?? i * THROWERS.staggerMs);
     this.items = defs.map((d, i) => ({ ...d, clock: this.startClock(d, i) }));
     this.mats = new Lobber(scene, { player, texture: TEX.BEERMAT, flightMs: THROWERS.flightMs, size: [6, 6], spin: 720 });
+    // What each one throws: beer mats outside; inside the pub, glasses, crisps and darts.
+    this.textures = { mat: TEX.BEERMAT, glass: TEX.PINT_GLASS, crisps: TEX.CRISPS, darts: TEX.DART };
     this.range = THROWERS.rangeTiles * TILE_SIZE;
 
     // A death clears the air, and everyone waits a moment again.
@@ -54,7 +56,7 @@ export default class Throwers {
       if (t.clock < THROWERS.everyMs) continue;
       t.clock = 0;
       const aim = p.x + p.body.velocity.x * (THROWERS.flightMs / 1000) * THROWERS.lead;
-      this.mats.throw(t.x, t.y, aim, t.floorY);
+      this.mats.throw(t.x, t.y, aim, t.floorY, this.textures[t.item] ?? TEX.BEERMAT);
       Audio.play('ticket');
     }
   }

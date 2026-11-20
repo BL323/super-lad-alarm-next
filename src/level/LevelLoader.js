@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { MAX_GAME_WIDTH, GAME_HEIGHT, PARALLAX, THEMES, DEFAULT_THEME, LAMP_GLOW } from '../config.js';
-import { TEX, TILESET, pubTextureKey, houseTextureKey } from '../assets.js';
+import { TEX, TILESET, LOCAL_FRAME, pubTextureKey, houseTextureKey } from '../assets.js';
 import { ensureSignTexture, ensureShopTexture } from '../art/placeholders.js';
 
 // Draw order for everything in the level.
@@ -67,6 +67,11 @@ export function loadLevel(scene, levelDef) {
     .setScrollFactor(0)
     .setTint(theme.hillsTint)
     .setDepth(DEPTH.backdrop);
+  // Indoors (the pub): the back wall instead of sky and hills, fixed to the world.
+  if (theme.interior) {
+    hills.setVisible(false);
+    scene.add.tileSprite(0, 0, width, GAME_HEIGHT, TEX.PUB_WALL).setOrigin(0).setDepth(DEPTH.backdrop);
+  }
 
   const objects = (map.getObjectLayer('objects')?.objects ?? []).map((o) => ({ ...o, y: o.y + offsetY }));
   const decor = (map.getObjectLayer('decor')?.objects ?? []).map((o) => ({ ...o, y: o.y + offsetY }));
@@ -88,6 +93,23 @@ export function loadLevel(scene, levelDef) {
       scene.tweens.add({ targets: glow, alpha: LAMP_GLOW.alpha - LAMP_GLOW.flickerAlpha, duration: LAMP_GLOW.flickerMs, yoyo: true, repeat: -1, ease: 'Sine.InOut', delay: (d.x * 7) % LAMP_GLOW.flickerMs });
     },
     stall: standing(() => TEX.STALL, DEPTH.decor + 1),
+    // Inside the pub. Wall pieces hang at a height above the floor.
+    fireplace: standing(() => TEX.FIREPLACE),
+    picture: (d) => scene.add.image(d.x, d.y - 84, TEX.PICTURE, (prop(d, 'design') ?? 0) % 3).setDepth(DEPTH.decor),
+    dartboard: (d) => scene.add.image(d.x, d.y - 74, TEX.DARTBOARD).setDepth(DEPTH.decor),
+    sconce: (d) => {
+      scene.add.image(d.x, d.y - 70, TEX.SCONCE).setOrigin(0.5, 1).setDepth(DEPTH.decor + 1);
+      if (!theme.lampsLit) return;
+      const glow = scene.add.image(d.x, d.y - 77, TEX.LAMP_GLOW).setDepth(DEPTH.decor + 2).setBlendMode(Phaser.BlendModes.ADD).setAlpha(LAMP_GLOW.alpha);
+      scene.tweens.add({ targets: glow, alpha: LAMP_GLOW.alpha - LAMP_GLOW.flickerAlpha, duration: LAMP_GLOW.flickerMs, yoyo: true, repeat: -1, ease: 'Sine.InOut', delay: (d.x * 7) % LAMP_GLOW.flickerMs });
+    },
+    // A regular at a back table; the angry ones are throwers.
+    local: (d) => scene.add.image(d.x, d.y - 2, TEX.LOCAL, prop(d, 'angry') ? LOCAL_FRAME.angry : LOCAL_FRAME.calm).setOrigin(0.5, 1).setDepth(DEPTH.decor + 1),
+    // The bar counter along the back of the landlord's arena, shelves behind it.
+    bar: (d) => {
+      scene.add.tileSprite(d.x, d.y - 20, d.width, 20, TEX.BAR).setOrigin(0).setDepth(DEPTH.decor + 1);
+      scene.add.tileSprite(d.x, d.y - 76, d.width, 56, TEX.BAR_BACK).setOrigin(0).setDepth(DEPTH.decor);
+    },
     cow: (d) => standing(() => TEX.COW, DEPTH.decor + 1)(d).setFlipX(!!prop(d, 'flip')),
   };
   for (const d of decor) {
@@ -125,6 +147,10 @@ export function loadLevel(scene, levelDef) {
   const finishObj = ofType('finish')[0];
   const spawnObj = ofType('spawn')[0];
   const bossObj = ofType('boss')[0];
+  const fightPoint = (t) => ofType(t).map(point);
+  const hatchObj = ofType('hatch')[0];
+  // The level 7 finish is the flap in the bar, not a pub door.
+  const finishAtBar = !!finishObj && decor.some((d) => typeOf(d) === 'bar-hatch' && Math.floor(d.x / 16) === Math.floor(finishObj.x / 16));
 
   return {
     map,
@@ -136,7 +162,7 @@ export function loadLevel(scene, levelDef) {
     hazards,
     spawn: spawnObj ? point(spawnObj) : { name: 'spawn', x: 32, y: GAME_HEIGHT - 32 },
     checkpoints: ofType('checkpoint').map(point),
-    finish: finishObj ? point(finishObj) : null,
+    finish: finishObj ? { ...point(finishObj), atBar: finishAtBar } : null,
     endZone: endZoneObj ? rectOf(endZoneObj) : null,
     secrets: ofType('secret').map(rectOf),
     boss: bossObj ? { kind: prop(bossObj, 'kind'), tuning: prop(bossObj, 'tuning'), x: bossObj.x, y: bossObj.y } : null,
@@ -147,7 +173,23 @@ export function loadLevel(scene, levelDef) {
       y: o.y,
       floorY: prop(o, 'floorRow') * map.tileHeight + offsetY,
       offsetMs: prop(o, 'offsetMs'),
+      item: prop(o, 'item') ?? 'mat',
     })),
+    dogs: ofType('dog').map((o) => ({ x0: o.x, x1: o.x + o.width, y: o.y })),
+    // Level 8.
+    megaphone: ofType('megaphone').map(point)[0] ?? null,
+    foxes: ofType('fox').map((o) => ({ x0: o.x, x1: o.x + o.width, y: o.y, offsetMs: prop(o, 'offsetMs') ?? 0 })),
+    bins: ofType('bins').map((o) => ({ x: o.x, y: o.y, dir: prop(o, 'dir'), everyMs: prop(o, 'everyMs'), offsetMs: prop(o, 'offsetMs') ?? 0 })),
+    bouncers: ofType('bouncer').map((o) => ({ x: o.x, y: o.y, mode: prop(o, 'mode'), offsetMs: prop(o, 'offsetMs') ?? 0 })),
+    traffic: ofType('traffic').map((o) => ({ x: o.x, y: o.y, width: o.width, offsetMs: prop(o, 'offsetMs') ?? 0 })),
+    closingMs: mapProp(map, 'closingMs') ?? null,
+    // The landlord fight's props (level 7).
+    fight: {
+      pumps: fightPoint('pump'),
+      bell: fightPoint('bell')[0] ?? null,
+      lever: fightPoint('lever')[0] ?? null,
+      hatch: hatchObj ? { x0: hatchObj.x, x1: hatchObj.x + hatchObj.width, y: hatchObj.y } : null,
+    },
     movers: ofType('mover').map((o) => ({
       kind: prop(o, 'kind'),
       x: o.x,
