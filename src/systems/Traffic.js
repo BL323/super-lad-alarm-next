@@ -4,7 +4,7 @@ import { TEX, PED_LIGHT_FRAME, CAR_FRAME } from '../assets.js';
 import { DEPTH } from '../level/LevelLoader.js';
 import Audio from './Audio.js';
 
-// A side road crossing the pavement (level 8), with a pedestrian light on
+// A side road crossing the pavement (level 10), with a pedestrian light on
 // each side. It runs on a loop: green man (TRAFFIC.walkMs) → flashing amber
 // (warnMs) → red man while a car comes out of the side road and across
 // (carMs, deadly) → green man … Each car comes from the other direction to

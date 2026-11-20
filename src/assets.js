@@ -40,7 +40,7 @@ export const TEX = {
   TICKET_MARKER: 'ticket-marker', // where a ticket will land
   DIZZY_STARS: 'dizzy-stars',
   CONFETTI: 'confetti',
-  // Level 7: inside The Avocet.
+  // Level 9: inside The Avocet.
   PUB_WALL: 'pub-wall', // the pub's back wall (wallpaper over oak panelling), tiled along the level
   DOG: 'pub-dog', // two trotting frames, facing right
   LOCAL: 'pub-local', // a regular sat at a back table: calm / angry (throwing)
@@ -54,7 +54,7 @@ export const TEX = {
   DARTBOARD: 'dartboard',
   BAR: 'bar-counter', // one 16 px stretch of the bar counter (tiled along the arena's back)
   BAR_BACK: 'bar-back', // bottles and optics on the shelves behind the bar (tiled)
-  BAR_HATCH: 'bar-hatch', // the flap in the bar: the level 7 finish (closed / open)
+  BAR_HATCH: 'bar-hatch', // the flap in the bar: the level 9 finish (closed / open)
   LANDLORD: 'landlord', // the landlord boss
   PUMP: 'beer-pump', // a beer pump on the bar: full / pulled / dry
   BEER_SPRAY: 'beer-spray', // a fleck of beer from a pump
@@ -62,7 +62,15 @@ export const TEX = {
   BELL: 'last-orders-bell',
   LEVER: 'cellar-lever', // up / pulled
   HATCH: 'cellar-hatch', // the trapdoor in front of the till: shut / open
-  // Level 8: Parkstone to the kebab shop.
+  CHIP: 'chip', // a chip dropped by the giant gull (level 5)
+  // Levels 6–7: the ferry to Brownsea Island, and the island.
+  WAVE: 'wave', // a wave breaking over the ferry's rail (tiled across its width)
+  BUOY: 'buoy', // a bobbing buoy: the harbour's crumbling crate
+  PEACOCK: 'peacock', // Brownsea's peacocks: two strutting frames, facing right
+  SQUIRREL: 'red-squirrel', // two scampering frames, facing right
+  GORSE: 'gorse', // a prickly gorse bush (hazard)
+  PLANK: 'loose-plank', // a loose boardwalk plank: the lagoon's crumbling crate
+  // Level 10: Parkstone to the kebab shop.
   MEGAPHONE: 'megaphone', // the pickup (and what Naylor holds up)
   SHOUT_WAVE: 'shout-wave', // one ring of the sound wave
   FOX: 'fox', // two running frames, facing right
@@ -107,8 +115,11 @@ export const PUBS = {
   'kings-arms': { name: 'KINGS ARMS', wall: 'render', roof: '#3a3a46', chimney: true, angryLocals: true }, // Wareham scenery only
   'rising-sun': { name: 'THE RISING SUN', wall: '#f2c46b', roof: '#5f574f', chimney: true, sun: true }, // Poole, by the quay
   avocet: { name: 'THE AVOCET', wall: 'render', roof: '#29366f', angryLocals: true },
-  // Level 8's finish: not a pub, but the door works the same. `kebab` draws a doner in the window.
+  // Level 10's finish: not a pub, but the door works the same. `kebab` draws a doner in the window.
   'kebab-shop': { name: 'PARKSTONE KEBABS', wall: '#e43b44', roof: '#1a1c2c', kebab: true },
+  // Brownsea Island (levels 6–7). Not pubs either: the quay's visitor centre, and the castle's gate (`castle`).
+  'brownsea-quay': { name: 'BROWNSEA QUAY', wall: '#f4e4c1', roof: '#1f6b3a' },
+  'brownsea-castle': { name: 'BROWNSEA CASTLE', wall: 'stone', roof: '#5f574f', castle: true },
 };
 
 // Playable characters, in select-screen order (left to right): all Naylor (red hair, same skin tone) in different
@@ -249,7 +260,7 @@ export const TILESET = {
     jetty: 24, // wooden jetty deck on posts (Wareham quay)
     pile: 25, // jetty posts standing in the river, below the deck
     waterHigh: 26, // river surface just below the bank (background): boats sit in it
-    // Level 7: inside The Avocet.
+    // Level 9: inside The Avocet.
     floorboards: 27, // the pub floor (surface)
     cellar: 28, // under the floor
     tableTop: 29, // a pub table (a floating ledge you can walk under)
@@ -260,8 +271,16 @@ export const TILESET = {
     beam: 34, // an oak ceiling beam: a ceiling only, like a low bridge's girder
     cellarHole: 35, // an open cellar hatch in the floor (background): falling in is a death
     shelf: 36, // a high shelf on the wall (a floating ledge)
+    // Levels 6–7: the ferry, and Brownsea's woods.
+    deck: 37, // the ferry's deck (surface)
+    hull: 38, // the ferry's hull, below the deck
+    cabinRoof: 39, // the wheelhouse roof (a floating ledge)
+    cabinWall: 40, // the wheelhouse, under its roof (background)
+    trunk: 41, // a pine trunk (background)
+    branch: 42, // a pine branch (a floating ledge)
+    hullWater: 43, // the ferry's hull at the waterline, the harbour lapping at it
   },
-  count: 37,
+  count: 44,
 };
 
 export const CROSSING_LIGHTS_FRAME = { width: 16, height: 40, off: 0, left: 1, right: 2 };
@@ -276,5 +295,7 @@ export const ANIM = {
   DOG_TROT: 'dog-trot',
   LANDLORD_WALK: 'landlord-walk',
   FOX_RUN: 'fox-run',
+  PEACOCK_STRUT: 'peacock-strut',
+  SQUIRREL_RUN: 'squirrel-run',
   BIN_ROLL: 'bin-roll',
 };

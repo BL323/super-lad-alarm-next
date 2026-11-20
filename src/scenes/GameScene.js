@@ -18,12 +18,14 @@ import AutoScroll from '../systems/AutoScroll.js';
 import { addWeather } from '../systems/Weather.js';
 import BossArena from '../systems/BossArena.js';
 import LandlordArena from '../systems/LandlordArena.js';
+import GullArena from '../systems/GullArena.js';
 import Dogs from '../systems/Dogs.js';
 import Megaphone from '../systems/Megaphone.js';
 import Foxes from '../systems/Foxes.js';
 import Bins from '../systems/Bins.js';
 import Bouncers from '../systems/Bouncers.js';
 import Traffic from '../systems/Traffic.js';
+import Waves from '../systems/Waves.js';
 import { celebrate } from '../systems/Celebration.js';
 import SpeechBubble from '../ui/SpeechBubble.js';
 import Player from '../entities/Player.js';
@@ -59,11 +61,12 @@ export default class GameScene extends Phaser.Scene {
     this.swans = this.level.swans.length ? new Swans(this, this.level.swans, this.player) : null;
     this.gulls = this.level.gulls.length ? new Gulls(this, this.level.gulls, this.player) : null;
     this.dogs = this.level.dogs.length ? new Dogs(this, this.level.dogs, this.player) : null;
-    // Level 8: the streets to the kebab shop, and the megaphone.
+    // Level 10: the streets to the kebab shop, and the megaphone.
     this.foxes = this.level.foxes.length ? new Foxes(this, this.level.foxes, this.player) : null;
     this.bins = this.level.bins.length ? new Bins(this, this.level.bins, this.player, this.level.layers.ground) : null;
     this.bouncers = this.level.bouncers.length ? new Bouncers(this, this.level.bouncers, this.player) : null;
     this.traffic = this.level.traffic.map((def) => new Traffic(this, def, this.player));
+    this.waves = this.level.waves.map((def) => new Waves(this, def, this.player));
     this.megaphone = this.level.megaphone
       ? new Megaphone(this, this.level.megaphone, this.player, this.controls, [this.foxes, this.bins, this.bouncers])
       : null;
@@ -88,7 +91,7 @@ export default class GameScene extends Phaser.Scene {
       this.physics.add.overlap(this.player, trigger, () => this.completeLevel());
     }
 
-    // Closing time (level 8): the shop's shutters come down at `closingMs`.
+    // Closing time (level 10): the shop's shutters come down at `closingMs`.
     this.gameState.closingMs = this.level.closingMs;
     this.closingWarned = false;
     this.shutters = null;
@@ -102,7 +105,8 @@ export default class GameScene extends Phaser.Scene {
     // end zone and holds the finish.
     this.arena = null;
     if (this.level.boss && this.level.endZone) {
-      const Arena = this.level.boss.kind === 'landlord' ? LandlordArena : BossArena;
+      const ARENAS = { landlord: LandlordArena, gull: GullArena };
+      const Arena = ARENAS[this.level.boss.kind] ?? BossArena;
       this.arena = new Arena(this, {
         zone: this.level.endZone,
         boss: this.level.boss,
@@ -151,7 +155,9 @@ export default class GameScene extends Phaser.Scene {
     this.autoScroll?.update(delta);
 
     // While the boss fight runs or the train pulls out, the train is moving: the hills race past.
+    // Out on the water (the ferry to Brownsea), the coast drifts by all the time.
     if (this.arena?.isActive || this.autoScroll?.isActive) this.trainTravel += delta * PARALLAX.trainSpeed;
+    else if (this.level.theme.sailing) this.trainTravel += delta * PARALLAX.trainSpeed * 0.3;
     this.level.hills.tilePositionX = this.cameras.main.scrollX * PARALLAX.hillsFactor + this.trainTravel;
     this.updateSecrets();
     this.updateClosing();
@@ -200,7 +206,7 @@ export default class GameScene extends Phaser.Scene {
     const s = this.gameState;
     if (s.completed || this.finishLocked || this.player.dead) return;
     s.completed = true; // stops the clock
-    // Closing time (level 8): in before it and the time comes off; after, it costs you.
+    // Closing time (level 10): in before it and the time comes off; after, it costs you.
     if (s.closingMs) {
       if (s.elapsedMs <= s.closingMs) s.closingBonusMs = CLOSING.earlyBonusMs;
       else s.lateMs = CLOSING.lateMs;
@@ -225,7 +231,7 @@ export default class GameScene extends Phaser.Scene {
     this.time.delayedCall(FINISH_DELAY_MS, () => this.scene.start(SCENE.COMPLETE, result));
   }
 
-  /** Level 8: warn as closing time nears, and bring the shutters down when it comes. */
+  /** Level 10: warn as closing time nears, and bring the shutters down when it comes. */
   updateClosing() {
     const closing = this.gameState.closingMs;
     if (!closing || this.gameState.completed) return;

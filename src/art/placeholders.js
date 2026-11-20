@@ -657,7 +657,56 @@ function makeTiles(scene) {
         rect(ctx, '#5f574f', 1, 4, 14, 2); // sleeper below
         rect(ctx, '#ffec27', 0, 12, w, 1); // yellow box marking
         break;
-      // --- Level 7: inside The Avocet ---
+      // --- Levels 6–7: the ferry, and Brownsea's woods ---
+      case t.deck:
+        // Scrubbed deck planks with a white rail post at each end.
+        rect(ctx, '#c49a6c', 0, 0, w, 4);
+        rect(ctx, '#e0b888', 0, 0, w, 1);
+        rect(ctx, '#8f6a40', 0, 4, w, 1);
+        rect(ctx, C.white, 0, 5, w, 3); // gunwale
+        rect(ctx, '#29366f', 0, 8, w, 8); // hull
+        rect(ctx, C.white, 0, 11, w, 1);
+        break;
+      case t.hull:
+        rect(ctx, '#29366f', 0, 0, w, h);
+        rect(ctx, '#3b4a8a', 0, 0, w, 1);
+        px(ctx, '#c2c3c7', 4, 7); // portholes
+        px(ctx, '#c2c3c7', 12, 7);
+        break;
+      case t.hullWater:
+        rect(ctx, '#29366f', 0, 0, w, 6);
+        rect(ctx, C.red, 0, 4, w, 2); // antifouling at the waterline
+        rect(ctx, C.water, 0, 6, w, 10);
+        rect(ctx, C.waterLight, 2, 6, 5, 1);
+        rect(ctx, C.waterLight, 10, 8, 4, 1);
+        rect(ctx, C.waterDark, 0, 12, w, 4);
+        break;
+      case t.cabinRoof:
+        rect(ctx, C.white, 0, 0, w, 5);
+        rect(ctx, C.grey, 0, 4, w, 1);
+        rect(ctx, '#83769c', 0, 5, w, 2);
+        break;
+      case t.cabinWall:
+        rect(ctx, C.white, 0, 0, w, h);
+        rect(ctx, '#a0e4ff', 3, 3, 10, 7); // window
+        rect(ctx, '#5b6ee1', 4, 4, 8, 5);
+        rect(ctx, C.grey, 0, h - 1, w, 1);
+        break;
+      case t.trunk:
+        rect(ctx, '#6b4226', 5, 0, 6, h);
+        rect(ctx, '#8f563b', 6, 0, 2, h);
+        rect(ctx, '#4a2e16', 9, 3, 1, 4);
+        rect(ctx, '#4a2e16', 6, 10, 1, 3);
+        break;
+      case t.branch:
+        // A pine bough: dark needles over a branch.
+        rect(ctx, '#2b5a34', 0, 0, w, 5);
+        rect(ctx, '#3f7f48', 0, 0, w, 2);
+        rect(ctx, '#1e4a27', 2, 4, 3, 2);
+        rect(ctx, '#1e4a27', 10, 4, 4, 2);
+        rect(ctx, '#6b4226', 0, 6, w, 2);
+        break;
+      // --- Level 9: inside The Avocet ---
       case t.floorboards:
         // Worn oak boards, seen side-on: the top edge you walk on, plank ends below.
         rect(ctx, '#6b4226', 0, 0, w, h);
@@ -776,6 +825,7 @@ function makeEasel(scene) {
 function makePub(scene, id, def) {
   const W = 96;
   const H = 80;
+  if (def.castle) return makeCastleGate(scene, id, def, W, H);
   makeImage(scene, pubTextureKey(id), W, H, (ctx) => {
     // Chimney and roof
     if (def.chimney) bricks(ctx, 72, 0, 8, 14);
@@ -1536,7 +1586,7 @@ export function ensureSignTexture(scene, text) {
 }
 
 
-// --- Level 7: inside The Avocet -------------------------------------------
+// --- Level 9: inside The Avocet -------------------------------------------
 
 // The pub's back wall, 64×180, tiled along the level at world scroll: a dark
 // beam at the ceiling, red flock wallpaper, a dado rail, oak panelling, and the
@@ -1959,7 +2009,16 @@ function makeHatch(scene) {
 }
 
 
-// --- Level 8: Parkstone to the kebab shop -----------------------------------
+// A chip, 6×3, dropped by the giant gull.
+function makeChip(scene) {
+  makeImage(scene, TEX.CHIP, 6, 3, (ctx) => {
+    rect(ctx, '#ffcd75', 0, 0, 6, 3);
+    rect(ctx, '#ffa300', 0, 2, 6, 1);
+    px(ctx, '#fff4b0', 1, 0);
+  });
+}
+
+// --- Level 10: Parkstone to the kebab shop -----------------------------------
 
 // The megaphone, 12×9: a white cone with a red band and a handle.
 function makeMegaphone(scene) {
@@ -2088,6 +2147,119 @@ function makeShutter(scene) {
   });
 }
 
+
+// --- Levels 6–7: the ferry to Brownsea, and the island ---------------------
+
+// Brownsea Castle's gatehouse, 96×80 like a pub front: grey stone,
+// battlements, two turrets, the name over an arched gate (the finish door
+// sits in the gate at x 41, y 54, 14×26).
+function makeCastleGate(scene, id, def, W, H) {
+  makeImage(scene, pubTextureKey(id), W, H, (ctx) => {
+    const stone = '#9e9ea6';
+    const dark = '#7a7a82';
+    rect(ctx, stone, 6, 14, W - 12, H - 14);
+    for (let y = 18; y < H; y += 6) for (let x = 6 + ((y / 6) % 2) * 4; x < W - 6; x += 8) rect(ctx, dark, x, y, 1, 5);
+    for (let y = 18; y < H; y += 6) rect(ctx, dark, 6, y, W - 12, 1);
+    // Battlements and turrets.
+    for (let x = 6; x < W - 6; x += 8) rect(ctx, stone, x, 8, 5, 6);
+    rect(ctx, stone, 0, 4, 14, H - 4);
+    rect(ctx, stone, W - 14, 4, 14, H - 4);
+    for (const x of [0, 5, 10, W - 14, W - 9, W - 4]) rect(ctx, stone, x, 0, 4, 4);
+    rect(ctx, C.ink, 5, 20, 3, 8); // arrow slits
+    rect(ctx, C.ink, W - 8, 20, 3, 8);
+    // Name board.
+    rect(ctx, C.greenDark, 18, 40, W - 36, 10);
+    rect(ctx, C.gold, 18, 40, W - 36, 1);
+    rect(ctx, C.gold, 18, 49, W - 36, 1);
+    const tw = measurePixelText(def.name);
+    drawPixelText(ctx, def.name, Math.round((W - tw) / 2), 43, C.gold);
+    // The arched gate.
+    rect(ctx, C.ink, 39, 52, 18, H - 52);
+    rect(ctx, C.ink, 41, 50, 14, 2);
+    rect(ctx, C.woodDark, 41, 54, 14, H - 54);
+    rect(ctx, '#3a3a46', 41, 60, 14, 1);
+    rect(ctx, '#3a3a46', 41, 68, 14, 1);
+  });
+}
+
+// A wave breaking over the rail, 16×28: spray at the top, green water below.
+function makeWave(scene) {
+  makeImage(scene, TEX.WAVE, 16, 28, (ctx) => {
+    rect(ctx, '#29adff', 0, 6, 16, 22);
+    rect(ctx, '#1e6fbf', 0, 16, 16, 12);
+    rect(ctx, '#a0e4ff', 0, 4, 16, 3);
+    for (const x of [1, 5, 9, 13]) rect(ctx, C.white, x, 0 + (x % 3), 2, 5);
+    rect(ctx, C.white, 3, 10, 3, 1);
+    rect(ctx, C.white, 10, 13, 4, 1);
+  });
+}
+
+// A harbour buoy, 16×16: red and white, bobbing (the harbour's crumbling crate).
+function makeBuoy(scene) {
+  makeImage(scene, TEX.BUOY, 16, 16, (ctx) => {
+    rect(ctx, C.red, 2, 0, 12, 5);
+    rect(ctx, C.white, 2, 5, 12, 4);
+    rect(ctx, C.red, 2, 9, 12, 4);
+    rect(ctx, '#be3a34', 2, 0, 12, 1);
+    rect(ctx, C.ink, 7, 13, 2, 3);
+  });
+}
+
+// A loose boardwalk plank, 16×16 (the lagoon's crumbling crate).
+function makePlank(scene) {
+  makeImage(scene, TEX.PLANK, 16, 16, (ctx) => {
+    rect(ctx, '#8f563b', 0, 0, 16, 4);
+    rect(ctx, '#b07850', 0, 0, 16, 1);
+    rect(ctx, '#5d3a1a', 0, 4, 16, 1);
+    rect(ctx, '#5d3a1a', 3, 5, 2, 11); // one leg missing
+    px(ctx, C.ink, 9, 2); // crack
+    px(ctx, C.ink, 10, 1);
+  });
+}
+
+// A peacock, 16×16, two strutting frames facing right: tail trailing, crest up.
+function makePeacock(scene) {
+  makeSheet(scene, TEX.PEACOCK, 16, 16, 2, (ctx, i) => {
+    rect(ctx, '#1f6b3a', 0, 9, 7, 3); // tail
+    rect(ctx, '#3fa34d', 0, 9, 7, 1);
+    for (const x of [1, 4]) px(ctx, C.gold, x, 10);
+    rect(ctx, '#3b5dc9', 6, 7, 6, 5); // body
+    rect(ctx, '#3b5dc9', 11, 2, 2, 6); // neck
+    rect(ctx, '#3b5dc9', 11, 1, 3, 3); // head
+    px(ctx, C.white, 13, 2);
+    px(ctx, C.ink, 12, 2);
+    rect(ctx, C.gold, 14, 2, 2, 1); // beak
+    for (const x of [11, 12, 13]) px(ctx, '#5b6ee1', x, 0); // crest
+    rect(ctx, '#5f574f', i ? 7 : 8, 12, 1, 4); // legs
+    rect(ctx, '#5f574f', i ? 10 : 9, 12, 1, 4);
+  });
+}
+
+// A red squirrel, 12×10, two scampering frames facing right, bushy tail up.
+function makeSquirrel(scene) {
+  makeSheet(scene, TEX.SQUIRREL, 12, 10, 2, (ctx, i) => {
+    rect(ctx, '#be3a34', 0, 0 + i, 3, 6); // tail
+    rect(ctx, '#e07028', 1, 1 + i, 1, 4);
+    rect(ctx, '#be3a34', 3, 4, 6, 4); // body
+    rect(ctx, '#be3a34', 8, 2, 3, 3); // head
+    px(ctx, '#be3a34', 9, 1); // ear tuft
+    px(ctx, C.ink, 10, 3);
+    rect(ctx, C.cream, 5, 7, 3, 1);
+    rect(ctx, '#743626', i ? 4 : 3, 8, 1, 2);
+    rect(ctx, '#743626', i ? 7 : 8, 8, 1, 2);
+  });
+}
+
+// A gorse bush, 16×10: spiky green with yellow flowers (a hazard).
+function makeGorse(scene) {
+  makeImage(scene, TEX.GORSE, 16, 10, (ctx) => {
+    rect(ctx, '#2b5a34', 1, 3, 14, 7);
+    rect(ctx, '#3f7f48', 3, 1, 10, 3);
+    for (const [x, y] of [[2, 4], [6, 2], [10, 3], [13, 5], [4, 7], [9, 6]]) rect(ctx, C.yellow, x, y, 2, 1);
+    for (const x of [0, 4, 8, 12, 15]) px(ctx, '#1e4a27', x, 2 + (x % 3));
+  });
+}
+
 const BUILDERS = {
   [TEX.PINT]: makePint,
   [TEX.ESPRESSO]: makeEspresso,
@@ -2144,6 +2316,13 @@ const BUILDERS = {
   [TEX.BELL]: makeBell,
   [TEX.LEVER]: makeLever,
   [TEX.HATCH]: makeHatch,
+  [TEX.CHIP]: makeChip,
+  [TEX.WAVE]: makeWave,
+  [TEX.BUOY]: makeBuoy,
+  [TEX.PLANK]: makePlank,
+  [TEX.PEACOCK]: makePeacock,
+  [TEX.SQUIRREL]: makeSquirrel,
+  [TEX.GORSE]: makeGorse,
   [TEX.MEGAPHONE]: makeMegaphone,
   [TEX.SHOUT_WAVE]: makeShoutWave,
   [TEX.FOX]: makeFox,

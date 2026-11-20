@@ -4,7 +4,7 @@ import { TEX, BOUNCER_FRAME } from '../assets.js';
 import { DEPTH } from '../level/LevelLoader.js';
 import Audio from './Audio.js';
 
-// Bouncers outside Parkstone's clubs (level 8). Out on the pavement a bouncer
+// Bouncers outside Parkstone's clubs (level 10). Out on the pavement a bouncer
 // is a solid wall too tall to jump (BOUNCERS.height); stepped back into his
 // doorway he lets you by. A `cycle` bouncer steps out for `outMs` and back in
 // for `inMs`, so you time your run. A `stand` bouncer never moves: only a

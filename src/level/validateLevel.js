@@ -18,7 +18,7 @@
 // auto-scroll are checked against the run speed.
 
 import { TILESET } from '../assets.js';
-import { PLAYER, PHYSICS, CROSSING, THROWERS, MOVERS, GULLS, AWNINGS, AUTOSCROLL, DOGS, FOXES, BOUNCERS, TRAFFIC } from '../config.js';
+import { PLAYER, PHYSICS, CROSSING, THROWERS, MOVERS, GULLS, AWNINGS, AUTOSCROLL, DOGS, FOXES, BOUNCERS, TRAFFIC, GULL_BOSS, WAVES } from '../config.js';
 
 export const LEVEL_RULES = {
   maxGapTiles: 3, // 48 px
@@ -34,7 +34,7 @@ export const LEVEL_RULES = {
     bodyHeight: PLAYER.body.height,
     margin: 2 / 3,
   },
-  bossTunings: ['first', 'final', 'landlord'], // keys of BOSS in config.js, or 'landlord' (LANDLORD)
+  bossTunings: ['first', 'final', 'landlord', 'gull'], // keys of BOSS in config.js, 'landlord' (LANDLORD) or 'gull' (GULL_BOSS)
   layer: 'ground',
   objectLayer: 'objects',
 };
@@ -320,10 +320,12 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
   for (const o of [...spawns, ...checkpoints, ...finishes, ...bosses]) {
     const c = colOf(o.x);
     if (surface[c] === null) errors.push(`${o.type} "${o.name}" at col ${c} is over a gap`);
+    // Standing on the surface, not inside the ground below it (you'd respawn in a wall).
+    else if (o.type !== 'boss' && Math.round(o.y / tw) !== surface[c]) errors.push(`${o.type} "${o.name}" at col ${c} is at row ${Math.round(o.y / tw)}, not on the surface (row ${surface[c]})`);
   }
 
   // Hazards: every surface hazard (glass, bucket) needs a safe tile at the same height either side.
-  const SURFACE_HAZARDS = ['glass', 'bucket', 'kebab', 'cowpat'];
+  const SURFACE_HAZARDS = ['glass', 'bucket', 'kebab', 'cowpat', 'gorse'];
   const glassCols = new Set();
   for (const h of ofType('hazard').filter((h) => SURFACE_HAZARDS.includes(prop(h, 'kind')))) {
     for (let c = colOf(h.x); c <= colOf(h.x + h.width - 1); c++) glassCols.add(c);
@@ -335,6 +337,13 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
       if (surface[n] !== s) errors.push(`hazard at col ${c} has no safe landing tile at col ${n}`);
     }
     if (glassCols.has(c - 1) && glassCols.has(c + 1)) errors.push(`hazard at col ${c} is part of a run longer than 2`);
+    // Nothing low overhead where you'd jump it: a branch, ledge or bridge within
+    // a full jump's reach (4 tiles) cuts the jump short and drops you on it.
+    for (let k = c - 2; k <= c + 1; k++) {
+      for (let r = s - 4; r < s; r++) {
+        if (r >= 0 && ground.data[r * cols + k]) errors.push(`hazard at col ${c}: something solid at col ${k} row ${r} is low over where you'd jump it`);
+      }
+    }
   }
 
   // Level crossings: flat road with a safe tile to wait on before the barrier,
@@ -393,6 +402,20 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     }
   }
 
+  // Anything you have to jump (swans, peacocks, dogs, squirrels, foxes) needs
+  // clear air over its patrol: something solid within a full jump's reach (4
+  // tiles) cuts the jump short and drops you on it.
+  for (const o of [...ofType('swan'), ...ofType('dog'), ...ofType('fox')]) {
+    const c0 = colOf(o.x);
+    const c1 = colOf(o.x + o.width - 1);
+    const s0 = prop(o, 'surfaceRow');
+    for (let k = c0 - 1; k <= c1 + 1; k++) {
+      for (let r = s0 - 4; r < s0; r++) {
+        if (r >= 0 && ground.data[r * cols + k]) errors.push(`${o.name} at cols ${c0}–${c1}: something solid at col ${k} row ${r} is low over where you'd jump it`);
+      }
+    }
+  }
+
   // Pub dogs: like swans (flat floor with room either side, nowhere near
   // where you (re)start or finish), but they can be stomped.
   const dogs = ofType('dog');
@@ -410,7 +433,7 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     }
   }
 
-  // Level 8. Foxes: like dogs, on flat pavement away from (re)starts.
+  // Level 10. Foxes: like dogs, on flat pavement away from (re)starts.
   for (const f of ofType('fox')) {
     const c0 = colOf(f.x);
     const c1 = colOf(f.x + f.width - 1);
@@ -473,6 +496,37 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     if (TRAFFIC.walkMs < need) errors.push(`traffic at cols ${c0}–${c1}: the green man shows for ${TRAFFIC.walkMs} ms; crossing needs ${Math.round(need)} ms with margin`);
   }
 
+  // Waves over the ferry's rail: flat deck with room either side, nowhere you
+  // (re)start on it, and calm long enough to run across.
+  for (const w of ofType('wave')) {
+    const c0 = colOf(w.x);
+    const c1 = colOf(w.x + w.width - 1);
+    const s0 = surface[c0];
+    for (let c = c0 - 1; c <= c1 + 1; c++) if (surface[c] !== s0) errors.push(`wave at cols ${c0}–${c1}: col ${c} is not flat deck`);
+    for (const o of [...spawns, ...checkpoints, ...finishes]) {
+      const c = colOf(o.x);
+      if (c >= c0 - 1 && c <= c1 + 1) errors.push(`${o.type} "${o.name}" is where a wave breaks at col ${c}`);
+    }
+    const need = (((w.width + 3 * tw) / J.runSpeed) * 1000) * WAVES.crossMargin;
+    if (WAVES.calmMs < need) errors.push(`wave at cols ${c0}–${c1}: calm for ${WAVES.calmMs} ms; crossing needs ${Math.round(need)} ms with margin`);
+  }
+
+  // The giant gull: out of a jump's reach, within an awning bounce's, with at
+  // least two awnings in the arena to bounce from.
+  const gullBoss = bosses.find((b) => prop(b, 'kind') === 'gull');
+  if (gullBoss && endZone) {
+    const inZone = awnings.filter((a) => a.c0 * tw >= endZone.x && (a.c1 + 1) * tw <= endZone.x + endZone.width);
+    if (inZone.length < 2) errors.push(`the gull fight needs at least 2 awnings in its arena, found ${inZone.length}`);
+    const half = GULL_BOSS.hitBox.height / 2;
+    const jumpReach = apex + J.bodyHeight;
+    if (GULL_BOSS.hoverPx - GULL_BOSS.bobPx - half <= jumpReach) errors.push(`the gull hovers within a jump's reach (${GULL_BOSS.hoverPx} px, reach ${Math.round(jumpReach)})`);
+    const floorRow = surface[colOf(gullBoss.x)];
+    for (const a of inZone) {
+      const bounceTop = (floorRow - a.row) * tw + bounceRise * J.margin + J.bodyHeight; // with the usual margin
+      if (GULL_BOSS.hoverPx + GULL_BOSS.bobPx + half > bounceTop + half * 2) errors.push(`the gull hovers out of reach of the awning at cols ${a.c0}–${a.c1}`);
+    }
+  }
+
   // The landlord fight: its props inside the arena; at least two pumps (two
   // phases need a fresh one each); the bell and lever where a jump from the
   // floor reaches them but walking doesn't.
@@ -529,7 +583,7 @@ export function validateLevel(map, rules = LEVEL_RULES, knownCollectibleTypes = 
     const c1 = colOf(a.x + a.width - 1);
     const inside = (o) => colOf(o.x) >= c0 && colOf(o.x) <= c1;
     const inRange = (o) => colOf(o.x + (o.width || 0) - 1) >= c0 && colOf(o.x) <= c1;
-    for (const t of ['mover', 'crossing', 'swan', 'gull', 'thrower', 'boss', 'dog', 'fox', 'bins', 'bouncer', 'traffic']) {
+    for (const t of ['mover', 'crossing', 'swan', 'gull', 'thrower', 'boss', 'dog', 'fox', 'bins', 'bouncer', 'traffic', 'wave']) {
       for (const o of ofType(t).filter(inRange)) errors.push(`${t} at col ${colOf(o.x)} is inside the auto-scroll at cols ${c0}–${c1}`);
     }
     for (const o of [...spawns, ...checkpoints, ...finishes].filter(inside)) {

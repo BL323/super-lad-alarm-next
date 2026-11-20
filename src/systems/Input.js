@@ -8,7 +8,7 @@ const { KeyCodes } = Phaser.Input.Keyboard;
 //   state.left / state.right   direction held
 //   state.jumpHeld             jump held (for variable jump height)
 //   state.jumpPressed          jump went down since the last update (one frame)
-//   state.shoutPressed         shout (the megaphone, level 8) went down since the last update
+//   state.shoutPressed         shout (the megaphone, level 10) went down since the last update
 //
 // Touch: the on-screen buttons register hit zones (game-pixel rectangles) with
 // setTouchZones(). Every active pointer is tested against them each frame, so

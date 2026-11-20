@@ -3,7 +3,7 @@ import { GAME_HEIGHT, TOUCH } from '../config.js';
 import { safeAreaInGame, cssPerGamePixel } from './safeArea.js';
 
 // On-screen buttons: left and right together at bottom left, jump at bottom
-// right, and (once Naylor has the megaphone, level 8) shout above jump. They
+// right, and (once Naylor has the megaphone, level 10) shout above jump. They
 // only draw and report hit zones; VirtualInput does the reading.
 export default class TouchControls {
   constructor(scene, controls) {

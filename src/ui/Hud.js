@@ -24,7 +24,7 @@ export default class Hud {
 
     this.bossBar = new BossBar(scene, gameScene, (text) => this.showToast(text));
 
-    // Level 8: time left before the kebab shop shuts, and the megaphone's charge.
+    // Level 10: time left before the kebab shop shuts, and the megaphone's charge.
     this.gameScene = gameScene;
     this.closing = addPixelText(scene, 0, 0, '', { scale: 1, tint: 0xffcd75 }).setOrigin(1, 0).setVisible(!!gameState.closingMs);
     this.megaIcon = scene.add.image(0, 0, TEX.MEGAPHONE).setOrigin(0, 0.5).setVisible(false);

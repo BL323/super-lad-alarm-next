@@ -136,7 +136,7 @@ export const BOSS = {
     dashSpeed: [160, 190, 220, 230], // px/s; he's dizzy after hitting the arena edge
     dizzyMs: 1500, // stomp window
   },
-  // Level 6: the harder rematch. Six stomps; every phase starts where the
+  // Level 8: the harder rematch. Six stomps; every phase starts where the
   // first fight ended and climbs. In the later phases he sometimes dashes
   // straight back after hitting a wall (`doubleDashChance`), with a short
   // flashing turn (`turnMs`) first, so hiding in the far corner isn't safe.
@@ -160,7 +160,38 @@ export const BOSS = {
 };
 export const DEFAULT_BOSS_TUNING = 'first';
 
-// The landlord of The Avocet (level 7, src/systems/LandlordArena.js and
+// The giant herring gull over Poole Quay (level 5, src/systems/GullArena.js
+// and src/entities/GullBoss.js). It hovers `hoverPx` above the quay, out of
+// any jump's reach but not an awning's bounce: bounce off an awning up into
+// it while it hovers (or climbs back up) and that's a hit. It drifts to and
+// fro dropping stolen chips (they land on a floor marker), and every
+// `hoverMs` it squawks (`windupMs`) and dive-bombs where you're standing:
+// deadly all the way down and back up. Arrays are per phase, as for BOSS.
+export const GULL_BOSS = {
+  name: 'HERRING GULL',
+  introText: 'SQUAWK!',
+  beatenText: 'GULL GONE!',
+  hint: 'BOUNCE OFF AN AWNING INTO IT!',
+  hits: 3,
+  introMs: 1200,
+  scale: 3, // drawn three times the size of the quay's gulls
+  hoverPx: 100, // above the quay: a jump reaches 63, an awning bounce 143
+  bobPx: 6,
+  driftSpeed: [36, 46, 56], // px/s
+  hoverMs: [2600, 2200, 1800],
+  chipsEveryMs: [1500, 1200, 1000],
+  chipsPerDrop: [1, 2, 3],
+  chipSpread: 26,
+  chipFlightMs: 950,
+  windupMs: [700, 600, 500],
+  diveMs: [1300, 1150, 1000], // down to the quay and back up
+  diveLowPx: 12, // its body's centre at the bottom of the dive, above the quay
+  hurtMs: 900,
+  hitBox: { width: 30, height: 18 },
+  exitMs: 1200,
+};
+
+// The landlord of The Avocet (level 9, src/systems/LandlordArena.js and
 // src/entities/Landlord.js). He can't be stomped: each phase is beaten a
 // different way. Phases 1–2: land on a beer pump (a one-way handle on the bar)
 // while he's within `pumpSprayRange` px of it and it soaks him; a pump runs
@@ -199,12 +230,12 @@ export const LANDLORD = {
   body: { width: 12, height: 28, offsetX: 2, offsetY: 4 },
 };
 
-// Pub dogs (level 7, src/systems/Dogs.js): each trots up and down its stretch
+// Pub dogs (level 9, src/systems/Dogs.js): each trots up and down its stretch
 // of floor at `speed`, and runs at `chaseSpeed` towards a player on the floor
 // within `chaseRange` px. Touching one from the side is a death; land on it
 // and it yelps and runs off (back when you respawn). The validator keeps their
 // patrol on flat floor with `clearTiles` either side and away from (re)starts.
-// Level 8: Parkstone to the kebab shop.
+// Level 10: Parkstone to the kebab shop.
 //
 // The megaphone (src/systems/Megaphone.js): pick it up and the shout button
 // (X, or the touch button above jump) sends a sound wave `rangePx` ahead of
@@ -232,6 +263,15 @@ export const TRAFFIC = { walkMs: 2400, warnMs: 1000, carMs: 1200, crossMargin: 2
 // clock) and the time comes off; after, the shutters are down and it costs
 // you `lateMs` (you still get your kebab).
 export const CLOSING = { earlyBonusMs: 5000, lateMs: 10000, warnAtMs: 15000 };
+
+// Waves breaking over the ferry's rail (level 6, src/systems/Waves.js):
+// calm (`calmMs`), spray building (`warnMs`), then a wave sweeps the deck
+// (`waveMs`, deadly). The validator checks the calm is long enough to cross.
+export const WAVES = { calmMs: 2600, warnMs: 900, waveMs: 900, crossMargin: 2, heightPx: 26 };
+// Brownsea's peacocks strut like the swans (deadly, can't be stomped); its red
+// squirrels scamper like the pub dogs (stomp them). Speeds here.
+export const PEACOCKS = { speed: 18 };
+export const SQUIRRELS = { speed: 40, chaseSpeed: 80 };
 
 export const DOGS = { speed: 28, chaseSpeed: 64, chaseRange: 56, stompBounce: -220, stepMs: 160, clearTiles: 1 };
 
@@ -379,9 +419,14 @@ export const THEMES = {
   afternoon: { sky: '#9cd6ff', hillsTint: 0xfff4dc }, // level 3: a warmer mid-afternoon
   golden: { sky: '#f7d58e', hillsTint: 0xffdc96 }, // level 4: golden late afternoon at Wareham
   stormy: { sky: '#8a90ad', hillsTint: 0xa4abc4 }, // level 5: a rainy dusk on the way back to Poole
-  // Level 6: night at Parkstone. `lampsLit` puts a warm glow round every street lamp.
+  // Level 8: night at Parkstone. `lampsLit` puts a warm glow round every street lamp.
   night: { sky: '#2b3166', hillsTint: 0x5a6196, lampsLit: true },
-  // Level 7: inside The Avocet. `interior` swaps the sky and hills for the
+  // Level 6: the ferry to Brownsea at sunset. `sailing` keeps the hills
+  // drifting by; the harbour's crumbling crates are buoys.
+  sunset: { sky: '#f7a86b', hillsTint: 0xd08a7a, sailing: true, crumble: 'buoy' },
+  // Level 7: Brownsea Island at dusk; the lagoon's crumbling crates are loose planks.
+  island: { sky: '#b48ec4', hillsTint: 0x8a9a7a, crumble: 'plank' },
+  // Level 9: inside The Avocet. `interior` swaps the sky and hills for the
   // pub's back wall (wallpaper over oak panelling); wall lights glow.
   pub: { sky: '#3a1f24', hillsTint: 0xffffff, interior: true, lampsLit: true, crumble: 'stool' },
 };

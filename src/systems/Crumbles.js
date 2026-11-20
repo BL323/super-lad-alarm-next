@@ -21,7 +21,7 @@ export default class Crumbles {
     this.player = player;
     this.group = scene.physics.add.staticGroup();
     // A cracked crate outdoors; inside the pub (theme `crumble: 'stool'`), a wobbly bar stool.
-    const texture = scene.level?.theme?.crumble === 'stool' ? TEX.STOOL : TEX.CRUMBLE;
+    const texture = { stool: TEX.STOOL, buoy: TEX.BUOY, plank: TEX.PLANK }[scene.level?.theme?.crumble] ?? TEX.CRUMBLE;
     this.items = defs.map((d) => {
       const img = this.group.create(d.x + 8, d.y + 8, texture).setDepth(DEPTH.ground);
       img.home = { x: img.x, y: img.y };

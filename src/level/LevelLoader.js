@@ -21,6 +21,7 @@ export const HAZARD_SPRITES = {
   bucket: { texture: TEX.BUCKET, body: [10, 8, 3, 8] }, // fried-chicken bucket outside The Black Bear
   kebab: { texture: TEX.KEBAB, body: [12, 6, 2, 9] }, // dropped kebab on Dorchester's high street
   cowpat: { texture: TEX.COWPAT, body: [10, 5, 3, 11] }, // on Moreton's lanes
+  gorse: { texture: TEX.GORSE, body: [12, 6, 2, 10] }, // on Brownsea's heath (drawn 10 tall at the tile's foot)
 };
 
 const prop = (obj, name) => obj.properties?.find((p) => p.name === name)?.value;
@@ -149,7 +150,7 @@ export function loadLevel(scene, levelDef) {
   const bossObj = ofType('boss')[0];
   const fightPoint = (t) => ofType(t).map(point);
   const hatchObj = ofType('hatch')[0];
-  // The level 7 finish is the flap in the bar, not a pub door.
+  // The level 9 finish is the flap in the bar, not a pub door.
   const finishAtBar = !!finishObj && decor.some((d) => typeOf(d) === 'bar-hatch' && Math.floor(d.x / 16) === Math.floor(finishObj.x / 16));
 
   return {
@@ -175,15 +176,16 @@ export function loadLevel(scene, levelDef) {
       offsetMs: prop(o, 'offsetMs'),
       item: prop(o, 'item') ?? 'mat',
     })),
-    dogs: ofType('dog').map((o) => ({ x0: o.x, x1: o.x + o.width, y: o.y })),
-    // Level 8.
+    dogs: ofType('dog').map((o) => ({ x0: o.x, x1: o.x + o.width, y: o.y, kind: prop(o, 'kind') ?? 'dog' })),
+    waves: ofType('wave').map((o) => ({ x: o.x, y: o.y, width: o.width, offsetMs: prop(o, 'offsetMs') ?? 0 })),
+    // Level 10.
     megaphone: ofType('megaphone').map(point)[0] ?? null,
     foxes: ofType('fox').map((o) => ({ x0: o.x, x1: o.x + o.width, y: o.y, offsetMs: prop(o, 'offsetMs') ?? 0 })),
     bins: ofType('bins').map((o) => ({ x: o.x, y: o.y, dir: prop(o, 'dir'), everyMs: prop(o, 'everyMs'), offsetMs: prop(o, 'offsetMs') ?? 0 })),
     bouncers: ofType('bouncer').map((o) => ({ x: o.x, y: o.y, mode: prop(o, 'mode'), offsetMs: prop(o, 'offsetMs') ?? 0 })),
     traffic: ofType('traffic').map((o) => ({ x: o.x, y: o.y, width: o.width, offsetMs: prop(o, 'offsetMs') ?? 0 })),
     closingMs: mapProp(map, 'closingMs') ?? null,
-    // The landlord fight's props (level 7).
+    // The landlord fight's props (level 9).
     fight: {
       pumps: fightPoint('pump'),
       bell: fightPoint('bell')[0] ?? null,
@@ -198,7 +200,7 @@ export function loadLevel(scene, levelDef) {
       travel: prop(o, 'travelPx'),
       offsetMs: prop(o, 'offsetMs') ?? 0,
     })),
-    swans: ofType('swan').map((o) => ({ x0: o.x, x1: o.x + o.width, y: o.y })),
+    swans: ofType('swan').map((o) => ({ x0: o.x, x1: o.x + o.width, y: o.y, kind: prop(o, 'kind') ?? 'swan' })),
     gulls: ofType('gull').map((o) => ({ x0: o.x + 8, x1: o.x + o.width - 8, y: o.y, offsetMs: prop(o, 'offsetMs') ?? 0 })),
     awnings: ofType('awning').map((o) => ({ x: o.x, y: o.y, width: o.width })),
     autoscroll: ofType('autoscroll').map((o) => ({ x0: o.x, x1: o.x + o.width }))[0] ?? null,

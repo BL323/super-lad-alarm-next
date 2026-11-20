@@ -3,7 +3,7 @@ import { TEX, ANIM, LANDLORD_FRAME } from '../assets.js';
 import { addPixelText } from '../ui/text.js';
 import Audio from '../systems/Audio.js';
 
-// The landlord of The Avocet (level 7). Like the Conductor, a state machine
+// The landlord of The Avocet (level 9). Like the Conductor, a state machine
 // driven by time in each state, but he can't be stomped: each phase is beaten
 // by the pub itself (src/systems/LandlordArena.js decides what hurts him).
 //

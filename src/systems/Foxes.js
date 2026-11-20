@@ -4,7 +4,7 @@ import { TEX, ANIM } from '../assets.js';
 import { DEPTH } from '../level/LevelLoader.js';
 import Audio from './Audio.js';
 
-// Urban foxes (level 8): each darts along its stretch of pavement in bursts
+// Urban foxes (level 10): each darts along its stretch of pavement in bursts
 // (FOXES.runMs), stops to sniff (FOXES.pauseMs), and turns at the ends.
 // Deadly to touch and too quick to stomp; a shout from the megaphone sends
 // them running off. They come back when the player respawns.

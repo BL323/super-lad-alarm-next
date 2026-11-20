@@ -12,10 +12,12 @@ Legs, stations and pubs.
 2. Dorchester South → Moreton, Frampton
 3. Moreton → Wool, The Black Bear (angry locals)
 4. Wool → Wareham, The Old Granary (an art easel ends up in the river; the Kings Arms is in the background)
-5. Wareham → Poole, The Rising Sun
-6. Poole → Parkstone, The Avocet
-7. Inside The Avocet, to the bar: the landlord isn't serving (the last boss)
-8. The Avocet → Parkstone Kebabs, before it shuts (with a megaphone left on the pub step)
+5. Wareham → Poole, The Rising Sun (a giant herring gull guards Poole Quay)
+6. Poole Quay → Brownsea Island, on the Brownsea ferry
+7. Brownsea Island, from the quay to Brownsea Castle
+8. Poole → Parkstone, The Avocet
+9. Inside The Avocet, to the bar: the landlord isn't serving (the last boss)
+10. The Avocet → Parkstone Kebabs, before it shuts (with a megaphone left on the pub step)
 
 Naylor's arch nemesis, "The Train Conductor", stands in his way twice. He first fights Naylor on the roof of his train between Moreton and Wool. He comes back for a harder rematch between Poole and Parkstone. Inside The Avocet the landlord won't serve Naylor his last pint: he's beaten with the pub itself (the beer pumps, his own barrels, the last orders bell and the cellar hatch). Then it's out through Parkstone's streets at closing time, past foxes, bins, traffic and bouncers, to the kebab shop.
 

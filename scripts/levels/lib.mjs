@@ -122,7 +122,7 @@ export function createLevel({ cols, properties = {} }) {
     }
   }
 
-  // --- Inside the pub (level 7) ---------------------------------------------------
+  // --- Inside the pub (level 9) ---------------------------------------------------
 
   /** The pub floor: boards at the surface, the cellar below. */
   function floor(c0, c1) {
@@ -167,6 +167,28 @@ export function createLevel({ cols, properties = {} }) {
     for (let c = c0; c <= c1; c++) set('ground', c, row, T.beam);
   }
 
+  /** The ferry from c0 to c1: deck at the roof row, hull below it down to the water. */
+  function ferryHull(c0, c1) {
+    for (let c = c0; c <= c1; c++) {
+      set('ground', c, ROOF, T.deck);
+      for (let r = ROOF + 1; r < ROWS; r++) set('ground', c, r, r === ROWS - 1 ? T.hullWater : T.hull);
+    }
+  }
+
+  /** The wheelhouse over cols c0–c1: its roof at `row` (a floating ledge), its walls behind, down to the deck. */
+  function cabin(c0, c1, row) {
+    for (let c = c0; c <= c1; c++) {
+      set('ground', c, row, T.cabinRoof);
+      for (let r = row + 1; r < ROOF; r++) set('background', c, r, T.cabinWall);
+    }
+  }
+
+  /** A pine at `col`: the trunk behind from `topRow` down to the ground, and branches (floating ledges) [c0, c1, row]. */
+  function pine(col, topRow, branches = [], groundRow = SURFACE) {
+    for (let r = topRow; r < groundRow; r++) set('background', col, r, T.trunk);
+    for (const [c0, c1, row] of branches) for (let c = c0; c <= c1; c++) set('ground', c, row, T.branch);
+  }
+
   /** A high shelf on the wall at `row` (a floating ledge). */
   function shelf(c0, c1, row) {
     for (let c = c0; c <= c1; c++) set('ground', c, row, T.shelf);
@@ -193,7 +215,8 @@ export function createLevel({ cols, properties = {} }) {
   // Points are given by tile column; `y` is the feet position (top of the surface row).
   const feet = (col, surfaceRow = SURFACE) => [col * TS + TS / 2, surfaceRow * TS];
   const spawn = (col) => addObject('spawn', 'spawn', ...feet(col));
-  const checkpoint = (col, station) => addObject('checkpoint', station, ...feet(col), 0, 0, { station });
+  /** A checkpoint at `col`, standing on the surface at `surfaceRow` (the roof row on a deck or carriage). */
+  const checkpoint = (col, station, surfaceRow = SURFACE) => addObject('checkpoint', station, ...feet(col, surfaceRow), 0, 0, { station });
   const finish = (col) => addObject('finish', 'finish', ...feet(col));
   const pint = (col, row) => addObject('collectible', 'pint', col * TS + TS / 2, row * TS + TS / 2, 0, 0, { type: 'pint' });
   const espresso = (col, row) =>
@@ -296,7 +319,7 @@ export function createLevel({ cols, properties = {} }) {
   const pubDecor = (kind, col, props = {}) => addObject(kind, kind, ...feet(col), 0, 0, props, decor);
   /** The bar counter along cols c0–c1 (decor at the back), with shelves behind it. */
   const bar = (c0, c1) => addObject('bar', 'bar', c0 * TS, SURFACE * TS, (c1 - c0 + 1) * TS, 0, {}, decor);
-  /** The flap in the bar at `col` of pub `pubId`: the level 7 finish goes in the same column. */
+  /** The flap in the bar at `col` of pub `pubId`: the level 9 finish goes in the same column. */
   const barHatch = (col, pubId) => addObject('bar-hatch', 'bar-hatch', ...feet(col), 0, 0, { pub: pubId }, decor);
   // The landlord fight's props (src/systems/LandlordArena.js), all inside the end-zone.
   /** A beer pump on the bar at `col`: its handle is a one-way perch 2 tiles up. */
@@ -307,7 +330,7 @@ export function createLevel({ cols, properties = {} }) {
   const lever = (col, row) => addObject('lever', 'lever', col * TS + TS / 2, row * TS + TS / 2);
   /** The cellar trapdoor in the floor over cols c0–c1, in front of the till. */
   const hatch = (c0, c1) => addObject('hatch', 'hatch', c0 * TS, SURFACE * TS, (c1 - c0 + 1) * TS, 0);
-  // --- Level 8: Parkstone to the kebab shop ---
+  // --- Level 10: Parkstone to the kebab shop ---
   /** The megaphone pickup at `col` (MEGAPHONE in config.js). */
   const megaphone = (col, surfaceRow = SURFACE) => addObject('megaphone', 'megaphone', ...feet(col, surfaceRow));
   /** A fox darting along cols c0–c1 of the pavement at `surfaceRow` (FOXES). Shout it away. */
@@ -326,6 +349,17 @@ export function createLevel({ cols, properties = {} }) {
     for (let c = c0; c <= c1; c++) set('ground', c, surfaceRow, T.road);
     return addObject('traffic', 'traffic', c0 * TS, surfaceRow * TS, (c1 - c0 + 1) * TS, 0, { offsetMs });
   };
+  // --- Levels 6–7: the ferry to Brownsea, and the island ---
+  /** A wave breaking over the deck at cols c0–c1 on a cycle (WAVES). */
+  const wave = (c0, c1, offsetMs = 0, surfaceRow = ROOF) =>
+    addObject('wave', 'wave', c0 * TS, surfaceRow * TS, (c1 - c0 + 1) * TS, 0, { offsetMs });
+  /** A peacock strutting cols c0–c1 (a swan by another name: deadly, can't be stomped). */
+  const peacock = (c0, c1, surfaceRow = SURFACE) =>
+    addObject('swan', 'peacock', c0 * TS, surfaceRow * TS, (c1 - c0 + 1) * TS, 0, { surfaceRow, kind: 'peacock' });
+  /** A red squirrel scampering cols c0–c1 (a pub dog by another name: stomp it). */
+  const squirrel = (c0, c1, surfaceRow = SURFACE) =>
+    addObject('dog', 'squirrel', c0 * TS, surfaceRow * TS, (c1 - c0 + 1) * TS, 0, { surfaceRow, kind: 'squirrel' });
+  const gorse = (col, surfaceRow = SURFACE) => hazard('gorse', col, surfaceRow);
   const easel = (col) => addObject('easel', 'easel', col * TS + TS / 2, (SURFACE + 1) * TS + 4, 0, 0, {}, decor);
 
   function toMap() {
@@ -408,6 +442,13 @@ export function createLevel({ cols, properties = {} }) {
     kegs,
     beam,
     shelf,
+    ferryHull,
+    cabin,
+    pine,
+    wave,
+    peacock,
+    squirrel,
+    gorse,
     local,
     dog,
     pubDecor,

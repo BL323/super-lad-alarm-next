@@ -1,127 +1,104 @@
-// Level 7: inside The Avocet, from the front door to the bar. Built by
+// Level 7: Brownsea Island, from the quay to the castle. Built by
 // `npm run build:levels`.
 //
-// The crawl's last pint is at the bar, and the landlord isn't serving. Inside
-// the pub the tables are the high road: the regulars at the back tables throw
-// glasses, crisps and darts at you on the floor, but can't reach the tables.
-// Dogs trot about between them (land on one and it bolts). In the snug the
-// cellar hatches are open, with wobbly stools over them, and the beams are
-// low. Then the landlord's fight in front of the bar (LANDLORD in config.js):
-// soak him with the beer pumps, kick his barrels back, then ring last orders
-// and drop him through the cellar hatch.
+// Dusk on Brownsea. Up from the quay through the pine woods, where the
+// branches are the high road and red squirrels scamper below (land on one
+// and it's off), past the peacocks (deadly to touch, they won't be stomped)
+// and the prickly gorse. Across the lagoon on the boardwalk, with loose
+// planks over the gaps and a gull along it. Over the heath, then up to
+// Brownsea Castle's gate.
 //
-//   the front room (0–21) → the lounge (22–66) → the snug, open cellar
-//   hatches (67–102) → the games room (103–152) → the bar (153–157)
-//   → the landlord's arena (158–177) → the bar hatch (col 181)
+//   the quay (0–20) → the pine woods (21–60) → the lagoon boardwalk (61–99)
+//   → the heath (100–150) → the castle approach (151–184),
+//   Brownsea Castle at col 176
 
 export const meta = {
   id: 'level-07',
-  cols: 190, // 9.5 screens of 20 tiles
-  properties: { title: 'Inside The Avocet', theme: 'pub' }, // theme: THEMES in src/config.js
+  cols: 185, // ~9.3 screens of 20 tiles
+  properties: { title: 'Brownsea Island', theme: 'island' }, // theme: THEMES in src/config.js
 };
 
 export default function build(L) {
-  const { ROOF, floor, hole, table, kegs, beam, shelf, crumble } = L;
-  const { spawn, checkpoint, finish, pint, espresso, glass, boss, zone, local, dog, pubDecor, bar, barHatch } = L;
-  const { pump, bell, lever, hatch } = L;
+  const { T, set, embankment, river, jetty, crumble, pine } = L;
+  const { spawn, checkpoint, finish, pint, espresso, gull, peacock, squirrel, gorse, pub, sign, lamp } = L;
 
-  const ON_TABLE = ROOF - 1; // pints sitting on a table top (row 8)
+  // The quay (cols 0–20).
+  embankment(0, 60);
+  spawn(6);
+  sign(12, 'BROWNSEA ISLAND');
+  lamp(17);
+  [9, 15, 19].forEach((c) => pint(c, 9));
 
-  // The front room (cols 0–21): in through the door, by the fire.
-  floor(0, 66);
-  spawn(7);
-  pubDecor('sconce', 3);
-  pubDecor('picture', 6, { design: 0 });
-  pubDecor('sconce', 10);
-  pubDecor('fireplace', 13);
-  [5, 9].forEach((c) => pint(c, 9));
-  // The martini: on the shelf over the fireplace. Climb the kegs, then turn
-  // back and jump up-left onto the shelf.
-  kegs(17, 8);
-  shelf(13, 14, 6);
-  espresso(13, 5);
-  pint(17, 6);
-  pubDecor('picture', 20, { design: 1 });
+  // The pine woods (cols 21–60). Branches are the high road (row 4); the low
+  // ones (rows 6–8) only where nothing on the ground needs jumping, so the
+  // jumps down there are never cut short. Squirrels and gorse below, a peacock.
+  pine(22, 2, [[21, 23, 8], [24, 25, 6]]);
+  pine(29, 2, [[27, 30, 4]]);
+  pine(34, 2, [[32, 35, 4]]);
+  pine(38, 2, [[37, 39, 4]]);
+  pine(43, 2, [[41, 44, 4]]);
+  pine(48, 2, [[46, 49, 4]]);
+  pine(54, 2, [[52, 55, 4]]);
+  pine(58, 2, [[57, 59, 4]]);
+  [22, 24, 28, 33, 38, 42, 47, 53, 58].forEach((c) => pint(c, c === 22 ? 7 : c === 24 ? 5 : 3));
+  // The martini: on a crate up and to the LEFT of a branch, out in the sky.
+  set('ground', 31, 2, T.crate);
+  espresso(31, 1);
+  squirrel(27, 33);
+  gorse(37);
+  pint(37, 8);
+  peacock(41, 48);
+  squirrel(51, 58);
 
-  // The lounge (cols 22–66): the regulars at the back tables throw glasses
-  // at you on the floor (16 tiles either way); up on the tables you're safe.
-  // A dog trots between the tables.
-  local(34, 'glass');
-  local(50, 'glass', 500);
-  pubDecor('local', 42); // a calm one, just drinking
-  table(24, 26);
-  table(30, 32);
-  table(37, 40);
-  table(45, 47);
-  table(52, 54);
-  table(59, 61);
-  [24, 26, 31, 38, 40, 46, 53, 60].forEach((c) => pint(c, ON_TABLE));
-  [28, 35, 43, 50, 57].forEach((c) => pint(c, 9)); // on the floor, under fire
-  dog(41, 49);
-  glass(56); // a dropped pint
-  pubDecor('sconce', 28);
-  pubDecor('picture', 44, { design: 2 });
-  pubDecor('sconce', 58);
-
-  // The snug (cols 67–102): open cellar hatches in the floor, wobbly stools
-  // over the widest, and low beams (short hops under them).
-  checkpoint(69, 'The snug');
-  floor(67, 74);
-  hole(75, 77); // a 3-tile hatch
-  [75, 76, 77].forEach((c) => pint(c, 6));
-  floor(78, 85);
-  beam(81, 88, 7);
-  hole(86, 86); // a 1-tile hatch under the beam: a short hop
-  [82, 84, 86, 88].forEach((c) => pint(c, 8));
-  floor(87, 92);
-  // Hatch 93–97: 1-tile gap, three wobbly stools (93 is open), 1-tile gap.
-  hole(93, 97);
-  [94, 95, 96].forEach((c) => {
+  // The lagoon (cols 61–99): the boardwalk over the water, loose planks over
+  // the gaps, a gull along the long stretch.
+  river(61, 98);
+  jetty(61, 67);
+  checkpoint(63, 'Lagoon');
+  // Gap 68–72: 1-tile gap, loose planks at 69–71, 1-tile gap.
+  [69, 70, 71].forEach((c) => {
     crumble(c);
     pint(c, 8);
   });
-  floor(98, 157);
-  pubDecor('sconce', 79);
-  pubDecor('sconce', 91);
-  pubDecor('picture', 100, { design: 0 });
+  jetty(73, 86);
+  gull(76, 83);
+  [74, 79, 85].forEach((c) => pint(c, 9));
+  // Gap 87–89, then a short stretch and one loose plank.
+  [87, 88, 89].forEach((c) => pint(c, 7));
+  jetty(90, 95);
+  pint(93, 9);
+  crumble(97); // 1-tile gaps at 96 and 98
+  pint(97, 8);
 
-  // The games room (cols 103–152): a dartboard corner, the pool table, a
-  // regular with a bag of crisps, and a second dog.
-  pubDecor('dartboard', 113);
-  local(116, 'darts');
-  table(119, 124, ROOF, 'pool');
-  [119, 121, 123, 124].forEach((c) => pint(c, ON_TABLE));
-  table(128, 130);
-  dog(126, 137);
-  local(138, 'crisps', 400);
-  table(140, 142);
-  table(146, 148);
-  [129, 141, 147].forEach((c) => pint(c, ON_TABLE));
-  [110, 126, 134, 144].forEach((c) => pint(c, 9));
-  glass(133);
-  pubDecor('sconce', 108);
-  pubDecor('picture', 132, { design: 1 });
-  pubDecor('sconce', 150);
+  // The heath (cols 99–150): gorse, a squirrel, two peacocks, and a high
+  // road of pine branches (row 5) over them, in from a low branch at 115.
+  embankment(99, 184);
+  checkpoint(102, 'Heath');
+  gorse(107);
+  pint(107, 7);
+  squirrel(105, 112);
+  pine(116, 4, [[115, 117, 8], [118, 119, 6]]);
+  pine(122, 2, [[121, 124, 5]]);
+  pine(127, 2, [[126, 129, 5]]);
+  pine(132, 2, [[131, 134, 5]]);
+  pine(137, 2, [[136, 139, 5]]);
+  pine(142, 2, [[141, 144, 5]]);
+  pine(147, 2, [[146, 148, 5]]);
+  [116, 119, 122, 127, 132, 137, 142, 147].forEach((c) => pint(c, c === 116 ? 7 : c === 119 ? 5 : 4));
+  peacock(121, 128);
+  gorse(133);
+  pint(133, 8);
+  peacock(137, 145);
+  gorse(150);
 
-  // The bar (cols 153–157): the last checkpoint, the respawn point for the fight.
-  checkpoint(155, 'The bar');
-  pint(153, 9);
+  // The castle approach (cols 151–184): a last squirrel, then the gate.
+  lamp(153);
+  squirrel(156, 164);
+  [158, 162].forEach((c) => pint(c, 7));
+  lamp(168);
+  pint(171, 9);
 
-  // The landlord's arena (cols 158–177): the bar along the back, three beer
-  // pumps on it, the last orders bell, the cellar lever and the hatch in
-  // front of his till. No pints in here.
-  floor(158, 189);
-  bar(158, 189);
-  zone('end-zone', 158, 177);
-  boss(175, 'landlord', L.SURFACE, 'landlord');
-  pump(161);
-  pump(166);
-  pump(173);
-  bell(163, 6);
-  lever(177, 7);
-  hatch(169, 171);
-
-  // The bar hatch (col 181): the finish, once he's gone down the cellar.
-  barHatch(181, 'avocet');
-  finish(181);
+  // Brownsea Castle. The finish is its gate (same column), 8 tiles from the end.
+  pub(176, 'brownsea-castle');
+  finish(176);
 }

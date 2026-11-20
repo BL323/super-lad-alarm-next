@@ -6,7 +6,7 @@ import { DEPTH } from '../level/LevelLoader.js';
 import Audio from './Audio.js';
 import Lobber from './Lobber.js';
 
-// The landlord fight in front of the bar at The Avocet (level 7's `end-zone`).
+// The landlord fight in front of the bar at The Avocet (level 9's `end-zone`).
 // It runs like the Conductor's arena (the camera locks, walls close, a death
 // resets everything, the bar hatch stays shut until he's beaten), but you
 // beat him with the pub:

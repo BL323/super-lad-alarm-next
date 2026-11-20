@@ -1,126 +1,152 @@
-// Level 8: Parkstone, from The Avocet to the kebab shop. Built by
+// Level 8: Poole → Parkstone, ending at The Avocet. Built by
 // `npm run build:levels`.
 //
-// Closing time. Out of The Avocet with a megaphone someone left on the step,
-// through Parkstone's streets to Parkstone Kebabs before it shuts. Foxes dart
-// about the bins, wheelie bins roll down the pavement, cars pull out of the
-// side roads, and bouncers step out of the clubs to block the way. Shout at
-// them (MEGAPHONE in config.js): foxes and bins are blown away, bouncers
-// stunned. The bouncer outside The Vault won't move for anything else. In
-// before the shutters come down and the time comes off; late, and it costs.
+// The last leg of the crawl, at night with the street lamps lit. The hardest
+// train ride, then the Conductor's revenge on the roof of his train: the
+// final fight (BOSS.final), six stomps, with bigger volleys and a dash back
+// off the wall. Beat him, hop off at Parkstone, and take the rooftops up the
+// road to The Avocet, where the locals throw beer mats from the windows.
 //
-//   outside The Avocet, the megaphone (0–23) → Ashley Road: foxes, bins, the
-//   rooftops (24–59) → a side road (61–64) → the clubs (65–110) → a side road
-//   (112–115) → Ashley Cross and The Vault (116–169) → a side road (171–174)
-//   → the kebab row (175–214), Parkstone Kebabs at col 206
+//   Poole (0–21) → the train (23–95) → lineside, the boss checkpoint (98–111)
+//   → the Conductor's train (112–131) → Parkstone station (132–153)
+//   → the road and its rooftops (154–212), The Avocet at col 204
 
 export const meta = {
   id: 'level-08',
-  cols: 215, // ~10.8 screens of 20 tiles
-  properties: { title: 'Parkstone to the Kebab Shop', theme: 'night', closingMs: 55000 }, // closingMs: CLOSING in src/config.js
+  cols: 213, // ~10.7 screens of 20 tiles
+  properties: { title: 'Poole to Parkstone', theme: 'night' }, // theme: THEMES in src/config.js
 };
 
 export default function build(L) {
-  const { T, set, pavement, crates, roof } = L;
-  const { spawn, checkpoint, finish, pint, espresso, pub, house, shop, lamp } = L;
-  const { megaphone, fox, bins, bouncer, traffic } = L;
+  const { T, ROOF, set, platform, pavement, roof, bridge, embankment, carriage, crates, canopy, crumble } = L;
+  const { spawn, checkpoint, finish, pint, espresso, glass, boss, zone, thrower, pub, sign, house, shop, lamp } = L;
 
-  // Outside The Avocet (cols 0–23). The megaphone's on the step.
-  pavement(0, 214);
-  pub(4, 'avocet', { scenery: true });
-  spawn(9);
-  lamp(12);
-  megaphone(15);
-  [11, 18, 21].forEach((c) => pint(c, 9));
+  // Luggage on a carriage roof: crates from `topRow` down to the roof.
+  const luggage = (col, topRow) => {
+    for (let r = topRow; r < ROOF; r++) set('ground', col, r, T.crate);
+  };
 
-  // Ashley Road (cols 24–59): a fox, a crate stair up to the rooftops, a
-  // second fox under them, and a bin store sending bins down the pavement.
-  house(26, 'terrace-red');
-  fox(27, 35);
-  house(30, 'terrace-cream');
-  lamp(37);
-  [28, 32, 36].forEach((c) => pint(c, 7)); // over the fox's run
-  crates(39, 9);
-  crates(40, 8);
-  crates(41, 7);
-  pint(40, 7);
-  pint(41, 6);
-  house(45, 'terrace-blue');
-  house(49, 'cottage');
-  house(53, 'terrace-red');
-  roof(43, 54, 5);
-  set('ground', 48, 4, T.crate); // a tall chimney
-  set('ground', 48, 3, T.crate);
-  [44, 46, 50, 52, 54].forEach((c) => pint(c, 4));
-  pint(48, 2);
-  // The martini: on a crate floating up and to the LEFT of the chimney.
-  set('ground', 46, 2, T.crate);
-  espresso(46, 1);
-  fox(44, 52, 500);
-  bins(57, -1, 2600); // rolls left down to the crate stair
-  lamp(58);
+  // Poole (cols 0–21): back at the station after The Rising Sun.
+  platform(0, 21);
+  canopy(2, 11, 4, [3, 11]);
+  sign(15, 'POOLE');
+  lamp(13);
+  lamp(19);
+  spawn(7);
+  [9, 11, 17].forEach((c) => pint(c, 9));
 
-  // A side road (cols 61–64): wait for the green man.
-  traffic(61, 64);
-  pint(63, 7);
+  // The train (cols 23–95): the hardest ride of the crawl. 3-tile gaps,
+  // four crumbling crates in a row, a low bridge over a gap, glass, luggage.
+  carriage(23, 10); // 1-tile gap at 22, step up onto the roof
+  glass(28, ROOF);
+  pint(25, 7);
+  pint(28, 5);
+  pint(31, 7);
+  [33, 34, 35].forEach((c) => pint(c, 6)); // over the 3-tile gap at 33–35
+  carriage(36, 10);
+  luggage(40, 7);
+  luggage(41, 6);
+  pint(40, 5);
+  pint(41, 4);
+  // The martini: on a crate up to the LEFT of the luggage, out in the night
+  // sky. Jump back up-left from the top case.
+  set('ground', 39, 4, T.crate);
+  espresso(39, 3);
+  // Gap 46–51: 1-tile gap, crumbling crates at 47–50, 1-tile gap.
+  [47, 48, 49, 50].forEach((c) => {
+    crumble(c, ROOF);
+    pint(c, 7);
+  });
+  carriage(52, 10);
+  glass(57, ROOF);
+  pint(54, 7);
+  pint(57, 5);
+  pint(60, 7);
+  [62, 63, 64].forEach((c) => pint(c, 6)); // over the 3-tile gap at 62–64
+  carriage(65, 10);
+  carriage(76, 10); // 1-tile gap at 75, under the bridge
+  bridge(67, 77, 5);
+  [67, 69, 71, 73, 75, 77].forEach((c) => pint(c, 7)); // short hops under it
+  glass(81, ROOF);
+  pint(81, 5);
+  // Gap 86–88: one crumbling crate in the middle.
+  crumble(87, ROOF);
+  pint(87, 7);
+  carriage(89, 7);
+  pint(92, 7);
 
-  // The clubs (cols 65–110): two bouncers stepping in and out, a fox between
-  // them, a crate, and another bin store.
-  checkpoint(67, 'Penn Hill');
-  lamp(70);
-  shop(76, 'NITE CLUB');
-  bouncer(78, 'cycle');
-  [74, 81].forEach((c) => pint(c, 9));
-  fox(83, 89, 300);
-  [84, 86, 88].forEach((c) => pint(c, 7));
-  shop(94, 'LATE BAR');
-  bouncer(96, 'cycle', 1100);
-  pint(99, 9);
-  crates(101, 9);
-  pint(101, 7);
-  pint(104, 9);
-  bins(109, -1, 2400, 800); // rolls left down to the crate
-  lamp(107);
+  // Lineside (cols 98–111): drop to the embankment. The checkpoint is the
+  // respawn point for the fight.
+  embankment(98, 111); // 2-tile gap at 96–97
+  lamp(101);
+  checkpoint(108, 'Boss train');
+  pint(97, 8);
+  pint(103, 9);
+  pint(105, 9);
 
-  // A side road (cols 112–115), out of step with the first.
-  traffic(112, 115, 1700);
-  pint(114, 7);
+  // The Conductor's train (cols 112–131): two coupled carriages, one screen
+  // long. Jumping onto the roof starts the final fight (BOSS.final). No pints
+  // in the arena.
+  carriage(112, 10);
+  carriage(122, 10);
+  zone('end-zone', 112, 131);
+  boss(129, 'conductor', ROOF, 'final');
 
-  // Ashley Cross (cols 116–169). The Vault's bouncer won't budge: shout at
-  // him. Then foxes round the bins, and a crate breaking up a bin lane.
-  checkpoint(118, 'Ashley Cross');
-  lamp(121);
-  shop(127, 'THE VAULT');
-  bouncer(130, 'stand');
-  [125, 133, 136].forEach((c) => pint(c, 9));
-  house(140, 'terrace-cream');
-  fox(138, 146, 200);
-  [139, 142, 145].forEach((c) => pint(c, 7));
-  house(144, 'terrace-blue');
-  lamp(149);
-  crates(151, 9);
-  pint(151, 7);
-  shop(156, 'TAXIS');
-  fox(155, 161, 700);
-  [155, 158, 161].forEach((c) => pint(c, 7));
-  bins(167, -1, 2200, 400); // rolls left down to the crate
-  lamp(166);
+  // Parkstone station (cols 132–153): hop off once he's beaten.
+  platform(132, 153);
+  checkpoint(134, 'Parkstone');
+  sign(139, 'PARKSTONE');
+  canopy(142, 152, 4, [143, 152]);
+  lamp(137);
+  pint(137, 9);
+  pint(145, 9);
+  pint(149, 9);
 
-  // A side road (cols 171–174).
-  traffic(171, 174, 900);
-  pint(173, 7);
+  // The road to The Avocet (cols 154–212), under the lamps. A crate stair
+  // up to the high road: three runs of rooftops with a wide alley, a narrow
+  // one and tall chimneys. The locals at The Avocet's windows throw beer mats
+  // at the street, from under the last run of roofs to the door.
+  pavement(154, 212);
+  lamp(155);
+  shop(158, 'OFF LICENCE');
+  crates(161, 9);
+  crates(162, 8);
+  crates(163, 7);
+  pint(161, 8);
+  pint(162, 7);
+  pint(163, 6);
+  house(167, 'terrace-blue');
+  house(171, 'terrace-cream');
+  house(175, 'terrace-red');
+  roof(165, 176, 5);
+  set('ground', 170, 4, T.crate); // a tall chimney
+  set('ground', 170, 3, T.crate);
+  lamp(178); // in the alley (3 tiles)
+  house(182, 'cottage');
+  house(186, 'terrace-blue');
+  roof(180, 187, 5);
+  set('ground', 183, 4, T.crate); // chimney
+  house(191, 'terrace-cream');
+  house(195, 'terrace-red');
+  roof(189, 196, 5); // a 1-tile gap at 188
+  set('ground', 193, 4, T.crate); // a tall chimney
+  set('ground', 193, 3, T.crate);
+  [166, 168, 172, 174, 176, 177, 178, 179, 181, 185, 187, 188, 190, 195, 196].forEach((c) => pint(c, 4));
+  pint(183, 3);
+  [170, 193].forEach((c) => pint(c, 2));
+  // The low road: broken glass under the rooftops.
+  glass(169);
+  pint(169, 7);
+  pint(174, 9);
+  glass(184);
+  pint(184, 7);
+  pint(192, 9);
+  lamp(199);
 
-  // The kebab row (cols 175–214): one last fox and the shop.
-  lamp(177);
-  shop(183, 'OFF LICENCE');
-  fox(180, 192, 400);
-  [182, 186, 190].forEach((c) => pint(c, 7));
-  house(196, 'terrace-red');
-  lamp(200);
-  pint(201, 9);
-
-  // Parkstone Kebabs. The finish is its door (same column), 8 tiles from the end.
-  pub(206, 'kebab-shop');
-  finish(206);
-  lamp(212);
+  // The Avocet. The finish is its door (same column), 8 tiles from the end.
+  pub(204, 'avocet');
+  thrower(204, -28, 20); // ground-floor windows, where the angry faces are
+  thrower(204, 28, 20);
+  lamp(209);
+  finish(204);
 }

@@ -42,7 +42,7 @@ export default class CompleteScene extends Phaser.Scene {
     row(40, 'TIME', formatTime(r.elapsedMs));
     row(56, `PINTS ${r.coins}/${r.coinsTotal}`, r.missed ? `+${formatSeconds(r.penaltyMs)}` : 'ALL!');
     if (r.bonusesTotal) row(72, 'MARTINI', r.bonuses ? `-${formatSeconds(r.bonusMs)}` : 'MISSED');
-    // Level 8: in before closing (time off) or late (time on) replaces the pint note.
+    // Level 10: in before closing (time off) or late (time on) replaces the pint note.
     if (r.closingMs) {
       const early = r.closingMs < 0;
       addPixelText(this, cx, 89, early ? `IN BEFORE CLOSING -${formatSeconds(-r.closingMs)}` : `LATE: SHUTTERS DOWN +${formatSeconds(r.closingMs)}`, {

@@ -5,7 +5,7 @@ import { DEPTH } from '../level/LevelLoader.js';
 import Audio from './Audio.js';
 import { isTouchDevice } from './device.js';
 
-// The megaphone (level 8). It waits, bobbing, where the level puts it; walk
+// The megaphone (level 10). It waits, bobbing, where the level puts it; walk
 // into it and Naylor holds it up for the rest of the level, and the shout
 // button appears. Each shout (MEGAPHONE.cooldownMs apart) sends a sound wave
 // `rangePx` ahead, `heightPx` tall: anything in it that can be shouted at

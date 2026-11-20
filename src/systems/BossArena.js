@@ -7,7 +7,7 @@ import Audio from './Audio.js';
 import Lobber from './Lobber.js';
 
 // The Train Conductor fight on the roof of his train (the level's `end-zone`):
-// level 3 (BOSS.first, between Moreton and Wool) and level 6 (BOSS.final).
+// level 3 (BOSS.first, between Moreton and Wool) and level 8 (BOSS.final).
 //
 // Entering the zone starts it: the camera pans to and locks on the arena,
 // walls close on both sides, and he begins after a short intro. Tickets

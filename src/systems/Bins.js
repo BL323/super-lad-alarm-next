@@ -4,7 +4,7 @@ import { TEX, ANIM, BIN_FRAME } from '../assets.js';
 import { DEPTH } from '../level/LevelLoader.js';
 import Audio from './Audio.js';
 
-// Wheelie bins (level 8). Each spawner sends a bin rolling along the pavement
+// Wheelie bins (level 10). Each spawner sends a bin rolling along the pavement
 // every `everyMs` (from where its cycle starts, `offsetMs`); a bin rolls until
 // it drops off an edge or bumps into something, then it's gone. Touching one
 // from the side is a death; land on it and you bounce off; a shout knocks it

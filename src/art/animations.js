@@ -42,6 +42,8 @@ const DEFS = [
   { key: ANIM.SWAN_WALK, texture: TEX.SWAN, frames: [0, 1], frameRate: 1000 / SWANS.stepMs, repeat: -1 },
   { key: ANIM.GULL_FLAP, texture: TEX.GULL, frames: [0, 1], frameRate: 1000 / GULLS.flapMs, repeat: -1 },
   { key: ANIM.DOG_TROT, texture: TEX.DOG, frames: [0, 1], frameRate: 1000 / DOGS.stepMs, repeat: -1 },
+  { key: ANIM.PEACOCK_STRUT, texture: TEX.PEACOCK, frames: [0, 1], frameRate: 3, repeat: -1 },
+  { key: ANIM.SQUIRREL_RUN, texture: TEX.SQUIRREL, frames: [0, 1], frameRate: 10, repeat: -1 },
   { key: ANIM.FOX_RUN, texture: TEX.FOX, frames: [0, 1], frameRate: 1000 / FOXES.stepMs, repeat: -1 },
   { key: ANIM.BIN_ROLL, texture: TEX.BIN, frames: [0, 1], frameRate: 8, repeat: -1 },
   { key: ANIM.LANDLORD_WALK, texture: TEX.LANDLORD, frames: LANDLORD_FRAME.walk, frameRate: 6, repeat: -1 },

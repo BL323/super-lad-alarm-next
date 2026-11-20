@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SWANS } from '../config.js';
+import { SWANS, PEACOCKS } from '../config.js';
 import { TEX, ANIM } from '../assets.js';
 import { DEPTH } from '../level/LevelLoader.js';
 
@@ -15,11 +15,14 @@ export default class Swans {
   constructor(scene, defs, player) {
     this.group = scene.physics.add.group({ allowGravity: false });
     this.items = defs.map((d, i) => {
-      const swan = this.group.create(i % 2 ? d.x1 - 8 : d.x0 + 8, d.y, TEX.SWAN).setOrigin(0.5, 1).setDepth(DEPTH.props);
+      // Brownsea's peacocks (`kind: 'peacock'`) strut the same way, just slower.
+      const peacock = d.kind === 'peacock';
+      const swan = this.group.create(i % 2 ? d.x1 - 8 : d.x0 + 8, d.y, peacock ? TEX.PEACOCK : TEX.SWAN).setOrigin(0.5, 1).setDepth(DEPTH.props);
+      swan.speed = peacock ? PEACOCKS.speed : SWANS.speed;
       swan.body.setSize(12, 11).setOffset(2, 4);
       swan.range = d;
       swan.dir = i % 2 ? -1 : 1;
-      swan.play(ANIM.SWAN_WALK);
+      swan.play(peacock ? ANIM.PEACOCK_STRUT : ANIM.SWAN_WALK);
       return swan;
     });
     scene.physics.add.overlap(player, this.group, () => {
@@ -39,7 +42,7 @@ export default class Swans {
       const { x0, x1 } = swan.range;
       if (swan.dir > 0 && swan.x >= x1 - 8) swan.dir = -1;
       else if (swan.dir < 0 && swan.x <= x0 + 8) swan.dir = 1;
-      swan.setVelocityX(swan.dir * SWANS.speed).setFlipX(swan.dir < 0);
+      swan.setVelocityX(swan.dir * swan.speed).setFlipX(swan.dir < 0);
     }
   }
 }

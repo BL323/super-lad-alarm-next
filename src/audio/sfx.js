@@ -178,7 +178,7 @@ export const SOUNDS = {
   boing: () => voice({ wave: 'triangle', from: 160, to: 640, dur: 0.22, vol: 0.32, vib: 18, vibDepth: 0.08 }), // off a shop awning
   bell: () => seq([[N.E6, 0.07], [N.C6, 0.07]], { duty: 0.5, vol: 0.1, release: 0.04 }), // level-crossing warning
 
-  // Inside The Avocet (level 7)
+  // Inside The Avocet (level 9)
   yelp: () => voice({ from: 1400, to: 2200, dur: 0.12, duty: 0.25, vol: 0.12, vib: 30, vibDepth: 0.08 }), // a stomped dog
   grunt: () => voice({ from: 160, to: 110, dur: 0.22, duty: 0.25, vol: 0.2, vib: 14, vibDepth: 0.1 }), // the landlord winding up
   spray: () => voice({ wave: 'noise', from: 6000, to: 1500, dur: 0.4, vol: 0.18, attack: 0.01, release: 0.2, lowpass: 0.3 }), // a pump gushing
@@ -196,12 +196,13 @@ export const SOUNDS = {
       { data: voice({ wave: 'noise', from: 1500, dur: 0.08, vol: 0.15, decay: true }) },
     ), // the cellar lever
 
-  // Parkstone to the kebab shop (level 8)
+  // Parkstone to the kebab shop (level 10)
   shout: () =>
     mix(
       { data: voice({ from: 330, to: 260, dur: 0.32, duty: 0.25, vol: 0.26, vib: 22, vibDepth: 0.12 }) },
       { data: voice({ wave: 'noise', from: 3000, dur: 0.3, vol: 0.1, decay: true, lowpass: 0.4 }) },
     ), // "OI!" through the megaphone
+  wave: () => voice({ wave: 'noise', from: 1800, to: 400, dur: 0.9, vol: 0.2, attack: 0.2, release: 0.4, lowpass: 0.5 }), // a wave over the rail
   car: () => voice({ wave: 'noise', from: 600, to: 300, dur: 0.9, vol: 0.14, attack: 0.15, release: 0.3, lowpass: 0.7 }), // a car pulling out
   shutter: () => voice({ wave: 'noise', from: 2500, to: 700, dur: 0.8, vol: 0.18, attack: 0.02, release: 0.1, vib: 30, vibDepth: 0.3 }), // a roller shutter rattling down
 };

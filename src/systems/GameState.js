@@ -12,7 +12,7 @@ export function createGameState(levelId) {
     bonusesTotal: 0,
     timeBonusMs: 0, // time taken off by bonus items
     checkpoint: null, // { name, x, y } feet position of the last activated checkpoint
-    closingMs: null, // level 8: when the kebab shop shuts (on the level clock)
+    closingMs: null, // level 10: when the kebab shop shuts (on the level clock)
     closingBonusMs: 0, // in before closing: time off
     lateMs: 0, // after closing: time on
     completed: false,
@@ -27,7 +27,7 @@ export function addPickup(state, def) {
 }
 
 /**
- * Final time: clock + 2 s per missed pint − bonuses, and (level 8) − the
+ * Final time: clock + 2 s per missed pint − bonuses, and (level 10) − the
  * closing-time bonus or + the late penalty. Never below zero.
  */
 export function finalTime(state) {

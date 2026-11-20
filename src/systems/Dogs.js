@@ -1,10 +1,10 @@
 import Phaser from 'phaser';
-import { DOGS } from '../config.js';
+import { DOGS, SQUIRRELS } from '../config.js';
 import { TEX, ANIM } from '../assets.js';
 import { DEPTH } from '../level/LevelLoader.js';
 import Audio from './Audio.js';
 
-// Pub dogs (level 7): each trots up and down its stretch of floor, and runs at
+// Pub dogs (level 9): each trots up and down its stretch of floor, and runs at
 // you when you're on the floor close by (still only within its stretch).
 // Touching one from the side is a death (through player.die()); land on it and
 // it yelps and bolts out of the pub, and you bounce. They all come back when
@@ -20,12 +20,17 @@ export default class Dogs {
     this.player = player;
     this.group = scene.physics.add.group({ allowGravity: false });
     this.items = defs.map((d, i) => {
-      const dog = this.group.create(i % 2 ? d.x1 - 8 : d.x0 + 8, d.y, TEX.DOG).setOrigin(0.5, 1).setDepth(DEPTH.props);
-      dog.body.setSize(12, 9).setOffset(2, 3);
+      // Brownsea's red squirrels (`kind: 'squirrel'`) scamper the same way, quicker.
+      const squirrel = d.kind === 'squirrel';
+      const dog = this.group.create(i % 2 ? d.x1 - 8 : d.x0 + 8, d.y, squirrel ? TEX.SQUIRREL : TEX.DOG).setOrigin(0.5, 1).setDepth(DEPTH.props);
+      if (squirrel) dog.body.setSize(9, 7).setOffset(2, 3);
+      else dog.body.setSize(12, 9).setOffset(2, 3);
+      dog.anim = squirrel ? ANIM.SQUIRREL_RUN : ANIM.DOG_TROT;
+      dog.speeds = squirrel ? SQUIRRELS : DOGS;
       dog.range = d;
       dog.home = { x: dog.x, y: dog.y };
       dog.dir = i % 2 ? -1 : 1;
-      dog.play(ANIM.DOG_TROT);
+      dog.play(dog.anim);
       return dog;
     });
 
@@ -83,7 +88,7 @@ export default class Dogs {
     dog.setPosition(dog.home.x, dog.home.y).setAngle(0).setAlpha(1);
     dog.body.enable = true;
     dog.body.reset(dog.home.x, dog.home.y);
-    dog.play(ANIM.DOG_TROT);
+    dog.play(dog.anim);
   }
 
   update() {
@@ -98,7 +103,7 @@ export default class Dogs {
       if (chasing) dog.dir = Math.sign(dx) || dog.dir;
       else if (dog.dir > 0 && dog.x >= x1 - 8) dog.dir = -1;
       else if (dog.dir < 0 && dog.x <= x0 + 8) dog.dir = 1;
-      const speed = chasing ? DOGS.chaseSpeed : DOGS.speed;
+      const speed = chasing ? dog.speeds.chaseSpeed : dog.speeds.speed;
       // Never leave the stretch, even when chasing.
       const atEnd = (dog.dir > 0 && dog.x >= x1 - 8) || (dog.dir < 0 && dog.x <= x0 + 8);
       dog.setVelocityX(atEnd ? 0 : dog.dir * speed).setFlipX(dog.dir < 0);

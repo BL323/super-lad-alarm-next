@@ -12,18 +12,19 @@
 //   Wareham (0–21) → the departing train (23–121, auto-scroll 24–130)
 //   → Holton Heath (124–136) → one carriage (139–148) → Poole station (151–170)
 //   → the high street, awnings and rooftops (171–213) → the quay (214–225)
-//   → the harbour and the ferry (226–239) → The Rising Sun (col 255)
+//   → the harbour and the ferry (226–239) → the giant gull's fight on the far
+//   quay (246–265) → The Rising Sun (col 273)
 
 export const meta = {
   id: 'level-05',
-  cols: 264, // ~13.2 screens of 20 tiles
+  cols: 282, // ~14.1 screens of 20 tiles
   properties: { title: 'Wareham to Poole', theme: 'stormy', weather: 'rain' }, // THEMES in src/config.js; weather: src/systems/Weather.js
 };
 
 export default function build(L) {
   const { T, ROOF, SURFACE, set, platform, pavement, bridge, embankment, carriage, canopy, river, crumble } = L;
   const { spawn, checkpoint, finish, pint, espresso, glass, mover, gull, awning, autoscroll, yacht } = L;
-  const { pub, sign, house, shop, lamp } = L;
+  const { pub, sign, house, shop, lamp, boss, zone } = L;
 
   /** Luggage piled on a carriage roof at `col`, up to `topRow`. */
   const luggage = (col, topRow) => {
@@ -150,13 +151,24 @@ export default function build(L) {
   mover('ferry', 227, 238, SURFACE);
   [230, 233, 236].forEach((c) => pint(c, 9)); // ride through them
 
-  // The far quay (cols 240–263): another gull, then The Rising Sun.
-  pavement(240, 263);
-  gull(243, 249, SURFACE, 1800);
-  lamp(251);
-  pint(252, 9);
-  pub(255, 'rising-sun');
+  // The far quay (cols 240–281): the giant herring gull's fight in front of
+  // three shops, then The Rising Sun. Its arena (cols 246–265) has a bouncy
+  // awning on each shop: bounce up into the gull while it hovers (GULL_BOSS).
+  pavement(240, 281);
+  checkpoint(242, 'Poole Quay');
+  pint(241, 9);
+  zone('end-zone', 246, 265);
+  shop(249, 'CHIPS');
+  awning(247, 251, 8);
+  shop(256, 'ROCK SHOP');
+  awning(254, 258, 8);
+  shop(262, 'BOAT TRIPS');
+  awning(260, 264, 8);
+  boss(256, 'gull', SURFACE, 'gull');
+  lamp(267);
+  [268, 270].forEach((c) => pint(c, 9));
+  pub(273, 'rising-sun');
 
   // The finish is the pub door (same column), 8 tiles from the end.
-  finish(255);
+  finish(273);
 }
